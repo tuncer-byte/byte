@@ -180,6 +180,21 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                 this._agentEnabled = message.enabled;
                 // Burada agent durumuna göre ek işlemler yapılabilir
                 break;
+
+            case 'sendFileToAI':
+                // Dosya içeriğini AI'ya gönder
+                await this._sendFileToAI(message.filePath);
+                break;
+                
+            case 'openFileSelector':
+                // Dosya seçici diyaloğu aç
+                await this._openFileSelector();
+                break;
+
+            case 'clearChat':
+                // Sohbeti temizle
+                await this._clearChat();
+                break;
         }
     }
     
@@ -238,20 +253,27 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     }
     
     /**
-     * Sohbeti temizler
+     * Sohbeti temizler ve yeni bir sohbet başlatır
      */
-    public clearChat() {
+    private async _clearChat() {
         if (!this._view) {
             return;
         }
         
-        // Mesaj geçmişini temizle
-        this._aiService.clearMessages();
-        
-        // WebView'e bildir
-        this._view.webview.postMessage({
-            type: 'clearChat'
-        });
+        try {
+            // Mesaj geçmişini temizle
+            this._aiService.clearMessages();
+            
+            // WebView'e bildir - yeni bir sohbet başlat
+            this._view.webview.postMessage({
+                type: 'clearChat'
+            });
+            
+            // Bildirim göster
+            vscode.window.showInformationMessage('Yeni bir sohbet başlatıldı');
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Sohbet temizlenirken hata oluştu: ${error.message}`);
+        }
     }
     
     /**
@@ -388,5 +410,88 @@ export class ChatPanel implements vscode.WebviewViewProvider {
         }
         
         return htmlContent;
+    }
+    
+    /**
+     * Dosya içeriğini okuyup AI'ya gönderir
+     */
+    private async _sendFileToAI(filePath: string) {
+        try {
+            if (!filePath) {
+                filePath = vscode.window.activeTextEditor?.document.uri.fsPath || '';
+                
+                if (!filePath) {
+                    throw new Error('Gönderilecek dosya bulunamadı.');
+                }
+            }
+            
+            // Dosyayı oku
+            const fs = require('fs');
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            const fileName = filePath.split(/[\\/]/).pop() || '';
+            
+            // Dosya içeriğini formatla
+            const message = `Aşağıdaki '${fileName}' dosyasını inceleyip analiz eder misin?\n\n\`\`\`\n${fileContent}\n\`\`\``;
+            
+            // AI'ya gönder
+            const response = await this._aiService.sendMessage(message);
+            
+            // Yanıtı WebView'e gönder
+            if (this._view) {
+                this._view.webview.postMessage({
+                    type: 'response',
+                    content: response
+                });
+            }
+        } catch (error: any) {
+            // Hata durumunda WebView'e bildir
+            if (this._view) {
+                this._view.webview.postMessage({
+                    type: 'error',
+                    content: error.message
+                });
+            }
+        }
+    }
+    
+    /**
+     * Dosya seçici diyaloğu açar
+     */
+    private async _openFileSelector() {
+        try {
+            // Dosya seçim diyaloğunu aç
+            const fileUri = await vscode.window.showOpenDialog({
+                canSelectMany: false,
+                openLabel: 'Dosya Seç',
+                filters: {
+                    'Tüm Dosyalar': ['*']
+                }
+            });
+            
+            if (fileUri && fileUri.length > 0) {
+                const filePath = fileUri[0].fsPath;
+                const fileName = filePath.split(/[\\/]/).pop() || '';
+                
+                // Dosya bilgilerini güncelle
+                if (this._view) {
+                    this._view.webview.postMessage({
+                        type: 'fileSelected',
+                        filePath: filePath,
+                        fileName: fileName
+                    });
+                    
+                    // Seçilen dosyayı AI'ya gönder
+                    await this._sendFileToAI(filePath);
+                }
+            }
+        } catch (error: any) {
+            // Hata durumunda WebView'e bildir
+            if (this._view) {
+                this._view.webview.postMessage({
+                    type: 'error',
+                    content: error.message
+                });
+            }
+        }
     }
 }

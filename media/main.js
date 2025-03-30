@@ -11,12 +11,16 @@
     const configureButton = document.getElementById('configureButton');
     const currentFileElement = document.getElementById('currentFile');
     const agentToggle = document.getElementById('agentToggle');
+    const sendFileButton = document.getElementById('sendFileButton');
+    const addFileButton = document.getElementById('addFileButton');
     
     // Mesajları saklamak için durum
     let state = vscode.getState() || { 
         messages: [],
         agentEnabled: true,
-        currentFile: 'package.json'
+        currentFile: 'package.json',
+        currentFilePath: '',
+        recentFiles: []
     };
     
     // Sayfa yüklendiğinde VS Code'a hazır olduğumuzu bildir
@@ -267,6 +271,31 @@
         });
     });
     
+    // Yeni chat başlatma butonu
+    document.querySelector('.new-chat').addEventListener('click', () => {
+        vscode.postMessage({ type: 'clearChat' });
+    });
+    
+    // Dosyayı AI'ya gönderme butonu
+    sendFileButton.addEventListener('click', () => {
+        // Mevcut dosya içeriğini al ve AI'ya gönder
+        vscode.postMessage({
+            type: 'sendFileToAI',
+            filePath: state.currentFilePath || ''
+        });
+        
+        // Yükleniyor göstergesini aç
+        loadingIndicator.style.display = 'block';
+    });
+    
+    // Başka dosya ekleme butonu
+    addFileButton.addEventListener('click', () => {
+        // VS Code'a dosya seçim dialogu açma isteği gönder
+        vscode.postMessage({
+            type: 'openFileSelector'
+        });
+    });
+    
     // VS Code'dan gelen mesajları dinle
     window.addEventListener('message', event => {
         const message = event.data;
@@ -376,6 +405,33 @@
                     </div>
                 `;
                 messagesContainer.appendChild(welcomeDiv);
+                break;
+                
+            case 'fileSelected':
+                // Yeni bir dosya seçildiğinde
+                if (message.filePath && message.fileName) {
+                    state.currentFile = message.fileName;
+                    state.currentFilePath = message.filePath;
+                    
+                    // Dosya adını güncelle
+                    currentFileElement.textContent = message.fileName;
+                    
+                    // Son dosyalar listesine ekle (eğer yoksa)
+                    if (!state.recentFiles.some(file => file.path === message.filePath)) {
+                        state.recentFiles.push({
+                            name: message.fileName,
+                            path: message.filePath
+                        });
+                        
+                        // Maksimum 5 dosya saklayalım
+                        if (state.recentFiles.length > 5) {
+                            state.recentFiles.shift();
+                        }
+                    }
+                    
+                    // Durumu kaydet
+                    vscode.setState(state);
+                }
                 break;
         }
     });
