@@ -51,6 +51,26 @@
       {
         "command": "byte.configureAI",
         "title": "Byte: AI Servisini Yapılandır"
+      },
+      {
+        "command": "byte.generateDocs",
+        "title": "Byte: Generate Documentation"
+      },
+      {
+        "command": "byte.optimizeCode",
+        "title": "Byte: Optimize Code"
+      },
+      {
+        "command": "byte.generateTests",
+        "title": "Byte: Generate Unit Tests"
+      },
+      {
+        "command": "byte.addComments",
+        "title": "Byte: Add Comments to Code"
+      },
+      {
+        "command": "byte.findIssues",
+        "title": "Byte: Analyze Code Issues"
       }
     ],
     "menus": {
@@ -64,6 +84,31 @@
           "command": "byte.refactorCode",
           "when": "editorHasSelection",
           "group": "byte@2"
+        },
+        {
+          "command": "byte.generateDocs",
+          "when": "editorHasSelection",
+          "group": "byte@3"
+        },
+        {
+          "command": "byte.optimizeCode",
+          "when": "editorHasSelection",
+          "group": "byte@4"
+        },
+        {
+          "command": "byte.generateTests",
+          "when": "editorHasSelection",
+          "group": "byte@5"
+        },
+        {
+          "command": "byte.addComments",
+          "when": "editorHasSelection",
+          "group": "byte@6"
+        },
+        {
+          "command": "byte.findIssues",
+          "when": "editorHasSelection",
+          "group": "byte@7"
         }
       ]
     },

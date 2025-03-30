@@ -375,11 +375,11 @@
                 welcomeDiv.innerHTML = `
                     <div class="assistant-message">
                         <div class="message-content">
-                            <h2>Welcome to Byte</h2>
+                            <h2>Welcome to Byte AI Assistant</h2>
                             <ul class="welcome-list">
-                                <li>Configure plugin settings</li>
-                                <li>Explore shortcuts</li>
-                                <li>Provide instructions for AI</li>
+                                <li>Configure AI providers (OpenAI, Gemini, Local models)</li>
+                                <li>Use right-click menu for code operations</li>
+                                <li>Explore advanced code analysis & generation</li>
                             </ul>
                             
                             <div class="assistant-intro">
@@ -393,6 +393,20 @@
                                     <li><span class="command">/explain</span> file or selected code</li>
                                     <li><span class="command">/review</span> code to recommend improvements</li>
                                     <li><span class="command">/unittests</span> to generate unit tests</li>
+                                    <li><span class="command">/docs</span> to create documentation</li>
+                                    <li><span class="command">/optimize</span> to improve code performance</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="right-click-features">
+                                <h3>Right-click menu features</h3>
+                                <p>Select any code and right-click to access:</p>
+                                <ul>
+                                    <li><strong>Generate Documentation</strong> - Create detailed docs from code</li>
+                                    <li><strong>Optimize Code</strong> - Improve performance and readability</li>
+                                    <li><strong>Add Comments</strong> - Add explanatory comments to code</li>
+                                    <li><strong>Generate Unit Tests</strong> - Create tests for your code</li>
+                                    <li><strong>Analyze Code Issues</strong> - Find and fix problems</li>
                                 </ul>
                             </div>
                             
