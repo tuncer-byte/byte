@@ -31,6 +31,8 @@ body, html {
     background-color: var(--background);
     font-size: 14px;
     line-height: 1.5;
+    margin: 0;
+    overflow-x: hidden;
 }
 
 .chat-container {
@@ -39,6 +41,7 @@ body, html {
     height: 100vh;
     max-width: 100%;
     margin: 0 auto;
+    background-color: var(--background);
 }
 
 .chat-header {
@@ -632,4 +635,69 @@ margin-bottom: 20px;
     border-radius: 3px;
     font-size: 13px;
     color: #e6e6e6;
+}
+
+/* Kod blokları için geliştirilmiş stiller - taşma sorununu çözmek için */
+.message-content pre {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    margin: 15px 0;
+    position: relative;
+    border: 1px solid var(--border-color);
+    overflow-x: auto; /* Yatay scroll ekle */
+    max-width: 100%;
+}
+
+.message-content pre code {
+    display: block;
+    padding: 12px 15px;
+    background-color: transparent;
+    color: var(--foreground);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-wrap: normal;
+    tab-size: 2;
+}
+
+.code-language {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: rgba(255, 123, 35, 0.2);
+    color: var(--primary-color);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 0 5px 0 5px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+/* Markdown listeleri için stiller */
+.message-content ul, 
+.message-content ol {
+    margin: 10px 0;
+    padding-left: 25px;
+}
+
+.message-content ul li, 
+.message-content ol li {
+    margin-bottom: 5px;
+}
+
+/* Paragraflar için stiller */
+.message-content p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+/* Başlıklar için stiller */
+.message-content h1, 
+.message-content h2, 
+.message-content h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: var(--primary-light);
 }

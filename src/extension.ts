@@ -25,6 +25,9 @@ export function activate(context: vscode.ExtensionContext) {
     const commandManager = new CommandManager(chatPanel, aiService);
     commandManager.registerCommands(context);
     
+    // ChatPanel'e CommandManager'ı bağla (slash komutlarını işleyebilmesi için)
+    chatPanel.setCommandManager(commandManager);
+    
     // İlk çalıştırmada kullanıcıya hoş geldin mesajı göster
     const hasShownWelcome = context.globalState.get<boolean>('hasShownWelcome');
     if (!hasShownWelcome) {
@@ -44,4 +47,4 @@ export function activate(context: vscode.ExtensionContext) {
 // Eklenti devre dışı bırakıldığında çağrılır
 export function deactivate() {
     console.log('Byte AI Asistanı devre dışı bırakıldı!');
-} 
+}

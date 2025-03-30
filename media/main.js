@@ -313,6 +313,20 @@
                 loadingIndicator.style.display = 'none';
                 break;
                 
+            case 'userMessage':
+                // Kullanıcı mesajını ekle (Slash komut işlemi için)
+                appendMessage('user', message.content);
+                
+                // Durumu güncelle
+                state.messages.push({ role: 'user', content: message.content });
+                vscode.setState(state);
+                break;
+                
+            case 'loadingStart':
+                // Yükleniyor göstergesini aç
+                loadingIndicator.style.display = 'block';
+                break;
+                
             case 'providerChanged':
                 // AI sağlayıcı değiştiğinde seçiciyi güncelle
                 aiProviderSelect.value = message.provider;

@@ -76,42 +76,48 @@
     "menus": {
       "editor/context": [
         {
-          "command": "byte.explainCode",
+          "submenu": "byte.menu",
           "when": "editorHasSelection",
-          "group": "byte@1"
+          "group": "navigation"
+        }
+      ],
+      "byte.menu": [
+        {
+          "command": "byte.explainCode",
+          "group": "z_byte@1"
         },
         {
           "command": "byte.refactorCode",
-          "when": "editorHasSelection",
-          "group": "byte@2"
+          "group": "z_byte@2"
         },
         {
           "command": "byte.generateDocs",
-          "when": "editorHasSelection",
-          "group": "byte@3"
+          "group": "z_byte@3"
         },
         {
           "command": "byte.optimizeCode",
-          "when": "editorHasSelection",
-          "group": "byte@4"
+          "group": "z_byte@4"
         },
         {
           "command": "byte.generateTests",
-          "when": "editorHasSelection",
-          "group": "byte@5"
+          "group": "z_byte@5"
         },
         {
           "command": "byte.addComments",
-          "when": "editorHasSelection",
-          "group": "byte@6"
+          "group": "z_byte@6"
         },
         {
           "command": "byte.findIssues",
-          "when": "editorHasSelection",
-          "group": "byte@7"
+          "group": "z_byte@7"
         }
       ]
     },
+    "submenus": [
+      {
+        "id": "byte.menu",
+        "label": "Byte AI Assistant"
+      }
+    ],
     "configuration": {
       "title": "Byte",
       "properties": {
