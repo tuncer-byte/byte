@@ -1,6 +1,6 @@
 # byte README
 
-![Project Architecture and Flow](../public/architect.png)
+![Project Architecture and Flow](public/architect.png)
 
 This diagram illustrates the architecture and flow of the byte extension.
 
