@@ -383,7 +383,6 @@
                             </ul>
                             
                             <div class="assistant-intro">
-                                <div class="assistant-icon">🔥</div>
                                 <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
                             </div>
                             
@@ -431,6 +430,18 @@
                     
                     // Durumu kaydet
                     vscode.setState(state);
+                }
+                break;
+                
+            case 'setWidth':
+                // Panel genişliğini ayarla
+                if (message.width) {
+                    // VSCode webview panelinin genişliğini ayarla
+                    document.documentElement.style.setProperty('--panel-width', `${message.width}px`);
+                    document.documentElement.style.setProperty('min-width', `${message.width}px`);
+                    document.body.style.minWidth = `${message.width}px`;
+                    // Container genişliğini ayarla
+                    document.querySelector('.chat-container').style.minWidth = `${message.width}px`;
                 }
                 break;
         }

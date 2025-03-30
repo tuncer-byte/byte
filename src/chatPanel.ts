@@ -70,7 +70,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     ) {
         this._view = webviewView;
         
-        // WebView güvenlik ayarları
+        // WebView genişliğini artır
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [
@@ -78,8 +78,22 @@ export class ChatPanel implements vscode.WebviewViewProvider {
             ]
         };
         
-        // WebView içeriğini ayarla
+        // Panel genişliğini ayarla - minimum genişlik 400px
         webviewView.webview.html = this._getWebviewContent(webviewView.webview);
+        
+        // CSS ile içeriğin genişliğini artır
+        this._view.onDidChangeVisibility(() => {
+            setTimeout(() => {
+                if (this._view && this._view.visible) {
+                    const minWidth = 400; // Minimum genişlik 400px
+                    // Extension'ın genişliğini ayarla
+                    this._view.webview.postMessage({
+                        type: 'setWidth',
+                        width: minWidth
+                    });
+                }
+            }, 100);
+        });
         
         // WebView ile mesajlaşma
         webviewView.webview.onDidReceiveMessage(

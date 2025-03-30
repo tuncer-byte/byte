@@ -540,6 +540,91 @@ margin-bottom: 20px;
     overflow-wrap: break-word;
 }
 
+/* Quick commands için geliştirilmiş stiller */
+.quick-commands {
+    margin-top: 20px;
+    background-color: rgba(30, 38, 49, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.quick-commands h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--primary-light);
+    font-weight: 500;
+}
+
+.command-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.command-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.command-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    background-color: rgba(255, 123, 35, 0.08);
+}
+
+.command {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    color: var(--command-color);
+    font-size: 13px;
+    font-weight: 500;
+    background-color: rgba(255, 123, 35, 0.15);
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.command-desc {
+    font-size: 12px;
+    color: var(--foreground);
+    opacity: 0.9;
+}
+
+/* Assistant intro için stiller */
+.assistant-intro {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    padding: 12px 15px;
+    background-color: rgba(255, 123, 35, 0.08);
+    border-radius: 10px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.assistant-icon {
+    font-size: 24px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.assistant-intro p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 .message-content code {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
     background-color: rgba(0, 0, 0, 0.2);
@@ -547,146 +632,4 @@ margin-bottom: 20px;
     border-radius: 3px;
     font-size: 13px;
     color: #e6e6e6;
-}
-
-.message-content pre {
-    margin: 10px 0;
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-}
-
-.message-content pre code {
-    display: block;
-    overflow-x: auto;
-    padding: 14px;
-    background-color: transparent;
-    border-radius: 0;
-    white-space: pre;
-    max-width: 100%;
-    font-size: 13px;
-    line-height: 1.45;
-    color: #e6e6e6;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 123, 35, 0.5) rgba(0, 0, 0, 0.1);
-}
-
-.message-content pre code::-webkit-scrollbar {
-    height: 8px;
-}
-
-.message-content pre code::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-}
-
-.message-content pre code::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 123, 35, 0.5);
-    border-radius: 4px;
-}
-
-.message-content p {
-    margin: 8px 0;
-}
-
-.message-content h1, .message-content h2, .message-content h3 {
-    margin-top: 20px;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.message-content h1 {
-    font-size: 18px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 8px;
-}
-
-.message-content h2 {
-    font-size: 16px;
-}
-
-.message-content h3 {
-    font-size: 14px;
-}
-
-.message-content ul, .message-content ol {
-    margin-left: 20px;
-    margin-top: 8px;
-    margin-bottom: 8px;
-}
-
-.message-content li {
-    margin-bottom: 5px;
-}
-
-.welcome-message {
-    max-width: 100%;
-}
-
-.code-language {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-size: 11px;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    background-color: rgba(255, 123, 35, 0.2);
-    color: var(--primary-color);
-    padding: 2px 8px;
-    border-radius: 0 6px 0 6px;
-    border-left: 1px solid rgba(255, 123, 35, 0.3);
-    border-bottom: 1px solid rgba(255, 123, 35, 0.3);
-    text-transform: lowercase;
-    font-weight: 500;
-}
-
-/* Dosya bağlam alanı için stiller */
-.file-context {
-    display: flex;
-    align-items: center;
-    background-color: rgba(30, 38, 49, 0.5);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    padding: 2px;
-    transition: all 0.2s;
-}
-
-.file-context:hover {
-    border-color: var(--primary-color);
-}
-
-.current-file {
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    color: var(--foreground);
-    padding: 3px 8px;
-    font-size: 12px;
-    background: none;
-    border: none;
-    border-radius: 4px;
-}
-
-.file-action-button {
-    background: none;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(230, 230, 230, 0.6);
-    padding: 4px;
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.file-action-button:hover {
-    background-color: rgba(255, 123, 35, 0.15);
-    color: var(--primary-color);
-}
-
-.file-action-button svg {
-    width: 14px;
-    height: 14px;
 }
