@@ -127,13 +127,17 @@
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
     
-    // Basit Markdown formatlaması
+    // Geliştirilmiş Markdown formatlaması
     function formatMarkdown(text) {
         if (!text) return '';
         
-        // Kod bloklarını işle
-        text = text.replace(/```([\s\S]*?)```/g, function(match, code) {
-            return `<pre><code>${escapeHtml(code)}</code></pre>`;
+        // Kod bloklarını işle - dil desteği eklendi
+        text = text.replace(/```(\w*)([\s\S]*?)```/g, function(match, language, code) {
+            const langClass = language ? ` class="language-${language}"` : '';
+            const formattedCode = escapeHtml(code.trim());
+            // Dil belirteci gösterimi eklendi
+            const langBadge = language ? `<div class="code-language">${language}</div>` : '';
+            return `<pre>${langBadge}<code${langClass}>${formattedCode}</code></pre>`;
         });
         
         // Satır içi kod
@@ -144,14 +148,50 @@
         text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
         text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
         
-        // Listeler (basitleştirilmiş)
-        text = text.replace(/^\* (.*$)/gm, '<ul><li>$1</li></ul>');
-        text = text.replace(/^\- (.*$)/gm, '<ul><li>$1</li></ul>');
+        // Kalın metinler
+        text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        
+        // İtalik metinler
+        text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        
+        // Listeler - geliştirildi
+        // Sırasız liste öğelerini grup olarak dönüştür
+        const ulRegex = /^[*\-] (.+)$/gm;
+        const ulMatches = text.match(ulRegex);
+        
+        if (ulMatches) {
+            let listItems = '';
+            ulMatches.forEach(match => {
+                const content = match.replace(/^[*\-] (.+)$/, '$1');
+                listItems += `<li>${content}</li>`;
+            });
+            text = text.replace(ulRegex, '');
+            // Listeleri düzgün grup olarak ekle
+            if (listItems) {
+                text = `<ul>${listItems}</ul>${text}`;
+            }
+        }
+        
+        // Numaralı listeler
+        const olRegex = /^\d+\. (.+)$/gm;
+        const olMatches = text.match(olRegex);
+        
+        if (olMatches) {
+            let listItems = '';
+            olMatches.forEach(match => {
+                const content = match.replace(/^\d+\. (.+)$/, '$1');
+                listItems += `<li>${content}</li>`;
+            });
+            text = text.replace(olRegex, '');
+            if (listItems) {
+                text = `<ol>${listItems}</ol>${text}`;
+            }
+        }
         
         // Kalan satırları paragraflara dönüştür
         const paragraphs = text.split(/\n\n+/);
         return paragraphs.map(p => {
-            if (p.trim() && !p.includes('<h') && !p.includes('<ul') && !p.includes('<pre')) {
+            if (p.trim() && !p.includes('<h') && !p.includes('<ul') && !p.includes('<ol') && !p.includes('<pre')) {
                 return `<p>${p.replace(/\n/g, '<br>')}</p>`;
             }
             return p;
