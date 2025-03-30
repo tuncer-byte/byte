@@ -1,5 +1,9 @@
 # byte README
 
+![Project Architecture and Flow](../public/architect.png)
+
+This diagram illustrates the architecture and flow of the byte extension.
+
 This is the README for your extension "byte". After writing up a brief description, we recommend including the following sections.
 
 ## Features
