@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Byte AI Asistanı</title>
+    <link rel="stylesheet" href="{{styleUri}}">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="logo-area">
+                <h1>Byte</h1>
+                <span class="version-tag">v1.0</span>
+            </div>
+            <div class="provider-selector">
+                <div class="select-wrapper">
+                    <select id="aiProvider">
+                        <option value="openai">OpenAI</option>
+                        <option value="gemini">Google Gemini</option>
+                        <option value="local">Yerel Model</option>
+                    </select>
+                    <div class="select-arrow">▼</div>
+                </div>
+                <button id="configureButton" class="icon-button" title="Yapılandır">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="messages-container" id="messagesContainer">
+            <div class="welcome-message">
+                <div class="assistant-message">
+                    <div class="message-content">
+                        <div class="welcome-header">
+                            <h2>Welcome to Byte</h2>
+                            <div class="welcome-subtitle">Your intelligent coding assistant</div>
+                        </div>
+                        
+                        <div class="welcome-features">
+                            <div class="feature-card">
+                                <div class="feature-icon">⚙️</div>
+                                <div class="feature-text">Configure plugin settings</div>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">⌨️</div>
+                                <div class="feature-text">Explore shortcuts</div>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">💬</div>
+                                <div class="feature-text">Provide instructions for AI</div>
+                            </div>
+                        </div>
+                        
+                        <div class="assistant-intro">
+                            <div class="assistant-icon">🔥</div>
+                            <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
+                        </div>
+                        
+                        <div class="quick-commands">
+                            <h3>Quick commands</h3>
+                            <ul>
+                                <li><span class="command">/code</span> to generate new feature or fix bug</li>
+                                <li><span class="command">/explain</span> file or selected code</li>
+                                <li><span class="command">/review</span> code to recommend improvements</li>
+                                <li><span class="command">/unittests</span> to generate unit tests</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="coffee-mode">
+                            <h3>Coffee mode</h3>
+                            <p>Enable to automatically apply changes and run safe commands</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Mesajlar buraya dinamik olarak eklenecek -->
+        </div>
+        
+        <div class="input-container">
+            <div class="context-info">
+                <span class="new-chat">New chat</span>
+                <span class="context-separator">|</span>
+                <span class="current-file" id="currentFile">package.json</span>
+                <div class="context-controls">
+                    <label class="agent-toggle">
+                        <span>Agent</span>
+                        <input type="checkbox" id="agentToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="input-wrapper">
+                <textarea id="userInput" placeholder="Ask Byte..." rows="1"></textarea>
+                <button id="sendButton" class="send-button" title="Gönder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="loading-indicator" id="loadingIndicator">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{scriptUri}}"></script>
+</body>
+</html>

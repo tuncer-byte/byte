@@ -1,0 +1,124 @@
+{
+  "name": "byte",
+  "displayName": "Byte",
+  "description": "AI destekli kodlama asistanı",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.98.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages",
+    "Machine Learning",
+    "Education"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ai-assistant",
+          "title": "Byte AI Asistanı",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ai-assistant": [
+        {
+          "id": "byteChatView",
+          "name": "AI Sohbet",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "byte.openChat",
+        "title": "Byte: Sohbet Panelini Aç"
+      },
+      {
+        "command": "byte.explainCode",
+        "title": "Byte: Seçili Kodu Açıkla"
+      },
+      {
+        "command": "byte.refactorCode",
+        "title": "Byte: Seçili Kodu İyileştir"
+      },
+      {
+        "command": "byte.configureAI",
+        "title": "Byte: AI Servisini Yapılandır"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "byte.explainCode",
+          "when": "editorHasSelection",
+          "group": "byte@1"
+        },
+        {
+          "command": "byte.refactorCode",
+          "when": "editorHasSelection",
+          "group": "byte@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Byte",
+      "properties": {
+        "byte.provider": {
+          "type": "string",
+          "enum": [
+            "openai",
+            "gemini",
+            "local"
+          ],
+          "default": "openai",
+          "description": "AI servis sağlayıcısını seçin"
+        },
+        "byte.openai.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API anahtarı (güvenlik nedeniyle Secret Storage'da saklamak önerilir)"
+        },
+        "byte.gemini.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Google Gemini API anahtarı"
+        },
+        "byte.local.endpoint": {
+          "type": "string",
+          "default": "http://localhost:8000/v1/completions",
+          "description": "Yerel AI servisinizin uç noktası"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/node-fetch": "^2.6.12",
+    "@types/vscode": "^1.98.0",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.23.0",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}

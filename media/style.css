@@ -1,0 +1,508 @@
+:root {
+    --primary-color: #FF7B23; /* Turuncu renk */
+    --primary-light: #FF9A52;
+    --primary-dark: #E35F00;
+    --background: #0D1117; /* Çok koyu arka plan */
+    --foreground: #E6E6E6; /* Açık metin rengi */
+    --sidebar-background: #161B22; /* Biraz daha açık arka plan */
+    --input-background: #1E2631; /* Metin kutusu arka planı */
+    --border-color: #30363D; /* Kenarlık rengi */
+    --button-background: #FF7B23;
+    --button-foreground: #FFFFFF;
+    --button-hover-background: #E35F00;
+    --select-background: #161B22;
+    --select-foreground: #E6E6E6;
+    --message-user-background: #1E2631;
+    --message-ai-background: #1A1F27;
+    --command-color: #FF7B23; /* Komutlar için vurgu rengi */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    height: 100%;
+    color: var(--foreground);
+    background-color: var(--background);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background-color: var(--sidebar-background);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin: 0;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.version-tag {
+    font-size: 11px;
+    background-color: rgba(255, 123, 35, 0.15);
+    color: var(--primary-color);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.provider-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.select-wrapper {
+    position: relative;
+    width: 160px;
+}
+
+#aiProvider {
+    appearance: none;
+    width: 100%;
+    background-color: var(--select-background);
+    color: var(--select-foreground);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#aiProvider:hover {
+    border-color: var(--primary-light);
+}
+
+#aiProvider:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(255, 123, 35, 0.2);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--primary-color);
+    pointer-events: none;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+    color: var(--foreground);
+}
+
+.icon-button:hover {
+    background-color: rgba(255, 123, 35, 0.15);
+    color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: var(--background);
+}
+
+/* Yeni karşılama alanı stilleri */
+.welcome-header {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.welcome-header h2 {
+    font-size: 28px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.welcome-subtitle {
+    font-size: 16px;
+    color: rgba(230, 230, 230, 0.8);
+}
+
+.welcome-features {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.feature-card {
+    flex: 1;
+    background-color: rgba(30, 38, 49, 0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.feature-text {
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Mesaj alanı ve eylemler için yeni stiller */
+.message {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.user-message {
+    align-self: flex-end;
+    background-color: var(--message-user-background);
+    border-radius: 12px 12px 0 12px;
+}
+
+.assistant-message {
+    align-self: flex-start;
+    background-color: var(--message-ai-background);
+    border-radius: 12px 12px 12px 0;
+    width: 100%;
+}
+
+/* Kopyalama butonu için yeni stil */
+.message-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    gap: 8px;
+}
+
+.message:hover .message-actions {
+    opacity: 1;
+}
+
+.copy-button {
+    background-color: rgba(30, 38, 49, 0.7);
+    border: none;
+    color: var(--foreground);
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+
+.copy-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.copy-button svg {
+    width: 14px;
+    height: 14px;
+}
+
+.copy-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    border: 1px solid rgba(40, 167, 69, 0.4);
+    color: #2ecc71;
+}
+
+/* Input alanı için yeni stiller */
+.input-container {
+    border-top: 1px solid var(--border-color);
+    background-color: var(--sidebar-background);
+    padding-bottom: 15px;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.context-info {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    font-size: 12px;
+    color: rgba(230, 230, 230, 0.7);
+    border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+    justify-content: space-between;
+}
+
+.new-chat {
+    font-weight: 500;
+    color: var(--foreground);
+    transition: color 0.2s;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.new-chat:hover {
+    color: var(--primary-color);
+    background-color: rgba(255, 123, 35, 0.1);
+}
+
+.context-separator {
+    opacity: 0.5;
+    margin: 0 8px;
+}
+
+.current-file {
+    font-family: 'Courier New', monospace;
+    color: var(--foreground);
+    background-color: rgba(30, 38, 49, 0.8);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    border: 1px solid rgba(48, 54, 61, 0.8);
+}
+
+.context-controls {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Agent Toggle Düğmesi */
+.agent-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.agent-toggle:hover {
+    background-color: rgba(30, 38, 49, 0.8);
+}
+
+.agent-toggle span {
+    font-size: 12px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.agent-toggle:hover span {
+    color: var(--primary-color);
+}
+
+.agent-toggle input {
+    display: none;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 36px;
+    height: 18px;
+    background-color: rgba(48, 54, 61, 0.7);
+    border-radius: 18px;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--foreground);
+    border-radius: 50%;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.agent-toggle input:checked + .toggle-slider {
+    background-color: rgba(255, 123, 35, 0.4);
+}
+
+.agent-toggle input:checked + .toggle-slider:before {
+    transform: translateX(18px);
+    background-color: var(--primary-color);
+}
+
+/* Input alanı ve gönderme butonu */
+.input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    margin: 15px 15px 8px;
+    background-color: var(--input-background);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(255, 123, 35, 0.15);
+}
+
+#userInput {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--foreground);
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 14px 14px;
+    resize: none;
+    min-height: 24px;
+    max-height: 150px;
+    outline: none;
+    font-family: inherit;
+}
+
+#userInput::placeholder {
+    color: rgba(230, 230, 230, 0.4);
+    font-style: italic;
+}
+
+.send-button {
+    background-color: transparent;
+    border: none;
+    color: var(--primary-color);
+    padding: 10px 16px;
+    margin: 2px;
+    height: 42px;
+    width: 42px;
+    cursor: pointer;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.send-button:hover {
+    background-color: rgba(255, 123, 35, 0.15);
+    transform: scale(1.05);
+}
+
+.send-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Yükleniyor göstergesi */
+.loading-indicator {
+    display: none;
+    padding: 8px 15px;
+    justify-content: center;
+    margin-top: 5px;
+}
+
+.loading-indicator.active {
+    display: flex;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.typing-indicator span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes typing {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
