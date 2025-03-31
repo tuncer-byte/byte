@@ -26,13 +26,13 @@ export class InlineCodeChat {
     public async analyzeSelectedCode() {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showErrorMessage('Analiz edilecek kod yok. Lütfen bir kodu seçin.');
+            vscode.window.showErrorMessage('No code to analyze. Please select some code.');
             return;
         }
 
         const selection = editor.selection;
         if (selection.isEmpty) {
-            vscode.window.showErrorMessage('Lütfen analiz edilecek kodu seçin.');
+            vscode.window.showErrorMessage('Please select code to analyze.');
             return;
         }
 
@@ -58,13 +58,13 @@ export class InlineCodeChat {
     public async askQuestionAboutCode() {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showErrorMessage('Soru sormak için kod yok. Lütfen bir kodu seçin.');
+            vscode.window.showErrorMessage('No code to ask about. Please select some code.');
             return;
         }
 
         const selection = editor.selection;
         if (selection.isEmpty) {
-            vscode.window.showErrorMessage('Lütfen hakkında soru sormak istediğiniz kodu seçin.');
+            vscode.window.showErrorMessage('Please select code to ask about.');
             return;
         }
 
@@ -74,8 +74,8 @@ export class InlineCodeChat {
 
         // Soru girdisi iste
         const question = await vscode.window.showInputBox({
-            prompt: 'Seçili kod hakkında bir soru sorun',
-            placeHolder: 'Örnek: Bu kodun zaman karmaşıklığı nedir?'
+            prompt: 'Ask a question about the selected code',
+            placeHolder: 'Example: What is the time complexity of this code?'
         });
 
         if (!question) {
@@ -105,7 +105,7 @@ export class InlineCodeChat {
 
         this.panel = vscode.window.createWebviewPanel(
             'inlineCodeChat',
-            'Kod Sohbeti',
+            'Code Chat',
             {
                 viewColumn: vscode.ViewColumn.Beside,
                 preserveFocus: true
@@ -135,16 +135,16 @@ export class InlineCodeChat {
                     await this.handleMessage(message.text);
                     break;
                 case 'fixCode':
-                    await this.handleMessage('Bu kodu düzelt ve iyileştir. Hataları gider ve en iyi uygulama yöntemlerini kullan.');
+                    await this.handleMessage('Fix and improve this code. Correct errors and use best practices.');
                     break;
                 case 'optimizeCode':
-                    await this.handleMessage('Bu kodu optimize et. Performans ve okunabilirlik açısından iyileştirmeler öner.');
+                    await this.handleMessage('Optimize this code. Suggest improvements for performance and readability.');
                     break;
                 case 'testCode':
-                    await this.handleMessage('Bu kod için kapsamlı birim testleri oluştur.');
+                    await this.handleMessage('Create comprehensive unit tests for this code.');
                     break;
                 case 'explainCode':
-                    await this.handleMessage('Bu kodu detaylı bir şekilde açıkla. Amacını, nasıl çalıştığını ve önemli kısımlarını belirt.');
+                    await this.handleMessage('Explain this code in detail. Describe its purpose, how it works, and highlight important parts.');
                     break;
             }
         });
@@ -161,11 +161,11 @@ export class InlineCodeChat {
 
         // HTML şablonunu döndür
         return `<!DOCTYPE html>
-        <html lang="tr">
+        <html lang="en">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Kod Sohbeti</title>
+            <title>Code Chat</title>
             <meta http-equiv="Content-Security-Policy" content="${csp}">
             <link rel="stylesheet" href="${styleUri}">
         </head>
@@ -173,14 +173,14 @@ export class InlineCodeChat {
             <div class="chat-container">
                 <div class="code-section">
                     <div class="code-header">
-                        <div class="code-title">Seçili Kod</div>
+                        <div class="code-title">Selected Code</div>
                         <div class="code-actions">
                             <button id="fixCodeBtn" class="action-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12 20h9"></path>
                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                 </svg>
-                                <span>Düzelt</span>
+                                <span>Fix</span>
                             </button>
                             <button id="optimizeCodeBtn" class="action-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -188,13 +188,13 @@ export class InlineCodeChat {
                                     <path d="M12 20V4"></path>
                                     <path d="M6 20v-6"></path>
                                 </svg>
-                                <span>Optimize Et</span>
+                                <span>Optimize</span>
                             </button>
                             <button id="testCodeBtn" class="action-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
-                                <span>Test Üret</span>
+                                <span>Test</span>
                             </button>
                             <button id="explainCodeBtn" class="action-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -202,14 +202,14 @@ export class InlineCodeChat {
                                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                                 </svg>
-                                <span>Açıkla</span>
+                                <span>Explain</span>
                             </button>
                             <button id="copyCodeBtn" class="action-button">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
-                                <span>Kopyala</span>
+                                <span>Copy</span>
                             </button>
                         </div>
                     </div>
@@ -220,10 +220,10 @@ export class InlineCodeChat {
                 </div>
                 <div class="chat-section">
                     <div id="messagesContainer" class="messages-container">
-                        <!-- Mesajlar buraya eklenecek -->
+                        <!-- Messages will be added here -->
                     </div>
                     <div class="input-container">
-                        <textarea id="userInput" placeholder="Kod hakkında bir soru sorun..." rows="1"></textarea>
+                        <textarea id="userInput" placeholder="Ask a question about the code..." rows="1"></textarea>
                         <button id="sendButton" class="send-button" disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
@@ -264,17 +264,17 @@ export class InlineCodeChat {
         this.isProcessing = true;
         await this.panel.webview.postMessage({
             command: 'startLoading',
-            message: 'Kod analiz ediliyor...'
+            message: 'Analyzing code...'
         });
 
         try {
             // Kodu analiz et ve sonucu gönder
-            const systemPrompt = `Sen kod analizi yapan bir asistansın. Verilen kodu analiz edip kullanıcıya yardımcı olacaksın. 
-                                Kod: ${code}
-                                Dosya adı: ${fileName}
-                                Dil: ${languageId}`;
+            const systemPrompt = `You are a code analysis assistant. You will analyze the provided code and help the user. 
+                                Code: ${code}
+                                File name: ${fileName}
+                                Language: ${languageId}`;
             
-            const userPrompt = "Bu kod parçasını analiz et. Kodun ne yaptığını, nasıl çalıştığını ve varsa iyileştirme önerilerini kısa ve öz bir şekilde açıkla.";
+            const userPrompt = "Analyze this code snippet. Briefly explain what the code does, how it works, and suggest any improvements if applicable.";
             
             this.messageHistory = [
                 { role: 'system', content: systemPrompt },
@@ -292,9 +292,9 @@ export class InlineCodeChat {
         } catch (error) {
             await this.panel.webview.postMessage({
                 command: 'error',
-                message: 'Kod analizi yapılırken bir hata oluştu. Lütfen tekrar deneyin.'
+                message: 'An error occurred while analyzing the code. Please try again.'
             });
-            console.error('Kod analizi hatası:', error);
+            console.error('Code analysis error:', error);
         } finally {
             this.isProcessing = false;
             await this.panel.webview.postMessage({ command: 'stopLoading' });
@@ -338,9 +338,9 @@ export class InlineCodeChat {
         } catch (error) {
             await this.panel.webview.postMessage({
                 command: 'error',
-                message: 'Yanıt alınırken bir hata oluştu. Lütfen tekrar deneyin.'
+                message: 'An error occurred while getting the response. Please try again.'
             });
-            console.error('AI yanıtı hatası:', error);
+            console.error('AI response error:', error);
         } finally {
             this.isProcessing = false;
             await this.panel.webview.postMessage({ command: 'stopLoading' });

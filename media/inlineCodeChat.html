@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kod Sohbeti</title>
+    <title>Code Chat</title>
     <link rel="stylesheet" href="inlineCodeChat.css">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; img-src ${webview.cspSource} https:;">
 </head>
@@ -11,14 +11,14 @@
     <div class="chat-container">
         <div class="code-section">
             <div class="code-header">
-                <div class="code-title">Seçili Kod</div>
+                <div class="code-title">Selected Code</div>
                 <div class="code-actions">
                     <button id="fixCodeBtn" class="action-button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 20h9"></path>
                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                         </svg>
-                        <span>Düzelt</span>
+                        <span>Fix</span>
                     </button>
                     <button id="optimizeCodeBtn" class="action-button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,13 +26,13 @@
                             <path d="M12 20V4"></path>
                             <path d="M6 20v-6"></path>
                         </svg>
-                        <span>Optimize Et</span>
+                        <span>Optimize</span>
                     </button>
                     <button id="testCodeBtn" class="action-button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>Test Üret</span>
+                        <span>Test</span>
                     </button>
                     <button id="explainCodeBtn" class="action-button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -40,14 +40,14 @@
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <span>Açıkla</span>
+                        <span>Explain</span>
                     </button>
                     <button id="copyCodeBtn" class="action-button">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                         </svg>
-                        <span>Kopyala</span>
+                        <span>Copy</span>
                     </button>
                 </div>
             </div>
@@ -58,10 +58,10 @@
         </div>
         <div class="chat-section">
             <div id="messagesContainer" class="messages-container">
-                <!-- Mesajlar buraya eklenecek -->
+                <!-- Messages will be added here -->
             </div>
             <div class="input-container">
-                <textarea id="userInput" placeholder="Kod hakkında bir soru sorun..." rows="1"></textarea>
+                <textarea id="userInput" placeholder="Ask a question about the code..." rows="1"></textarea>
                 <button id="sendButton" class="send-button" disabled>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>

@@ -61,9 +61,9 @@
         const codeText = codeBlock.textContent;
         navigator.clipboard.writeText(codeText)
             .then(() => {
-                // Kopyalama başarılı bildirimi
+                // Success notification
                 const originalText = copyCodeBtn.innerHTML;
-                copyCodeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Kopyalandı</span>`;
+                copyCodeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Copied</span>`;
                 copyCodeBtn.classList.add('copied');
                 
                 setTimeout(() => {
@@ -72,10 +72,10 @@
                 }, 2000);
             })
             .catch(err => {
-                console.error('Kopyalama hatası:', err);
+                console.error('Copy error:', err);
                 vscode.postMessage({
                     command: 'error',
-                    message: 'Kod kopyalanırken bir hata oluştu.'
+                    message: 'An error occurred while copying the code.'
                 });
             });
     });
@@ -135,7 +135,7 @@
                                 </svg>`;
                             }, 2000);
                         })
-                        .catch(err => console.error('Kod bloğu kopyalama hatası:', err));
+                        .catch(err => console.error('Code block copy error:', err));
                 });
                 
                 actionsDiv.appendChild(copyButton);

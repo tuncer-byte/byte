@@ -1,7 +1,7 @@
 {
   "name": "byte",
   "displayName": "Byte AI Assistant",
-  "description": "AI destekli kodlama asistanı",
+  "description": "AI-powered coding assistant",
   "version": "0.0.1",
   "publisher": "tuncer-byte", 
   "author": {
@@ -31,7 +31,7 @@
       "activitybar": [
         {
           "id": "ai-assistant",
-          "title": "Byte AI Asistanı",
+          "title": "Byte AI Assistant",
           "icon": "media/icon.png"
         }
       ]
@@ -40,7 +40,7 @@
       "ai-assistant": [
         {
           "id": "byteChatView",
-          "name": "AI Sohbet",
+          "name": "AI Chat",
           "type": "webview"
         }
       ]
@@ -48,19 +48,19 @@
     "commands": [
       {
         "command": "byte.openChat",
-        "title": "Byte: Sohbet Panelini Aç"
+        "title": "Byte: Open Chat Panel"
       },
       {
         "command": "byte.explainCode",
-        "title": "Byte: Seçili Kodu Açıkla"
+        "title": "Byte: Explain Selected Code"
       },
       {
         "command": "byte.refactorCode",
-        "title": "Byte: Seçili Kodu İyileştir"
+        "title": "Byte: Refactor Selected Code"
       },
       {
         "command": "byte.configureAI",
-        "title": "Byte: AI Servisini Yapılandır"
+        "title": "Byte: Configure AI Service"
       },
       {
         "command": "byte.generateDocs",
@@ -84,17 +84,17 @@
       },
       {
         "command": "byte.codeChat",
-        "title": "Byte: Kod Bloğu ile Sohbet Et",
+        "title": "Byte: Chat with Code Block",
         "icon": "$(comment-discussion)"
       },
       {
         "command": "byte.inlineCodeAnalysis",
-        "title": "Byte: Kodu Analiz Et",
+        "title": "Byte: Analyze Code",
         "icon": "$(sparkle)"
       },
       {
         "command": "byte.askQuestionAboutCode",
-        "title": "Byte: Kod Hakkında Soru Sor",
+        "title": "Byte: Ask Question About Code",
         "icon": "$(question)"
       }
     ],
@@ -186,27 +186,27 @@
             "local"
           ],
           "default": "openai",
-          "description": "AI servis sağlayıcısını seçin"
+          "description": "Select AI service provider"
         },
         "byte.openai.apiKey": {
           "type": "string",
           "default": "",
-          "description": "OpenAI API anahtarı (güvenlik nedeniyle Secret Storage'da saklamak önerilir)"
+          "description": "OpenAI API key (it's recommended to store in Secret Storage for security)"
         },
         "byte.gemini.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Google Gemini API anahtarı"
+          "description": "Google Gemini API key"
         },
         "byte.local.endpoint": {
           "type": "string",
           "default": "http://localhost:11434/api/generate",
-          "description": "Ollama servisinizin uç noktası"
+          "description": "Ollama service endpoint URL"
         },
         "byte.local.model": {
           "type": "string",
           "default": "llama3",
-          "description": "Ollama'da kullanılacak olan model adı (llama3, codellama, mistral vb.)"
+          "description": "Model name to use in Ollama (llama3, codellama, mistral, etc.)"
         }
       }
     }
