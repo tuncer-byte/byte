@@ -319,21 +319,14 @@ export class CommandManager {
                 progress.report({ message: "Sending request to AI model..." });
                 
                 // Dokümantasyon oluşturmak için özel prompt hazırla
-                const prompt = `Analyze this code and create comprehensive documentation. The documentation should include:
-
-1. An introduction explaining the general purpose and function of the code
-2. For each function/method/class:
-   - Its purpose and functionality
-   - Complete description of parameters (type, format, required status)
-   - Return value and format
-   - Step-by-step explanations of important algorithms
-   - Special cases, limitations, and points to note
-3. Dependencies and relationships
-4. Possible error situations and how they are handled
-5. At least 2-3 example usage scenarios (simple and advanced examples)
-6. Performance information (if applicable)
-
-The documentation should be understandable for both end users and developers. Return it in Markdown format using appropriate heading levels.
+                const prompt = `Please generate comprehensive documentation for the following code. Include:
+                
+1. Overview of what the code does
+2. Function/method descriptions
+3. Parameter explanations
+4. Return value descriptions
+5. Usage examples
+6. Any edge cases or important notes
 
 Code:
 \`\`\`
@@ -567,70 +560,18 @@ ${code}
             try {
                 progress.report({ message: "Sending request to AI model..." });
                 
-                // Optimizasyon için prompt hazırla
-                let optimizationPrompt = `Optimize the following code for ${optimizationType.label.toLowerCase()}. During optimization:
+                // Optimizasyon için özel prompt hazırla
+                const prompt = `Please optimize the following code for ${optimizationType.label.toLowerCase()}. 
+Provide a clear explanation of the changes made and why they improve the code.
 
-1. Fully preserve the existing functionality - the algorithm's behavior should not change
-2. Improve the code's ${optimizationType.label === 'Performance Optimization' ? 'execution speed and resource efficiency' : 
-    optimizationType.label === 'Memory Usage Optimization' ? 'memory usage and memory management' : 
-    optimizationType.label === 'Code Size Reduction' ? 'code size and complexity' : 
-    'readability and maintainability'}
-3. Explain the purpose and impact of each change you make
-4. If possible, express the impact of the improvement in measurable terms`;
-
-                // Optimizasyon türüne göre özel talimatlar ekle
-                if (optimizationType.label === 'Performance Optimization') {
-                    optimizationPrompt += `
-For performance optimization, pay special attention to:
-- Reducing time complexity (O(n²) -> O(n log n) or better)
-- Eliminating unnecessary calculations
-- Optimizing or consolidating loops where possible
-- Using more efficient data structures
-- Finding opportunities for asynchronous operations, parallel processing, or lazy evaluation
-- Implementing caching strategies where possible
-- Considering micro-optimizations in critical paths`;
-                } else if (optimizationType.label === 'Memory Usage Optimization') {
-                    optimizationPrompt += `
-For memory optimization, pay special attention to:
-- Detecting and eliminating memory leaks
-- Optimizing large data structures
-- Avoiding unnecessary copies
-- Implementing memory pooling or sharing techniques
-- Evaluating opportunities for passing by reference instead of by value
-- Implementing early memory release
-- Eliminating unnecessary intermediate variables`;
-                } else if (optimizationType.label === 'Code Size Reduction') {
-                    optimizationPrompt += `
-For code size optimization, pay special attention to:
-- Eliminating code duplication, applying the DRY (Don't Repeat Yourself) principle
-- Extracting common functionality into helper functions
-- Using more concise and shorter coding techniques
-- Eliminating unnecessary conditions and branches
-- Identifying and cleaning up dead code
-- Creating smaller, focused functions
-- Reducing excessive comments and unnecessary documentation`;
-                } else { // Readability Enhancement
-                    optimizationPrompt += `
-For readability optimization, pay special attention to:
-- Making variable and function names meaningful and consistent
-- Breaking complex logic into smaller, understandable functions
-- Making the code flow more linear and traceable
-- Using modern language features to make the code more clear
-- Adding comments strategically, explaining not just "what" but "why"
-- Simplifying nested conditions and using guard clauses
-- Improving overall code organization and formatting`;
-                }
-
-                optimizationPrompt += `
-
-Code to optimize:
+Original code:
 \`\`\`
 ${code}
 \`\`\`
 
-Return the optimized code and then explain the changes made, the optimization strategy, and the expected benefits.`;
+Please return the optimized code along with a detailed explanation of the improvements.`;
                 
-                const optimizedResult = await this.aiService.sendMessage(optimizationPrompt);
+                const optimizedResult = await this.aiService.sendMessage(prompt);
                 
                 // İki seçenek sun: 1) Mevcut kodu değiştir, 2) Yeni dosyada göster
                 const action = await vscode.window.showInformationMessage(
@@ -743,28 +684,19 @@ Return the optimized code and then explain the changes made, the optimization st
                 progress.report({ message: "Sending request to AI model..." });
                 
                 // Test oluşturmak için özel prompt hazırla
-                const prompt = `Create comprehensive ${framework} unit tests for the following code. The tests should meet these criteria:
-
-1. Include test scenarios for each function and every important logic flow
-2. Test coverage should include:
-   - Main functionality tests (happy path)
-   - Boundary values
-   - Empty/null/undefined values
-   - Invalid input validation
-   - Error handling cases
-   - Edge cases
-3. Each test should have a clear description and purpose
-4. Tests should include mocking/stubbing to replace dependencies (if any)
-5. Test setup and teardown procedures should be properly implemented
-6. Follow the recommended best practices for the ${framework} framework
-7. The tests themselves should be understandable and maintainable
+                const prompt = `Please generate comprehensive unit tests for the following code using the ${framework} testing framework.
+Include a variety of test cases covering:
+1. Happy path scenarios
+2. Edge cases
+3. Error handling
+4. Input validation
 
 Code to test:
 \`\`\`
 ${code}
 \`\`\`
 
-Return well-structured tests with explanatory comments, ready to run.`;
+Return well-structured tests with explanatory comments.`;
                 
                 const testCode = await this.aiService.sendMessage(prompt);
                 
@@ -909,34 +841,17 @@ Return well-structured tests with explanatory comments, ready to run.`;
                 progress.report({ message: "Sending request to AI model..." });
                 
                 // Yorum eklemek için özel prompt hazırla
-                const prompt = `Add ${commentStyle.label.toLowerCase()} style explanatory comments to the following code.
-
-The added comments should have these characteristics:
-${commentStyle.label === 'Documentation Style' ? `
-- Fully adhere to JSDoc/TSDoc standards
-- Include complete documentation comments for every function, class, and method
-- Document all parameters, return values, and possible errors
-- Use appropriate tags such as @param, @returns, @throws
-- Include additional explanations for complex logic` : ''}
-${commentStyle.label === 'Comprehensive' ? `
-- Include detailed explanations for each logical section
-- Explain complex algorithms step by step
-- Indicate the purpose and usage of variables
-- Focus on the "why" question - explain why the code is written this way
-- Include notes that will help future development` : ''}
-${commentStyle.label === 'Concise' ? `
-- Add short and concise comments only to complex or non-obvious sections
-- Keep comments minimal enough not to affect code readability
-- Use only where necessary
-- Each comment should be a single sentence or short paragraph
-- Avoid excessive documentation` : ''}
+                const prompt = `Please add ${commentStyle.label.toLowerCase()} comments to the following code. 
+${commentStyle.label === 'Documentation Style' ? 'Use JSDoc/TSDoc style comments for functions, classes, and methods.' : ''}
+${commentStyle.label === 'Comprehensive' ? 'Explain the purpose and functionality of each significant section.' : ''}
+${commentStyle.label === 'Concise' ? 'Add minimal comments only for complex or non-obvious parts.' : ''}
 
 Code:
 \`\`\`
 ${code}
 \`\`\`
 
-Return the same code with appropriate comments added. Don't make any other changes, just add suitable comments.`;
+Return the same code with appropriate comments added.`;
                 
                 const commentedCode = await this.aiService.sendMessage(prompt);
                 
@@ -1024,56 +939,19 @@ Return the same code with appropriate comments added. Don't make any other chang
                 progress.report({ message: "Sending request to AI model..." });
                 
                 // Problem bulmak için özel prompt hazırla
-                const prompt = `Analyze the following code in detail for ${issueTypes.label.toLowerCase()}. For each issue you find:
-
-1. Specify the exact location and line range of the issue
-2. Classify the type of issue (Performance, Security, Maintenance, Design, etc.)
-3. Indicate the severity of the issue (Critical, High, Medium, Low)
-4. Technically explain why it's a problem
-5. Provide solution suggestions - both quick fix and long-term solution
-6. If possible, include an improved code example
-
-${issueTypes.label === 'Performance Issues' ? `Focus specifically on these performance issues:
-- O(n²) or worse time complexity
-- Unnecessary loops or calculations
-- Memory leaks
-- Inefficient data structures
-- Blocked operations
-- Opportunities for asynchronous processing` : ''}
-
-${issueTypes.label === 'Security Vulnerabilities' ? `Focus specifically on these security vulnerabilities:
-- Injection (SQL, XSS, command, etc.)
-- Authentication or authorization weaknesses
-- Sensitive data exposure
-- Insecure deserialization
-- Use of untrusted input without validation
-- Weak encryption implementations
-- Missing access control` : ''}
-
-${issueTypes.label === 'Code Smells' ? `Focus specifically on these code smells:
-- Code duplication (DRY violations)
-- Excessively long functions or classes
-- Overly complex conditional expressions
-- Dead code or unused variables
-- Magic numbers or strings
-- Inadequate naming
-- Violations of SOLID principles` : ''}
-
-${issueTypes.label === 'Bugs and Logic Errors' ? `Focus specifically on these errors:
-- Logic errors
-- Null/undefined references
-- Out-of-bounds access
-- Deadlock or race condition potential
-- Flawed condition checks
-- Validation deficiencies
-- Edge cases` : ''}
+                const prompt = `Please analyze this code for ${issueTypes.label.toLowerCase()} and provide detailed feedback.
+For each issue you find:
+1. Clearly identify the location and nature of the problem
+2. Explain why it's an issue
+3. Provide a specific solution or code fix
+4. Rate the severity (Critical, Major, Minor)
 
 Code to analyze:
 \`\`\`
 ${code}
 \`\`\`
 
-Structure your response in Markdown format and detail each issue under headings. Provide clear and actionable solutions for each issue.`;
+Return a comprehensive analysis with code examples of how to fix the issues.`;
                 
                 const analysis = await this.aiService.sendMessage(prompt);
                 
@@ -1097,22 +975,13 @@ Structure your response in Markdown format and detail each issue under headings.
                     // Tüm sorunları düzeltme isteği gönder
                     progress.report({ message: "Generating fixed version..." });
                     
-                    const fixPrompt = `Create an improved version of the code by fixing the issues identified in the previous analysis. When fixing, ensure that:
-
-1. All identified bugs, security vulnerabilities, and code smells are resolved
-2. Code readability and maintainability are improved
-3. Performance improvements are implemented
-4. Modern coding practices are used
-5. Overall code quality is enhanced
-6. Code functionality is preserved - same API and behavior should remain
-7. Each change targets the issue without substantially changing the existing code
-
+                    const fixPrompt = `Given the issues identified in the previous analysis, please provide a fixed version of the code with all issues resolved.
 Original code:
 \`\`\`
 ${code}
 \`\`\`
 
-Please return only the fixed code without explanations. You may leave brief comments in the code for important points.`;
+Please return only the fixed code without explanations.`;
                     
                     const fixedCode = await this.aiService.sendMessage(fixPrompt);
                     

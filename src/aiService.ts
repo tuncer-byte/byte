@@ -245,14 +245,15 @@ export class AIService {
     }
 
     /**
-     * Yerel modele istek gönderir
+     * Ollama modeline istek gönderir
      */
     private async callLocalModel(userMessage: string): Promise<string> {
-        // Yerel model endpoint'i
+        // Ollama model endpoint'i
         const config = vscode.workspace.getConfiguration('byte');
-        const endpoint = config.get<string>('local.endpoint') || 'http://localhost:8000/v1/completions';
+        const endpoint = config.get<string>('local.endpoint') || 'http://localhost:11434/api/generate';
+        const model = config.get<string>('local.model') || 'llama3';
         
-        this.log(`Yerel model isteği gönderiliyor (${endpoint})...`);
+        this.log(`Ollama isteği gönderiliyor (${endpoint}, model: ${model})...`);
         
         try {
             // Mesaj geçmişini birleştir
@@ -264,25 +265,25 @@ export class AIService {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    model: model,
                     prompt: prompt,
-                    max_tokens: 1000,
-                    temperature: 0.7
+                    stream: false
                 })
             });
             
             if (!response.ok) {
-                throw new Error(`Yerel model API Hatası: ${response.status}`);
+                throw new Error(`Ollama API Hatası: ${response.status}`);
             }
             
             const data = await response.json();
-            // API yanıt formatına göre çıkarımı uyarla
-            const assistantResponse = data.choices ? data.choices[0].text : data.response;
+            // Ollama yanıt formatına göre çıkarımı uyarla
+            const assistantResponse = data.response || "Üzgünüm, bir yanıt oluşturulamadı.";
             
-            this.log('Yerel model yanıtı alındı');
+            this.log('Ollama yanıtı alındı');
             return assistantResponse;
         } catch (error: any) {
-            this.log(`Yerel model API Hatası: ${error.message}`, true);
-            throw new Error(`Yerel model isteği başarısız: ${error.message}`);
+            this.log(`Ollama API Hatası: ${error.message}`, true);
+            throw new Error(`Ollama isteği başarısız: ${error.message}`);
         }
     }
 
@@ -290,19 +291,7 @@ export class AIService {
      * Kod açıklama istekleri için özel prompt
      */
     public async explainCode(code: string): Promise<string> {
-        const prompt = `Analyze and explain the following code in detail. Please address these points:
-1. What is the general purpose and function of the code?
-2. What is the role of each function, method, or class?
-3. Are there important algorithms or data structures? How do they work?
-4. Are there any notable coding patterns or special techniques used?
-5. What are potential areas for optimization or improvement?
-6. What are the strengths and weaknesses of the code?
-
-Make your explanations clear and comprehensive enough for both beginner and experienced developers to understand.
-
-\`\`\`
-${code}
-\`\`\``;
+        const prompt = `Aşağıdaki kodu satır satır açıkla ve ne yaptığını detaylı olarak anlat:\n\n\`\`\`\n${code}\n\`\`\``;
         return this.sendMessage(prompt);
     }
 
@@ -310,89 +299,7 @@ ${code}
      * Kod refaktör istekleri için özel prompt
      */
     public async refactorCode(code: string): Promise<string> {
-        const prompt = `Refactor the following code to make it more readable, efficient, and aligned with modern coding practices. When refactoring:
-
-1. Make changes that improve code quality (naming, structure, organization)
-2. Suggest performance and efficiency improvements
-3. Fix security vulnerabilities and bugs
-4. Reduce code duplication and apply the DRY (Don't Repeat Yourself) principle
-5. Increase adherence to SOLID principles
-6. Use modern language features (if applicable)
-7. Make changes that improve maintainability
-
-Include brief explanations about the reason and benefits of each significant change. In your response, first provide the suggested code, then a section explaining the changes.
-
-\`\`\`
-${code}
-\`\`\``;
-        return this.sendMessage(prompt);
-    }
-
-    /**
-     * Kod analizi istekleri için özel prompt
-     */
-    public async analyzeCode(code: string): Promise<string> {
-        const prompt = `Perform a deep analysis of the following code and evaluate it in these categories:
-
-1. Code Quality:
-   - Code readability and complexity
-   - Variable/function naming standards
-   - Modularity and maintainability
-   - Adherence to SOLID principles (if applicable)
-   - Code duplication (DRY principle) check
-
-2. Performance Analysis:
-   - Algorithm efficiency and time complexity
-   - Resource usage (memory, processing power)
-   - Potential performance bottlenecks
-   - Optimization suggestions
-
-3. Security Assessment:
-   - Potential security vulnerabilities
-   - Input validation gaps
-   - Authorization/authentication issues
-   - Data exposure risks
-
-4. Best Practices Compliance:
-   - Proper use of language features
-   - Use of modern programming techniques
-   - Design pattern usage and evaluation
-   - Testability
-
-5. Potential Improvements:
-   - Suggested changes and enhancements
-   - Alternative approaches
-   - Modern library or technology recommendations
-
-While conducting this analysis, also highlight the code's strengths and provide a comprehensive, balanced assessment.
-
-\`\`\`
-${code}
-\`\`\``;
-        return this.sendMessage(prompt);
-    }
-
-    /**
-     * Kod hata ayıklama istekleri için özel prompt
-     */
-    public async debugCode(code: string, errorMessage: string): Promise<string> {
-        const prompt = `There's an error in the following code with this error message:
-
-"${errorMessage}"
-
-Please:
-1. Identify and explain the exact cause of the error
-2. Show where in the code the error occurs
-3. Provide a step-by-step solution to fix the error
-4. Suggest ways to prevent similar errors in the future
-
-Errors may not just be syntax errors, but could be logical errors, performance issues, security vulnerabilities, or anti-patterns.
-
-Carefully analyze the code and provide clear, actionable steps to resolve the issue.
-
-\`\`\`
-${code}
-\`\`\``;
+        const prompt = `Aşağıdaki kodu daha okunabilir, verimli ve iyi pratiklere uygun olacak şekilde refaktör et. Açıklamalar ve iyileştirme nedenleri ekle:\n\n\`\`\`\n${code}\n\`\`\``;
         return this.sendMessage(prompt);
     }
 
@@ -404,19 +311,7 @@ ${code}
         const formattedMessages = [
             { 
                 role: 'system', 
-                content: `You are Byte, an advanced coding assistant designed to help software developers in their development processes.
-
-Remember these key capabilities:
-1. Provide well-designed, understandable, and efficient code examples.
-2. Make suggestions to ensure code is not only functional but also readable and maintainable.
-3. Carefully analyze user questions to provide responses appropriate to their experience level.
-4. Follow proper language rules and be clear and concise in your answers.
-5. Provide current information on coding standards, best practices, and security.
-6. When explaining code or suggesting improvements, provide clear examples.
-7. Break down complex questions into comprehensive responses when needed.
-8. Stay informed about modern software development methodologies, tools, and libraries.
-
-Fully understand users' questions and provide technically accurate and detailed answers. Ask for additional information when queries are ambiguous. Always recommend the most up-to-date and best coding practices.`
+                content: 'Sen Byte adlı bir kodlama asistanısın. Kullanıcıların programlama sorularına yardımcı ol. Yanıtlarında Türkçe dil kurallarına uy ve net, anlaşılır olarak cevap ver. Kod örnekleri ve açıklamalar ekleyebilirsin.'
             }
         ];
         
@@ -437,28 +332,16 @@ Fully understand users' questions and provide technically accurate and detailed 
      */
     private formatMessagesForGemini(): string {
         // Sistem yönergeleri
-        let result = `You are Byte, an advanced coding assistant designed to help software developers in their development processes.
-
-Remember these key capabilities:
-1. Provide well-designed, understandable, and efficient code examples.
-2. Make suggestions to ensure code is not only functional but also readable and maintainable.
-3. Carefully analyze user questions to provide responses appropriate to their experience level.
-4. Follow proper language rules and be clear and concise in your answers.
-5. Provide current information on coding standards, best practices, and security.
-6. When explaining code or suggesting improvements, provide clear examples.
-7. Break down complex questions into comprehensive responses when needed.
-8. Stay informed about modern software development methodologies, tools, and libraries.
-
-Fully understand users' questions and provide technically accurate and detailed answers. Ask for additional information when queries are ambiguous. Always recommend the most up-to-date and best coding practices.\n\n`;
+        let result = "Sen Byte adlı bir kodlama asistanısın. Kullanıcıların programlama sorularına yardımcı ol. Yanıtlarında Türkçe dil kurallarına uy ve net, anlaşılır olarak cevap ver.\n\n";
         
         // Son 5 mesajı ekle (limit)
         const recentMessages = this.messages.slice(-5);
         
         recentMessages.forEach(message => {
             if (message.role === 'user') {
-                result += `User: ${message.content}\n\n`;
+                result += `Kullanıcı: ${message.content}\n\n`;
             } else {
-                result += `Assistant: ${message.content}\n\n`;
+                result += `Asistan: ${message.content}\n\n`;
             }
         });
         
@@ -466,32 +349,20 @@ Fully understand users' questions and provide technically accurate and detailed 
     }
 
     /**
-     * Yerel model için mesaj formatına dönüştürme
+     * Ollama model için mesaj formatına dönüştürme
      */
     private formatMessagesForLocal(): string {
         // Sistem yönergeleri
-        let result = `You are Byte, an advanced coding assistant designed to help software developers in their development processes.
-
-Remember these key capabilities:
-1. Provide well-designed, understandable, and efficient code examples.
-2. Make suggestions to ensure code is not only functional but also readable and maintainable.
-3. Carefully analyze user questions to provide responses appropriate to their experience level.
-4. Follow proper language rules and be clear and concise in your answers.
-5. Provide current information on coding standards, best practices, and security.
-6. When explaining code or suggesting improvements, provide clear examples.
-7. Break down complex questions into comprehensive responses when needed.
-8. Stay informed about modern software development methodologies, tools, and libraries.
-
-Fully understand users' questions and provide technically accurate and detailed answers. Ask for additional information when queries are ambiguous. Always recommend the most up-to-date and best coding practices.\n\n`;
+        let result = "Sen Byte adlı bir kodlama asistanısın. Kullanıcıların programlama sorularına yardımcı ol. Yanıtlarında Türkçe dil kurallarına uy ve net, anlaşılır olarak cevap ver.\n\n";
         
         // Son 5 mesajı ekle (limit)
         const recentMessages = this.messages.slice(-5);
         
         recentMessages.forEach(message => {
             if (message.role === 'user') {
-                result += `User: ${message.content}\n\n`;
+                result += `Kullanıcı: ${message.content}\n\n`;
             } else {
-                result += `Assistant: ${message.content}\n\n`;
+                result += `Asistan: ${message.content}\n\n`;
             }
         });
         
@@ -559,6 +430,37 @@ Fully understand users' questions and provide technically accurate and detailed 
             console.error(logMessage);
         } else {
             console.log(logMessage);
+        }
+    }
+
+    /**
+     * Mesaj geçmişine göre AI yanıtı alır
+     * @param messages Mesaj geçmişi
+     * @returns AI yanıtı
+     */
+    public async getResponse(messages: {role: string, content: string}[]): Promise<string> {
+        try {
+            // Son kullanıcı mesajını al
+            const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
+            
+            // Mevcut mesaj geçmişinin bir kopyasını oluştur
+            const currentMessages = this.getMessages();
+            
+            // Sistem mesajını ilet
+            const systemMessage = messages.find(m => m.role === 'system')?.content;
+            if (systemMessage) {
+                currentMessages.unshift({
+                    role: 'system',
+                    content: systemMessage
+                });
+            }
+            
+            // Yanıtı al
+            const response = await this.sendMessage(lastUserMessage);
+            return response;
+        } catch (error: any) {
+            console.error('AI yanıtı alınamadı:', error);
+            throw new Error(`AI yanıtı alınırken hata oluştu: ${error.message}`);
         }
     }
 }

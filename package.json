@@ -1,8 +1,18 @@
 {
   "name": "byte",
-  "displayName": "Byte",
+  "displayName": "Byte AI Assistant",
   "description": "AI destekli kodlama asistanı",
   "version": "0.0.1",
+  "publisher": "tuncer-byte", 
+  "author": {
+    "name": "Tuncer Bagcababasi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tuncer-byte/byte"
+  },
+  "license": "MIT",
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.98.0"
   },
@@ -22,7 +32,7 @@
         {
           "id": "ai-assistant",
           "title": "Byte AI Asistanı",
-          "icon": "media/icon.svg"
+          "icon": "media/icon.png"
         }
       ]
     },
@@ -71,6 +81,41 @@
       {
         "command": "byte.findIssues",
         "title": "Byte: Analyze Code Issues"
+      },
+      {
+        "command": "byte.codeChat",
+        "title": "Byte: Kod Bloğu ile Sohbet Et",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "byte.inlineCodeAnalysis",
+        "title": "Byte: Kodu Analiz Et",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "byte.askQuestionAboutCode",
+        "title": "Byte: Kod Hakkında Soru Sor",
+        "icon": "$(question)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "byte.codeChat",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "byte.inlineCodeAnalysis",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "byte.askQuestionAboutCode",
+        "key": "ctrl+alt+q",
+        "mac": "cmd+alt+q",
+        "when": "editorHasSelection"
       }
     ],
     "menus": {
@@ -83,32 +128,44 @@
       ],
       "byte.menu": [
         {
-          "command": "byte.explainCode",
+          "command": "byte.codeChat",
           "group": "z_byte@1"
         },
         {
-          "command": "byte.refactorCode",
+          "command": "byte.inlineCodeAnalysis",
           "group": "z_byte@2"
         },
         {
-          "command": "byte.generateDocs",
+          "command": "byte.askQuestionAboutCode",
           "group": "z_byte@3"
         },
         {
-          "command": "byte.optimizeCode",
+          "command": "byte.explainCode",
           "group": "z_byte@4"
         },
         {
-          "command": "byte.generateTests",
+          "command": "byte.refactorCode",
           "group": "z_byte@5"
         },
         {
-          "command": "byte.addComments",
+          "command": "byte.generateDocs",
           "group": "z_byte@6"
         },
         {
-          "command": "byte.findIssues",
+          "command": "byte.optimizeCode", 
           "group": "z_byte@7"
+        },
+        {
+          "command": "byte.generateTests",
+          "group": "z_byte@8"
+        },
+        {
+          "command": "byte.addComments",
+          "group": "z_byte@9"
+        },
+        {
+          "command": "byte.findIssues",
+          "group": "z_byte@10"
         }
       ]
     },
@@ -143,8 +200,13 @@
         },
         "byte.local.endpoint": {
           "type": "string",
-          "default": "http://localhost:8000/v1/completions",
-          "description": "Yerel AI servisinizin uç noktası"
+          "default": "http://localhost:11434/api/generate",
+          "description": "Ollama servisinizin uç noktası"
+        },
+        "byte.local.model": {
+          "type": "string",
+          "default": "llama3",
+          "description": "Ollama'da kullanılacak olan model adı (llama3, codellama, mistral vb.)"
         }
       }
     }

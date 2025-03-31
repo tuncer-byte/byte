@@ -270,14 +270,27 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                 
             case AIProvider.Local:
                 const localEndpoint = await vscode.window.showInputBox({
-                    prompt: 'Yerel AI servis endpoint URL\'inizi girin',
-                    value: vscode.workspace.getConfiguration('byte').get<string>('local.endpoint') || 'http://localhost:8000/v1/completions',
+                    prompt: 'Ollama servis endpoint URL\'inizi girin',
+                    value: vscode.workspace.getConfiguration('byte').get<string>('local.endpoint') || 'http://localhost:11434/api/generate',
                     ignoreFocusOut: true
                 });
                 
                 if (localEndpoint) {
                     await vscode.workspace.getConfiguration('byte').update('local.endpoint', localEndpoint, vscode.ConfigurationTarget.Global);
-                    vscode.window.showInformationMessage('Yerel endpoint başarıyla kaydedildi.');
+                    
+                    // Ollama model adını da soralım
+                    const ollamaModel = await vscode.window.showInputBox({
+                        prompt: 'Kullanmak istediğiniz Ollama model adını girin',
+                        value: vscode.workspace.getConfiguration('byte').get<string>('local.model') || 'llama3',
+                        placeHolder: 'llama3, codellama, mistral',
+                        ignoreFocusOut: true
+                    });
+                    
+                    if (ollamaModel) {
+                        await vscode.workspace.getConfiguration('byte').update('local.model', ollamaModel, vscode.ConfigurationTarget.Global);
+                    }
+                    
+                    vscode.window.showInformationMessage('Ollama yapılandırması başarıyla kaydedildi.');
                 }
                 break;
         }
