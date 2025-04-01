@@ -14,13 +14,49 @@
     const sendFileButton = document.getElementById('sendFileButton');
     const addFileButton = document.getElementById('addFileButton');
     
+    // Ayarlar Modalı Elementleri
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const cancelSettingsBtn = document.getElementById('cancelSettingsBtn');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const settingsStatus = document.getElementById('settingsStatus');
+    const defaultProviderSelect = document.getElementById('defaultProvider');
+    
+    // API Anahtarı Giriş Alanları
+    const openaiApiKeyInput = document.getElementById('openaiApiKey');
+    const geminiApiKeyInput = document.getElementById('geminiApiKey');
+    const localEndpointInput = document.getElementById('localEndpoint');
+    const openaiModelSelect = document.getElementById('openaiModel');
+    const geminiModelSelect = document.getElementById('geminiModel');
+    const localModelSelect = document.getElementById('localModel');
+    const saveHistoryCheckbox = document.getElementById('saveHistory');
+    
+    // Şifre Göster/Gizle Düğmeleri
+    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+    
     // Mesajları saklamak için durum
     let state = vscode.getState() || { 
         messages: [],
         agentEnabled: true,
         currentFile: 'package.json',
         currentFilePath: '',
-        recentFiles: []
+        recentFiles: [],
+        settings: {
+            defaultProvider: 'openai',
+            openai: {
+                apiKey: '',
+                model: 'gpt-3.5-turbo'
+            },
+            gemini: {
+                apiKey: '',
+                model: 'gemini-1.5-flash'
+            },
+            local: {
+                endpoint: 'http://localhost:11434/api/generate',
+                model: 'llama3'
+            },
+            saveHistory: true
+        }
     };
     
     // Sayfa yüklendiğinde VS Code'a hazır olduğumuzu bildir
@@ -36,6 +72,9 @@
         if (state.currentFile) {
             currentFileElement.textContent = state.currentFile;
         }
+        
+        // Kayıtlı ayarları yükle
+        loadSettings();
     });
     
     // Agent toggle değişikliği
@@ -49,6 +88,162 @@
             enabled: agentToggle.checked
         });
     });
+    
+    // Şifre göster/gizle butonları için olay dinleyicisi
+    togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const inputId = button.getAttribute('data-for');
+            const inputElement = document.getElementById(inputId);
+            
+            if (inputElement.type === 'password') {
+                inputElement.type = 'text';
+                button.classList.add('show');
+            } else {
+                inputElement.type = 'password';
+                button.classList.remove('show');
+            }
+        });
+    });
+    
+    // Ayarlar modalını aç
+    configureButton.addEventListener('click', () => {
+        openSettingsModal();
+    });
+    
+    // Ayarlar modalını kapat
+    function closeSettingsModal() {
+        settingsModal.classList.remove('active');
+        setTimeout(() => {
+            settingsModal.style.display = 'none';
+        }, 300);
+    }
+    
+    // Ayarlar modalını aç
+    function openSettingsModal() {
+        settingsModal.style.display = 'flex';
+        setTimeout(() => {
+            settingsModal.classList.add('active');
+        }, 10);
+        
+        // Mevcut ayarları form alanlarına doldur
+        fillSettingsForm();
+    }
+    
+    // Ayarlar formuna mevcut ayarları doldur
+    function fillSettingsForm() {
+        // Genel ayarlar
+        defaultProviderSelect.value = state.settings.defaultProvider;
+        saveHistoryCheckbox.checked = state.settings.saveHistory;
+        
+        // OpenAI ayarları
+        openaiApiKeyInput.value = state.settings.openai.apiKey || '';
+        openaiModelSelect.value = state.settings.openai.model || 'gpt-3.5-turbo';
+        
+        // Gemini ayarları
+        geminiApiKeyInput.value = state.settings.gemini.apiKey || '';
+        geminiModelSelect.value = state.settings.gemini.model || 'gemini-1.5-flash';
+        
+        // Yerel ayarlar
+        localEndpointInput.value = state.settings.local.endpoint || 'http://localhost:11434/api/generate';
+        localModelSelect.value = state.settings.local.model || 'llama3';
+        
+        // API anahtarı durumlarını göster
+        updateProviderStatus('openai', !!state.settings.openai.apiKey);
+        updateProviderStatus('gemini', !!state.settings.gemini.apiKey);
+    }
+    
+    // Sağlayıcı durum bilgisini güncelle
+    function updateProviderStatus(provider, hasApiKey) {
+        const statusElement = document.querySelector(`#${provider}Settings .provider-status`);
+        if (statusElement) {
+            if (hasApiKey) {
+                statusElement.textContent = 'Yapılandırıldı';
+                statusElement.classList.add('configured');
+            } else {
+                statusElement.textContent = 'API Anahtarı Gerekli';
+                statusElement.classList.remove('configured');
+            }
+        }
+    }
+    
+    // Kayıtlı ayarları yükle
+    function loadSettings() {
+        // VS Code'dan ayarları iste
+        vscode.postMessage({ type: 'getSettings' });
+    }
+    
+    // Ayarları kaydet
+    function saveSettings() {
+        // Form verilerini topla
+        const settings = {
+            defaultProvider: defaultProviderSelect.value,
+            openai: {
+                apiKey: openaiApiKeyInput.value,
+                model: openaiModelSelect.value
+            },
+            gemini: {
+                apiKey: geminiApiKeyInput.value,
+                model: geminiModelSelect.value
+            },
+            local: {
+                endpoint: localEndpointInput.value,
+                model: localModelSelect.value
+            },
+            saveHistory: saveHistoryCheckbox.checked
+        };
+        
+        // Ayarları state'e kaydet
+        state.settings = settings;
+        vscode.setState(state);
+        
+        // Ayarları VS Code'a gönder
+        vscode.postMessage({
+            type: 'saveSettings',
+            settings: settings
+        });
+        
+        // Kaydetme öncesi UI'yı güncelle
+        settingsStatus.textContent = 'Ayarlar kaydediliyor...';
+        settingsStatus.classList.remove('error');
+        settingsStatus.classList.remove('success');
+        settingsStatus.classList.add('show');
+        
+        // UI seçimini güncelle
+        aiProviderSelect.value = settings.defaultProvider;
+    }
+    
+    // Ayarlar başarıyla kaydedildiğinde
+    function handleSettingsSaved() {
+        // Başarılı mesajı göster
+        settingsStatus.textContent = 'Ayarlar başarıyla kaydedildi!';
+        settingsStatus.classList.add('success');
+        
+        // 2 saniye sonra modalı kapat
+        setTimeout(() => {
+            closeSettingsModal();
+            settingsStatus.textContent = '';
+            settingsStatus.classList.remove('show');
+        }, 2000);
+    }
+    
+    // Ayarlar kaydedilirken hata oluştuğunda
+    function handleSettingsError(errorMessage) {
+        // Hata mesajı göster
+        settingsStatus.textContent = errorMessage;
+        settingsStatus.classList.remove('success');
+        settingsStatus.classList.add('error');
+        settingsStatus.classList.add('show');
+        
+        // 5 saniye sonra mesajı gizle
+        setTimeout(() => {
+            settingsStatus.classList.remove('show');
+        }, 5000);
+    }
+    
+    // Ayarlar modalı butonları
+    closeSettingsBtn.addEventListener('click', closeSettingsModal);
+    cancelSettingsBtn.addEventListener('click', closeSettingsModal);
+    saveSettingsBtn.addEventListener('click', saveSettings);
     
     // Önceki mesajları yükle
     function loadMessages() {
@@ -263,14 +458,6 @@
         });
     });
     
-    // Yapılandırma butonu
-    configureButton.addEventListener('click', () => {
-        vscode.postMessage({
-            type: 'configureAI',
-            provider: aiProviderSelect.value
-        });
-    });
-    
     // Yeni chat başlatma butonu
     document.querySelector('.new-chat').addEventListener('click', () => {
         vscode.postMessage({ type: 'clearChat' });
@@ -302,15 +489,18 @@
         
         switch (message.type) {
             case 'response':
-                // Yapay zeka yanıtını ekle
+                // Yapay zeka yanıtını işle
+                console.log('AI response received');
+                
+                // Yükleniyor göstergesini gizle
+                loadingIndicator.classList.remove('active');
+                
+                // Mesajı görüntüle
                 appendMessage('assistant', message.content);
                 
-                // Durumu güncelle
-                state.messages.push({ role: 'assistant', content: message.content });
-                vscode.setState(state);
+                // Mesaj state'e kaydedildiyse, state'i güncelle
+                // (Mesaj state'e VS Code tarafından kaydediliyor, state güncellemesine gerek yok)
                 
-                // Yükleniyor göstergesini kapat
-                loadingIndicator.style.display = 'none';
                 break;
                 
             case 'userMessage':
@@ -328,51 +518,71 @@
                 break;
                 
             case 'providerChanged':
-                // AI sağlayıcı değiştiğinde seçiciyi güncelle
+                // AI sağlayıcı değiştiğinde UI'yı güncelle
+                console.log('Provider changed to:', message.provider);
                 aiProviderSelect.value = message.provider;
                 break;
                 
             case 'error':
-                // Hata mesajını göster
-                appendMessage('assistant', `⚠️ Hata: ${message.content}`);
-                loadingIndicator.style.display = 'none';
+                // Hata mesajını işle
+                console.error('Error from extension:', message.content);
+                
+                // Yükleniyor göstergesini gizle
+                loadingIndicator.classList.remove('active');
+                
+                // Hata mesajını görüntüle
+                const errorDiv = document.createElement('div');
+                errorDiv.classList.add('error-message');
+                errorDiv.textContent = `Hata: ${message.content}`;
+                messagesContainer.appendChild(errorDiv);
+                
+                // Otomatik kaydır
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 break;
                 
             case 'init':
-                // Yapılandırma bilgilerini al
-                if (message.provider) {
-                    aiProviderSelect.value = message.provider;
-                }
+                // WebView başlangıç durumu
+                console.log('WebView init received:', message);
                 
-                // Önceki mesajları yükle
+                // Mesaj geçmişini yükle
                 if (message.messages) {
                     state.messages = message.messages;
-                    vscode.setState(state);
+                    
+                    // Mevcut mesajları temizle ve yeni mesajları ekle
                     messagesContainer.innerHTML = '';
                     loadMessages();
                 }
                 
-                // Agent durumunu al
+                // Agent durumunu ayarla
                 if (message.agentEnabled !== undefined) {
                     state.agentEnabled = message.agentEnabled;
                     agentToggle.checked = message.agentEnabled;
-                    vscode.setState(state);
                 }
                 
-                // Mevcut dosya bilgisini al
+                // Mevcut dosya bilgisini ayarla
                 if (message.currentFile) {
                     state.currentFile = message.currentFile;
                     currentFileElement.textContent = message.currentFile;
-                    vscode.setState(state);
                 }
+                
+                // Provider seçimini ayarla
+                if (message.provider) {
+                    aiProviderSelect.value = message.provider;
+                }
+                
+                // State'i güncelle
+                vscode.setState(state);
                 break;
                 
             case 'currentFileChanged':
-                // Mevcut açık dosya değiştiğinde bilgiyi güncelle
+                // Mevcut dosya değiştiğinde UI'yı güncelle
                 if (message.filePath) {
-                    const fileName = message.filePath.split('/').pop();
+                    const fileName = message.filePath.split(/[\\/]/).pop() || '';
                     state.currentFile = fileName;
+                    state.currentFilePath = message.filePath;
                     currentFileElement.textContent = fileName;
+                    
+                    // State'i güncelle
                     vscode.setState(state);
                 }
                 break;
@@ -470,6 +680,34 @@
                     document.body.style.minWidth = `${message.width}px`;
                     // Container genişliğini ayarla
                     document.querySelector('.chat-container').style.minWidth = `${message.width}px`;
+                }
+                break;
+                
+            case 'settingsSaved':
+                // Ayarlar başarıyla kaydedilmiş
+                if (message.success) {
+                    handleSettingsSaved();
+                }
+                break;
+                
+            case 'settingsError':
+                // Ayarlar kaydedilirken hata
+                handleSettingsError(message.error);
+                break;
+                
+            case 'settingsUpdated':
+                // Ayarlar güncellendiğinde state'i güncelle
+                if (message.settings) {
+                    state.settings = message.settings;
+                    vscode.setState(state);
+                    
+                    // UI'yı güncelle
+                    fillSettingsForm();
+                    aiProviderSelect.value = message.settings.defaultProvider;
+                    
+                    // API anahtarı durumu güncelle
+                    updateProviderStatus('openai', !!message.settings.openai.apiKey);
+                    updateProviderStatus('gemini', !!message.settings.gemini.apiKey);
                 }
                 break;
         }

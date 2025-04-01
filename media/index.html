@@ -130,6 +130,159 @@
             </div>
         </div>
     </div>
+
+    <!-- Ayarlar Modal Dialog -->
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>Ayarlar</h2>
+                <button id="closeSettingsBtn" class="close-button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="settings-body">
+                <div class="settings-section">
+                    <h3>AI Sağlayıcı Ayarları</h3>
+                    
+                    <div class="settings-group" id="openaiSettings">
+                        <div class="settings-group-header">
+                            <div class="provider-icon openai-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+                                    <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8ZM12 14C10.9 14 10 13.1 10 12C10 10.9 10.9 10 12 10C13.1 10 14 10.9 14 12C14 13.1 13.1 14 12 14Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="provider-info">
+                                <h4>OpenAI</h4>
+                                <span class="provider-status">API Anahtarı Gerekli</span>
+                            </div>
+                        </div>
+                        <div class="settings-group-body">
+                            <div class="settings-field">
+                                <label for="openaiApiKey">API Anahtarı</label>
+                                <div class="api-key-input">
+                                    <input type="password" id="openaiApiKey" placeholder="OpenAI API anahtarınızı girin">
+                                    <button class="toggle-password" data-for="openaiApiKey">
+                                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
+                                        </svg>
+                                        <svg class="eye-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" fill="currentColor"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span class="info-tip">API anahtarı güvenli bir şekilde saklanacaktır</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="openaiModel">Model</label>
+                                <select id="openaiModel">
+                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                    <option value="gpt-4">GPT-4</option>
+                                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group" id="geminiSettings">
+                        <div class="settings-group-header">
+                            <div class="provider-icon gemini-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.5 8.65L14.08 14.5L12.17 13.5L13.08 11H10.92L11.83 13.5L9.92 14.5L7.5 8.65L9.92 7.5L11.08 10.42L12.92 10.42L14.08 7.5L16.5 8.65Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="provider-info">
+                                <h4>Google Gemini</h4>
+                                <span class="provider-status">API Anahtarı Gerekli</span>
+                            </div>
+                        </div>
+                        <div class="settings-group-body">
+                            <div class="settings-field">
+                                <label for="geminiApiKey">API Anahtarı</label>
+                                <div class="api-key-input">
+                                    <input type="password" id="geminiApiKey" placeholder="Google Gemini API anahtarınızı girin">
+                                    <button class="toggle-password" data-for="geminiApiKey">
+                                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
+                                        </svg>
+                                        <svg class="eye-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" fill="currentColor"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span class="info-tip">API anahtarı güvenli bir şekilde saklanacaktır</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="geminiModel">Model</label>
+                                <select id="geminiModel">
+                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group" id="localSettings">
+                        <div class="settings-group-header">
+                            <div class="provider-icon local-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.31 11.14C10.54 10.69 9.97 10.2 9.97 9.47C9.97 8.63 10.76 8.04 12.07 8.04C13.45 8.04 13.97 8.7 14.06 9.58H15.94C15.84 8.27 15.03 7.11 13.36 6.73V5H10.79V6.7C9.34 7.01 8.29 7.99 8.29 9.49C8.29 11.29 9.71 12.19 11.91 12.71C13.9 13.19 14.25 13.86 14.25 14.58C14.25 15.11 13.88 15.97 12.08 15.97C10.44 15.97 9.75 15.26 9.61 14.41H7.74C7.89 15.95 9.31 16.99 10.78 17.28V19H13.35V17.3C14.81 17.02 15.93 16.15 15.93 14.56C15.93 12.36 14.08 11.59 12.31 11.14Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="provider-info">
+                                <h4>Ollama (Yerel)</h4>
+                                <span class="provider-status">Bağlantı Ayarları</span>
+                            </div>
+                        </div>
+                        <div class="settings-group-body">
+                            <div class="settings-field">
+                                <label for="localEndpoint">Endpoint URL</label>
+                                <input type="text" id="localEndpoint" placeholder="http://localhost:11434/api/generate">
+                                <span class="info-tip">Ollama API endpoint adresi</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="localModel">Model</label>
+                                <select id="localModel">
+                                    <option value="llama3">Llama 3</option>
+                                    <option value="codellama">CodeLlama</option>
+                                    <option value="mistral">Mistral</option>
+                                    <option value="phi">Phi</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Genel Ayarlar</h3>
+                    <div class="settings-field">
+                        <label for="defaultProvider">Varsayılan AI Sağlayıcısı</label>
+                        <select id="defaultProvider">
+                            <option value="openai">OpenAI</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="local">Ollama (Yerel)</option>
+                        </select>
+                    </div>
+                    <div class="settings-field">
+                        <div class="checkbox-field">
+                            <input type="checkbox" id="saveHistory" checked>
+                            <label for="saveHistory">Sohbet geçmişini kaydet</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <div class="settings-status" id="settingsStatus"></div>
+                <div class="settings-actions">
+                    <button id="saveSettingsBtn" class="primary-button">Kaydet</button>
+                    <button id="cancelSettingsBtn" class="secondary-button">İptal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="{{scriptUri}}"></script>
 </body>
 </html>

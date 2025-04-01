@@ -1,9 +1,9 @@
 {
   "name": "byte",
   "displayName": "Byte AI Assistant",
-  "description": "AI-powered coding assistant",
+  "description": "AI-powered coding assistant that helps developers write, analyze, refactor, and optimize code. Features include code explanation, documentation generation, unit test creation, and intelligent suggestions to improve code quality and productivity.",
   "version": "0.0.1",
-  "publisher": "tuncer-byte", 
+  "publisher": "byte", 
   "author": {
     "name": "Tuncer Bagcababasi"
   },
@@ -178,10 +178,29 @@
           "default": "",
           "description": "OpenAI API key (it's recommended to store in Secret Storage for security)"
         },
+        "byte.openai.model": {
+          "type": "string",
+          "enum": [
+            "gpt-3.5-turbo",
+            "gpt-4",
+            "gpt-4-turbo"
+          ],
+          "default": "gpt-3.5-turbo",
+          "description": "OpenAI model to use"
+        },
         "byte.gemini.apiKey": {
           "type": "string",
           "default": "",
           "description": "Google Gemini API key"
+        },
+        "byte.gemini.model": {
+          "type": "string",
+          "enum": [
+            "gemini-1.5-flash",
+            "gemini-1.5-pro"
+          ],
+          "default": "gemini-1.5-flash",
+          "description": "Google Gemini model to use"
         },
         "byte.local.endpoint": {
           "type": "string",
@@ -192,6 +211,11 @@
           "type": "string",
           "default": "llama3",
           "description": "Model name to use in Ollama (llama3, codellama, mistral, etc.)"
+        },
+        "byte.saveHistory": {
+          "type": "boolean",
+          "default": true,
+          "description": "Save chat history between sessions"
         }
       }
     }

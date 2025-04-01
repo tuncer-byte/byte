@@ -201,30 +201,29 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                 }
                 break;
                 
-            case 'configureAI':
-                // Kullanıcı AI sağlayıcısını yapılandırmak istediğinde
-                this._configureAIProvider(message.provider);
-                break;
-                
             case 'agentStatusChanged':
-                // Agent durumu değiştiğinde
+                // Agent özelliğinin durumunu güncelle
                 this._agentEnabled = message.enabled;
-                // Burada agent durumuna göre ek işlemler yapılabilir
-                break;
-
-            case 'sendFileToAI':
-                // Dosya içeriğini AI'ya gönder
-                await this._sendFileToAI(message.filePath);
                 break;
                 
-            case 'openFileSelector':
-                // Dosya seçici diyaloğu aç
+            case 'sendFile':
+                // Mevcut dosyayı AI'ya gönder
+                await this._sendFileToAI('');
+                break;
+                
+            case 'selectFile':
+                // Dosya seçici diyaloğunu aç
                 await this._openFileSelector();
                 break;
 
-            case 'clearChat':
-                // Sohbeti temizle
-                await this._clearChat();
+            case 'getSettings':
+                // WebView'e mevcut ayarları gönder
+                await this._sendSettingsToWebView();
+                break;
+                
+            case 'saveSettings':
+                // Ayarları kaydet ve güncelle
+                await this._saveSettings(message.settings);
                 break;
         }
     }
@@ -999,6 +998,158 @@ Example: \`/explain function sum(a, b) { return a + b; }\`
                 return 'RSpec';
             default:
                 return 'appropriate';
+        }
+    }
+
+    /**
+     * WebView'e mevcut ayarları gönderir
+     */
+    private async _sendSettingsToWebView() {
+        try {
+            // API anahtarlarını al (güvenli depolama alanından)
+            const openaiApiKey = await this._aiService.getOpenAIApiKey();
+            const geminiApiKey = await this._aiService.getGeminiApiKey();
+            
+            // Yapılandırma ayarlarını al
+            const config = vscode.workspace.getConfiguration('byte');
+            const defaultProvider = config.get<string>('provider') || 'openai';
+            const openaiModel = config.get<string>('openai.model') || 'gpt-3.5-turbo';
+            const geminiModel = config.get<string>('gemini.model') || 'gemini-1.5-flash';
+            const localEndpoint = config.get<string>('local.endpoint') || 'http://localhost:11434/api/generate';
+            const localModel = config.get<string>('local.model') || 'llama3';
+            const saveHistory = config.get<boolean>('saveHistory') !== false;
+            
+            // Ayarları bir nesne olarak yapılandır
+            const settings = {
+                defaultProvider,
+                openai: {
+                    apiKey: openaiApiKey || '',
+                    model: openaiModel
+                },
+                gemini: {
+                    apiKey: geminiApiKey || '',
+                    model: geminiModel
+                },
+                local: {
+                    endpoint: localEndpoint,
+                    model: localModel
+                },
+                saveHistory
+            };
+            
+            // WebView'e gönder
+            if (this._view) {
+                this._view.webview.postMessage({
+                    type: 'settingsUpdated',
+                    settings
+                });
+            }
+        } catch (error: any) {
+            console.error('Ayarlar yüklenirken hata oluştu:', error);
+            // Hata durumunda WebView'e bildir
+            if (this._view) {
+                this._view.webview.postMessage({
+                    type: 'error',
+                    content: `Ayarlar yüklenirken hata oluştu: ${error.message}`
+                });
+            }
+        }
+    }
+
+    /**
+     * WebView'den gelen ayarları kaydeder
+     */
+    private async _saveSettings(settings: any) {
+        try {
+            const config = vscode.workspace.getConfiguration('byte');
+            
+            try {
+                // Varsayılan sağlayıcıyı kaydet
+                await config.update('provider', settings.defaultProvider, vscode.ConfigurationTarget.Global);
+            } catch (err: any) {
+                console.error('Varsayılan sağlayıcı kaydedilirken hata oluştu:', err);
+                this._sendSettingsError(`Varsayılan sağlayıcı ayarlanamadı: ${err.message}`);
+                return;
+            }
+            
+            // OpenAI API anahtarını güvenli alana kaydet
+            if (settings.openai.apiKey) {
+                try {
+                    await this._aiService.setOpenAIApiKey(settings.openai.apiKey);
+                } catch (err: any) {
+                    console.error('OpenAI API anahtarı kaydedilirken hata oluştu:', err);
+                    this._sendSettingsError(`OpenAI API anahtarı kaydedilemedi: ${err.message}`);
+                    return;
+                }
+            }
+            
+            // Gemini API anahtarını güvenli alana kaydet
+            if (settings.gemini.apiKey) {
+                try {
+                    await this._aiService.setGeminiApiKey(settings.gemini.apiKey);
+                } catch (err: any) {
+                    console.error('Gemini API anahtarı kaydedilirken hata oluştu:', err);
+                    this._sendSettingsError(`Gemini API anahtarı kaydedilemedi: ${err.message}`);
+                    return;
+                }
+            }
+            
+            // Model ayarlarını ayrı ayrı kaydet ve hata kontrolü yap
+            try {
+                await config.update('openai.model', settings.openai.model, vscode.ConfigurationTarget.Global);
+            } catch (err: any) {
+                // Model ayarını kaydetmeye devam eder ama kullanıcıyı bilgilendiririz
+                console.warn('openai.model ayarı kaydedilemedi, devam ediliyor', err);
+            }
+            
+            try {
+                await config.update('gemini.model', settings.gemini.model, vscode.ConfigurationTarget.Global);
+            } catch (err: any) {
+                console.warn('gemini.model ayarı kaydedilemedi, devam ediliyor', err);
+            }
+            
+            // Yerel API ayarlarını kaydet
+            try {
+                await config.update('local.endpoint', settings.local.endpoint, vscode.ConfigurationTarget.Global);
+                await config.update('local.model', settings.local.model, vscode.ConfigurationTarget.Global);
+            } catch (err: any) {
+                console.warn('Yerel model ayarları kaydedilemedi, devam ediliyor', err);
+            }
+            
+            // Geçmiş kaydetme ayarını güncelle
+            try {
+                await config.update('saveHistory', settings.saveHistory, vscode.ConfigurationTarget.Global);
+            } catch (err: any) {
+                console.warn('saveHistory ayarı kaydedilemedi, devam ediliyor', err);
+            }
+            
+            // Başarılı mesajını WebView'e gönder
+            if (this._view) {
+                this._view.webview.postMessage({
+                    type: 'settingsSaved',
+                    success: true
+                });
+            }
+            
+            // Sağlayıcı değiştiyse, AI servisini de güncelle
+            if (settings.defaultProvider !== this._aiService.getProvider()) {
+                this._aiService.setProvider(settings.defaultProvider as AIProvider);
+            }
+        } catch (error: any) {
+            console.error('Ayarlar kaydedilirken genel hata oluştu:', error);
+            this._sendSettingsError(`Ayarlar kaydedilirken hata oluştu: ${error.message}`);
+        }
+    }
+
+    /**
+     * Ayar hatası mesajını WebView'e gönderir
+     */
+    private _sendSettingsError(errorMessage: string) {
+        if (this._view) {
+            this._view.webview.postMessage({
+                type: 'settingsError',
+                error: errorMessage
+            });
         }
     }
 }

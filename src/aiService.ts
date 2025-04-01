@@ -372,7 +372,7 @@ export class AIService {
     /**
      * OpenAI API anahtarını güvenli depodan alır
      */
-    private async getOpenAIApiKey(): Promise<string | undefined> {
+    public async getOpenAIApiKey(): Promise<string | undefined> {
         // Önce secret storage'dan anahtarı almayı dene
         let apiKey = await this.context.secrets.get('openai-api-key');
         
@@ -388,7 +388,7 @@ export class AIService {
     /**
      * Google Gemini API anahtarını güvenli depodan alır
      */
-    private async getGeminiApiKey(): Promise<string | undefined> {
+    public async getGeminiApiKey(): Promise<string | undefined> {
         // Önce secret storage'dan anahtarı almayı dene
         let apiKey = await this.context.secrets.get('gemini-api-key');
         
