@@ -12,6 +12,7 @@
     const currentFileElement = document.getElementById('currentFile');
     const fileContextElement = document.getElementById('fileContext');
     const agentToggle = document.getElementById('agentToggle');
+    const newChatButton = document.querySelector('.new-chat');
     
     // Ayarlar Modalı Elementleri
     const settingsModal = document.getElementById('settingsModal');
@@ -455,7 +456,7 @@
             state.messages.push({ role: 'user', content: message });
             
             // Yükleniyor göstergesini aç
-            loadingIndicator.style.display = 'block';
+            loadingIndicator.classList.add('active');
             
             // VS Code'a gönder
             vscode.postMessage({
@@ -498,9 +499,81 @@
         });
     });
     
-    // Yeni chat başlatma butonu
-    document.querySelector('.new-chat').addEventListener('click', () => {
-        vscode.postMessage({ type: 'clearChat' });
+    // New Chat butonu için event listener
+    newChatButton.addEventListener('click', () => {
+        // Mesajları temizle
+        messagesContainer.innerHTML = '';
+        
+        // Hoşgeldin mesajını göster
+        const welcomeMessage = document.createElement('div');
+        welcomeMessage.className = 'welcome-message';
+        welcomeMessage.innerHTML = `
+            <div class="assistant-message">
+                <div class="message-content">
+                    <div class="welcome-header">
+                        <h2>Welcome to Byte</h2>
+                        <div class="welcome-subtitle">Your intelligent coding assistant</div>
+                    </div>
+                    
+                    <div class="welcome-features">
+                        <div class="feature-card">
+                            <div class="feature-icon">⚙️</div>
+                            <div class="feature-text">Configure plugin settings</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⌨️</div>
+                            <div class="feature-text">Explore shortcuts</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">💬</div>
+                            <div class="feature-text">Provide instructions for AI</div>
+                        </div>
+                    </div>
+                    
+                    <div class="assistant-intro">
+                        <div class="assistant-icon">B</div>
+                        <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
+                    </div>
+                    
+                    <div class="quick-commands">
+                        <h3>Quick commands</h3>
+                        <div class="command-list">
+                            <div class="command-item">
+                                <span class="command">/code</span>
+                                <span class="command-desc">to generate new feature or fix bug</span>
+                            </div>
+                            <div class="command-item">
+                                <span class="command">/explain</span>
+                                <span class="command-desc">file or selected code</span>
+                            </div>
+                            <div class="command-item">
+                                <span class="command">/review</span>
+                                <span class="command-desc">code to recommend improvements</span>
+                            </div>
+                            <div class="command-item">
+                                <span class="command">/unittests</span>
+                                <span class="command-desc">to generate unit tests</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chill-mode">
+                        <h3>Chill mode</h3>
+                        <p>Enable to automatically apply changes and run safe commands</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        messagesContainer.appendChild(welcomeMessage);
+        
+        // State'i sıfırla
+        state.messages = [];
+        
+        // Input alanını temizle
+        userInput.value = '';
+        
+        // VS Code'a yeni sohbet başladığını bildir
+        vscode.postMessage({ type: 'newChat' });
     });
     
     // Current file checkbox'ını dinleyelim
