@@ -162,7 +162,7 @@ body, html {
 }
 
 .welcome-header {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     text-align: left;
     position: relative;
 }
@@ -179,7 +179,7 @@ body, html {
 
 .welcome-subtitle {
     font-size: 15px;
-    color: rgba(230, 230, 230, 0.9);
+    color: rgba(230, 230, 230, 0.7);
     font-weight: 400;
     letter-spacing: 0.2px;
     text-align: left;
@@ -188,19 +188,19 @@ body, html {
 .welcome-features {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin: 25px 0;
+    gap: 8px;
+    margin: 15px 0;
 }
 
 .feature-card {
     background: transparent;
     border: none;
-    padding: 8px 0;
+    padding: 6px 0;
     transition: all 0.3s ease;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .feature-card:hover {
@@ -220,7 +220,7 @@ body, html {
 
 .feature-text {
     font-size: 14px;
-    color: var(--foreground);
+    color: rgba(230, 230, 230, 0.8);
     font-weight: 400;
     margin: 0;
     text-align: left;
@@ -696,34 +696,31 @@ body, html {
 
 /* Assistant intro için stiller */
 .assistant-intro {
-    border-radius: 12px;
-    padding: 24px 0;
     display: flex;
     align-items: center;
-    gap: 20px;
-    margin: 30px 0;
-    background: transparent;
+    gap: 12px;
+    margin: 15px 0;
+    padding: 10px 0;
 }
 
 .assistant-icon {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    border-radius: 12px;
+    background: var(--primary-color);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
     font-weight: 600;
-    color: white;
-    box-shadow: 0 4px 12px rgba(255, 123, 35, 0.2);
+    font-size: 16px;
 }
 
 .assistant-intro p {
-    font-size: 15px;
-    line-height: 1.6;
-    color: rgba(230, 230, 230, 0.9);
+    color: rgba(230, 230, 230, 0.8);
     margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 .message-content code {
