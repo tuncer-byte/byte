@@ -39,6 +39,11 @@ export class InlineCodeChat {
         const selectedCode = editor.document.getText(selection);
         const fileName = path.basename(editor.document.fileName);
         const languageId = editor.document.languageId;
+        
+        // Seçili satır bilgisini hesapla
+        const startLine = selection.start.line + 1; // 1-tabanlı satır numarası
+        const endLine = selection.end.line + 1;     // 1-tabanlı satır numarası
+        const lineInfo = `${startLine}-${endLine}. satırlar`;
 
         this.lastSelectedCode = selectedCode;
         this.lastLanguageId = languageId;
@@ -49,7 +54,7 @@ export class InlineCodeChat {
         this.createOrShowPanel();
 
         // Seçilen kodu ve başlangıç analizini panele gönder
-        await this.updatePanelWithCode(selectedCode, fileName, languageId);
+        await this.updatePanelWithCode(selectedCode, fileName, languageId, lineInfo);
     }
 
     /**
@@ -71,6 +76,11 @@ export class InlineCodeChat {
         const selectedCode = editor.document.getText(selection);
         const fileName = path.basename(editor.document.fileName);
         const languageId = editor.document.languageId;
+        
+        // Seçili satır bilgisini hesapla
+        const startLine = selection.start.line + 1; // 1-tabanlı satır numarası
+        const endLine = selection.end.line + 1;     // 1-tabanlı satır numarası
+        const lineInfo = `${startLine}-${endLine}. satırlar`;
 
         // Soru girdisi iste
         const question = await vscode.window.showInputBox({
@@ -91,7 +101,7 @@ export class InlineCodeChat {
         this.createOrShowPanel();
 
         // Seçilen kodu panele gönder
-        await this.updatePanelWithCode(selectedCode, fileName, languageId);
+        await this.updatePanelWithCode(selectedCode, fileName, languageId, lineInfo);
 
         // Soruyu gönder
         await this.handleMessage(question);
@@ -100,9 +110,19 @@ export class InlineCodeChat {
     private createOrShowPanel() {
         if (this.panel) {
             this.panel.reveal(vscode.ViewColumn.Beside);
+            
+            // Panel zaten varsa ve kod da seçilmişse güncellemek için gönder
+            if (this.lastSelectedCode) {
+                const lines = this.lastSelectedCode.split('\n').length;
+                const lineInfo = `Seçili kod: ${lines} satır`;
+                this.updatePanelWithCode(this.lastSelectedCode, this.lastFileName, this.lastLanguageId, lineInfo);
+            }
+            
             return;
         }
 
+        console.log('Creating new WebView panel for InlineCodeChat');
+        
         this.panel = vscode.window.createWebviewPanel(
             'inlineCodeChat',
             'Code Chat',
@@ -120,31 +140,71 @@ export class InlineCodeChat {
         );
 
         // HTML içeriğini oluştur
-        this.panel.webview.html = this.getWebviewContent(this.panel.webview);
+        console.log('Generating HTML content for WebView');
+        const htmlContent = this.getWebviewContent(this.panel.webview);
+        this.panel.webview.html = htmlContent;
+        console.log('WebView HTML content set, length:', htmlContent.length);
 
         // Panel kapatıldığında temizlik yap
         this.panel.onDidDispose(() => {
+            console.log('WebView panel disposed');
             this.panel = undefined;
             this.messageHistory = [];
         });
 
         // Mesaj alıcısını ayarla
         this.panel.webview.onDidReceiveMessage(async (message) => {
+            console.log('Received message from WebView:', message.command);
+            
             switch (message.command) {
                 case 'sendMessage':
+                    // Gelen kod, dil ve dosya adı bilgilerini kullan
+                    if (message.code && message.language) {
+                        this.lastSelectedCode = message.code;
+                        this.lastLanguageId = message.language;
+                        this.lastFileName = message.fileName || '';
+                        console.log(`Updated stored code - Length: ${this.lastSelectedCode.length}, Language: ${this.lastLanguageId}`);
+                    }
                     await this.handleMessage(message.text);
                     break;
                 case 'fixCode':
-                    await this.handleMessage('Fix and improve this code. Correct errors and use best practices.');
+                    await this.handleMessage(`Fix and improve this code. Correct errors and use best practices. Don't include the code block in your response.`);
                     break;
                 case 'optimizeCode':
-                    await this.handleMessage('Optimize this code. Suggest improvements for performance and readability.');
+                    await this.handleMessage(`Optimize this code. Suggest improvements for performance and readability. Don't include the code block in your response.`);
                     break;
                 case 'testCode':
-                    await this.handleMessage('Create comprehensive unit tests for this code.');
+                    await this.handleMessage(`Create comprehensive unit tests for this code. Don't include the original code in your response.`);
                     break;
                 case 'explainCode':
-                    await this.handleMessage('Explain this code in detail. Describe its purpose, how it works, and highlight important parts.');
+                    await this.handleMessage(`Explain this code in detail. Describe its purpose, how it works, and highlight important parts. Don't include the code itself in your response.`);
+                    break;
+                case 'ready':
+                    console.log('WebView is ready, sending initial code');
+                    if (this.lastSelectedCode) {
+                        // Başlangıç kodunu gönder
+                        const lines = this.lastSelectedCode.split('\n').length;
+                        let lineInfo = `Seçili kod: ${lines} satır`;
+                        
+                        // Asıl seçim satır bilgisi varsa onu kullan
+                        const editor = vscode.window.activeTextEditor;
+                        if (editor && !editor.selection.isEmpty) {
+                            const startLine = editor.selection.start.line + 1;
+                            const endLine = editor.selection.end.line + 1;
+                            lineInfo = `${startLine}-${endLine}. satırlar`;
+                        }
+                        
+                        this.updatePanelWithCode(this.lastSelectedCode, this.lastFileName, this.lastLanguageId, lineInfo);
+                    } else {
+                        // Kod yoksa düğmeleri devre dışı bırak
+                        await this.panel?.webview.postMessage({
+                            command: 'updateCode',
+                            code: '',
+                            fileName: '',
+                            languageId: '',
+                            lineInfo: 'Kod seçilmedi'
+                        });
+                    }
                     break;
             }
         });
@@ -157,7 +217,8 @@ export class InlineCodeChat {
 
         // CSP (Content Security Policy) tanımla
         const nonce = this.getNonce();
-        const csp = `default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; img-src ${webview.cspSource} https:;`;
+        // CSP'yi daha güvenli hale getir
+        const csp = `default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; img-src ${webview.cspSource} https:; connect-src ${webview.cspSource};`;
 
         // HTML şablonunu döndür
         return `<!DOCTYPE html>
@@ -175,14 +236,14 @@ export class InlineCodeChat {
                     <div class="code-header">
                         <div class="code-title">Selected Code</div>
                         <div class="code-actions">
-                            <button id="fixCodeBtn" class="action-button">
+                            <button id="fixCodeBtn" class="action-button" disabled>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12 20h9"></path>
                                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                                 </svg>
                                 <span>Fix</span>
                             </button>
-                            <button id="optimizeCodeBtn" class="action-button">
+                            <button id="optimizeCodeBtn" class="action-button" disabled>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M18 20V10"></path>
                                     <path d="M12 20V4"></path>
@@ -190,13 +251,13 @@ export class InlineCodeChat {
                                 </svg>
                                 <span>Optimize</span>
                             </button>
-                            <button id="testCodeBtn" class="action-button">
+                            <button id="testCodeBtn" class="action-button" disabled>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                                 <span>Test</span>
                             </button>
-                            <button id="explainCodeBtn" class="action-button">
+                            <button id="explainCodeBtn" class="action-button" disabled>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="10"></circle>
                                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -204,7 +265,7 @@ export class InlineCodeChat {
                                 </svg>
                                 <span>Explain</span>
                             </button>
-                            <button id="copyCodeBtn" class="action-button">
+                            <button id="copyCodeBtn" class="action-button" disabled>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -213,7 +274,7 @@ export class InlineCodeChat {
                             </button>
                         </div>
                     </div>
-                    <div id="codeContent">
+                    <div id="codeContent" style="display: block;">
                         <div id="languageBadge" class="code-language"></div>
                         <pre id="codeBlock" class="code-block"><code></code></pre>
                     </div>
@@ -247,57 +308,90 @@ export class InlineCodeChat {
         return text;
     }
 
-    private async updatePanelWithCode(code: string, fileName: string, languageId: string) {
+    private async updatePanelWithCode(code: string, fileName: string, languageId: string, lineInfo: string = '') {
         if (!this.panel) {
+            console.error('Panel not available when trying to update code');
             return;
         }
 
+        // Kodun boş olup olmadığını kontrol et
+        if (!code || !code.trim()) {
+            console.warn('Empty code provided to updatePanelWithCode');
+        }
+
+        console.log(`Sending code to WebView: ${code.length} chars, language: ${languageId}, line info: ${lineInfo}`);
+
         // Kodu ve dil bilgisini WebView'a gönder
-        await this.panel.webview.postMessage({
-            command: 'updateCode',
-            code,
-            fileName,
-            languageId
-        });
-
-        // Başlangıç analizi gönder
-        this.isProcessing = true;
-        await this.panel.webview.postMessage({
-            command: 'startLoading',
-            message: 'Analyzing code...'
-        });
-
         try {
-            // Kodu analiz et ve sonucu gönder
-            const systemPrompt = `You are a code analysis assistant. You will analyze the provided code and help the user. 
-                                Code: ${code}
-                                File name: ${fileName}
-                                Language: ${languageId}`;
-            
-            const userPrompt = "Analyze this code snippet. Briefly explain what the code does, how it works, and suggest any improvements if applicable.";
-            
-            this.messageHistory = [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-            ];
-
-            const response = await this.aiService.getResponse(this.messageHistory);
-            this.messageHistory.push({ role: 'assistant', content: response });
-
+            // Önce sadece kodu ve dili gönder, hemen analiz başlatma
             await this.panel.webview.postMessage({
-                command: 'addMessage',
-                message: response,
-                type: 'assistant'
+                command: 'updateCode',
+                code,
+                fileName,
+                languageId,
+                lineInfo
             });
-        } catch (error) {
+
+            console.log('Code update message sent to WebView');
+
+            // WebView'ın kodu işlemesi için kısa bir bekleme
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Başlangıç analizi gönder
+            this.isProcessing = true;
             await this.panel.webview.postMessage({
-                command: 'error',
-                message: 'An error occurred while analyzing the code. Please try again.'
+                command: 'startLoading',
+                message: 'Analyzing code...'
             });
-            console.error('Code analysis error:', error);
-        } finally {
-            this.isProcessing = false;
-            await this.panel.webview.postMessage({ command: 'stopLoading' });
+
+            try {
+                // Kodu analiz et ve sonucu gönder
+                const systemPrompt = `You are a code analysis assistant. You will analyze the provided code and help the user. 
+                                    Code: ${code}
+                                    File name: ${fileName}
+                                    Language: ${languageId}
+                                    Line range: ${lineInfo}
+                                    
+                                    Important instructions:
+                                    1. DO NOT include the original code in your responses
+                                    2. DO NOT wrap your responses in code blocks containing the original code
+                                    3. Analyze the code internally and provide insights, suggestions, and explanations
+                                    4. If you need to reference specific parts of the code, refer to them by line numbers
+                                    5. If you need to suggest changes, describe them clearly or show only the specific lines that need to be changed`;
+                
+                const userPrompt = "Analyze this code snippet. Briefly explain what the code does, how it works, and suggest any improvements if applicable. Don't include the original code in your response.";
+                
+                // Mesaj geçmişini sıfırla ve sistem ve kullanıcı mesajlarını ekle
+                this.messageHistory = [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ];
+
+                console.log('Requesting AI analysis...');
+                const response = await this.aiService.getResponse(this.messageHistory);
+                console.log('AI analysis received, sending to WebView');
+                
+                this.messageHistory.push({ role: 'assistant', content: response });
+
+                await this.panel.webview.postMessage({
+                    command: 'addMessage',
+                    message: response,
+                    type: 'assistant'
+                });
+            } catch (error) {
+                console.error('Code analysis error:', error);
+                
+                await this.panel.webview.postMessage({
+                    command: 'error',
+                    message: 'An error occurred while analyzing the code. Please try again.'
+                });
+            } finally {
+                this.isProcessing = false;
+                await this.panel.webview.postMessage({ command: 'stopLoading' });
+            }
+        } catch (err) {
+            console.error('Error sending messages to WebView:', err);
+            vscode.window.showErrorMessage('Failed to connect to the chat interface. Please try reopening the panel.');
         }
     }
 
@@ -320,7 +414,32 @@ export class InlineCodeChat {
         });
 
         try {
-            // Mesaj geçmişine kullanıcı mesajını ekle
+            // Satır bilgisini hesapla
+            const lines = this.lastSelectedCode.split('\n').length;
+            const lineInfo = `${lines} satır`;
+            
+            // Her mesajda kod bilgisini ve bağlamı dahil et
+            const systemPrompt = `You are a code analysis assistant. You will analyze the provided code and help the user. 
+                                Code: ${this.lastSelectedCode}
+                                File name: ${this.lastFileName}
+                                Language: ${this.lastLanguageId}
+                                Lines: ${lineInfo}
+                                
+                                Important instructions:
+                                1. DO NOT include the original code in your responses
+                                2. DO NOT wrap your responses in code blocks containing the original code
+                                3. Analyze the code internally and provide insights, suggestions, and explanations
+                                4. If you need to reference specific parts of the code, refer to them by line numbers
+                                5. If you need to suggest changes, describe them clearly or show only the specific lines that need to be changed`;
+            
+            // Mesaj geçmişinde ilk mesajı güncelle veya yoksa ekle
+            if (this.messageHistory.length > 0 && this.messageHistory[0].role === 'system') {
+                this.messageHistory[0].content = systemPrompt;
+            } else {
+                this.messageHistory.unshift({ role: 'system', content: systemPrompt });
+            }
+            
+            // Kullanıcı mesajını ekle
             this.messageHistory.push({ role: 'user', content: text });
 
             // AI yanıtını al

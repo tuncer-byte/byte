@@ -1,33 +1,33 @@
 :root {
     /* VS Code renk değişkenleri - temel UI */
-    --background-color: var(--vscode-editor-background);
-    --foreground-color: var(--vscode-editor-foreground);
-    --border-color: var(--vscode-panel-border);
-    --input-background: var(--vscode-input-background);
-    --input-foreground: var(--vscode-input-foreground);
-    --button-background: var(--vscode-button-background);
-    --button-foreground: var(--vscode-button-foreground);
-    --button-hover-background: var(--vscode-button-hoverBackground);
-    --badge-background: var(--vscode-activityBarBadge-background);
-    --badge-foreground: var(--vscode-activityBarBadge-foreground);
-    --hover-background: var(--vscode-list-hoverBackground);
-    --error-foreground: var(--vscode-errorForeground);
-    --link-color: var(--vscode-textLink-foreground);
-    --active-background: var(--vscode-list-activeSelectionBackground);
-    --active-foreground: var(--vscode-list-activeSelectionForeground);
-    --focus-border: var(--vscode-focusBorder);
-    --panel-background: var(--vscode-sideBar-background);
-    --card-background: var(--vscode-editorWidget-background);
+    --background-color: var(--background, #0D1117);
+    --foreground-color: var(--foreground, #E6E6E6);
+    --border-color: var(--border-color, #30363D);
+    --input-background: var(--input-background, #1E2631);
+    --input-foreground: var(--foreground, #E6E6E6);
+    --button-background: var(--button-background, #FF7B23);
+    --button-foreground: var(--button-foreground, #FFFFFF);
+    --button-hover-background: var(--button-hover-background, #E35F00);
+    --badge-background: var(--primary-color, #FF7B23);
+    --badge-foreground: var(--button-foreground, #FFFFFF);
+    --hover-background: var(--primary-light, #FF9A52);
+    --error-foreground: var(--foreground, #E6E6E6);
+    --link-color: var(--primary-color, #FF7B23);
+    --active-background: var(--primary-dark, #E35F00);
+    --active-foreground: var(--foreground, #E6E6E6);
+    --focus-border: var(--primary-color, #FF7B23);
+    --panel-background: var(--sidebar-background, #161B22);
+    --card-background: var(--sidebar-background, #161B22);
     
     /* Gölge ve opaklık için değişkenler */
     --shadow-color: rgba(0, 0, 0, 0.2);
-    --accent-color: var(--vscode-button-background);
-    --accent-text: var(--vscode-button-foreground);
-    --secondary-background: var(--vscode-editor-inactiveSelectionBackground, rgba(128, 128, 128, 0.1));
-    --user-message-background: var(--vscode-editor-selectionBackground, var(--button-background));
-    --assistant-message-background: var(--vscode-editorSuggestWidget-background, var(--card-background));
-    --hover-border: var(--vscode-settings-modifiedItemIndicator, var(--button-background));
-    --code-highlight-bg: var(--vscode-editor-wordHighlightBackground, rgba(0, 0, 0, 0.15));
+    --accent-color: var(--primary-color, #FF7B23);
+    --accent-text: var(--button-foreground, #FFFFFF);
+    --secondary-background: var(--sidebar-background, #161B22);
+    --user-message-background: var(--primary-color, #FF7B23);
+    --assistant-message-background: var(--message-ai-background, #1A1F27);
+    --hover-border: var(--primary-color, #FF7B23);
+    --code-highlight-bg: var(--message-user-background, #1E2631);
 }
 
 * {
@@ -65,6 +65,7 @@ body {
     flex-direction: column;
     background-color: var(--panel-background);
     transition: max-height 0.3s ease;
+    min-height: 150px;
 }
 
 .code-header {
@@ -91,7 +92,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     opacity: 0.8;
-    color: var(--vscode-descriptionForeground, var(--foreground-color));
+    color: var(--foreground-color);
 }
 
 .code-actions {
@@ -141,7 +142,10 @@ body {
     flex: 1;
     overflow: auto;
     position: relative;
-    background-color: var(--vscode-editor-background);
+    background-color: var(--background-color);
+    min-height: 100px;
+    padding: 8px;
+    display: block !important;
 }
 
 .code-language {
@@ -157,7 +161,7 @@ body {
     z-index: 5;
 }
 
-.code-block {
+#codeBlock {
     margin: 8px 0;
     padding: 8px 16px 16px;
     overflow: auto;
@@ -166,6 +170,23 @@ body {
     line-height: 1.5;
     white-space: pre;
     tab-size: 4;
+    max-height: 300px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--background-color);
+}
+
+#codeBlock code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
+    display: block;
+    color: var(--foreground-color);
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+    min-height: 1em;
+    padding: 4px;
 }
 
 /* Chat Section */
@@ -211,7 +232,7 @@ body {
 .user-message {
     align-self: flex-end;
     background-color: var(--user-message-background);
-    color: var(--vscode-editor-selectionForeground, var(--foreground-color));
+    color: var(--button-foreground);
     border-radius: 8px 8px 0 8px;
 }
 
@@ -245,7 +266,7 @@ body {
     margin-bottom: 0.5em;
     font-weight: 600;
     line-height: 1.3;
-    color: var(--vscode-textPreformat-foreground, var(--foreground-color));
+    color: var(--foreground-color);
 }
 
 .message-content h1 {
@@ -282,11 +303,11 @@ body {
 
 .message-content code {
     font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
-    background-color: var(--vscode-textCodeBlock-background, rgba(0, 0, 0, 0.2));
+    background-color: var(--code-highlight-bg);
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-size: 0.9em;
-    color: var(--vscode-textPreformat-foreground, var(--foreground-color));
+    color: var(--foreground-color);
 }
 
 .message-content pre {
@@ -296,7 +317,7 @@ body {
     margin: 8px 0;
     overflow-x: auto;
     position: relative;
-    border: 1px solid var(--vscode-notebook-cellBorderColor, var(--border-color));
+    border: 1px solid var(--border-color);
 }
 
 .message-content pre code {
@@ -322,10 +343,10 @@ body {
 }
 
 .copy-button {
-    background: var(--vscode-button-secondaryBackground, rgba(0, 0, 0, 0.2));
+    background: var(--input-background);
     border: none;
     cursor: pointer;
-    color: var(--vscode-button-secondaryForeground, var(--foreground-color));
+    color: var(--foreground-color);
     opacity: 0.7;
     border-radius: 4px;
     padding: 4px;
@@ -337,12 +358,13 @@ body {
 
 .copy-button:hover {
     opacity: 1;
-    background-color: var(--vscode-button-secondaryHoverBackground, rgba(128, 128, 128, 0.4));
+    background-color: var(--button-background);
+    color: var(--button-foreground);
 }
 
 .copy-button.copied {
-    color: var(--vscode-gitDecoration-addedResourceForeground, #4CAF50);
-    background-color: var(--vscode-diffEditor-insertedTextBackground, rgba(76, 175, 80, 0.2));
+    color: var(--button-foreground);
+    background-color: var(--primary-color);
 }
 
 .loading-message {
@@ -352,7 +374,7 @@ body {
     justify-content: center;
     padding: 16px;
     gap: 8px;
-    color: var(--vscode-descriptionForeground, var(--foreground-color));
+    color: var(--foreground-color);
     opacity: 0.7;
     align-self: center;
 }
@@ -390,12 +412,12 @@ body {
 
 .error-message {
     padding: 8px 12px;
-    background-color: var(--vscode-inputValidation-errorBackground, rgba(255, 0, 0, 0.1));
-    color: var(--vscode-inputValidation-errorForeground, var(--error-foreground));
+    background-color: rgba(255, 0, 0, 0.1);
+    color: var(--error-foreground);
     border-radius: 6px;
     margin: 8px 0;
     align-self: center;
-    border-left: 3px solid var(--vscode-inputValidation-errorBorder, var(--error-foreground));
+    border-left: 3px solid var(--primary-dark);
     animation: fadeIn 0.3s ease;
 }
 
@@ -499,4 +521,48 @@ textarea:focus {
     .chat-section {
         width: 55%;
     }
+}
+
+/* Dosya Bilgisi Stilleri */
+.file-info {
+    display: flex;
+    flex-direction: column;
+    margin: 16px;
+    background-color: var(--input-background);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.file-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--foreground-color);
+}
+
+.file-name svg {
+    color: var(--accent-color);
+}
+
+.line-info {
+    font-size: 12px;
+    color: var(--foreground-color);
+    opacity: 0.8;
+}
+
+/* Kod blok elementinin gizlenmesi */
+#codeBlock {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+}
+
+#codeBlock code {
+    display: none;
 } 

@@ -83,11 +83,6 @@
         "title": "Byte: Analyze Code Issues"
       },
       {
-        "command": "byte.codeChat",
-        "title": "Byte: Chat with Code Block",
-        "icon": "$(comment-discussion)"
-      },
-      {
         "command": "byte.inlineCodeAnalysis",
         "title": "Byte: Analyze Code",
         "icon": "$(sparkle)"
@@ -99,12 +94,6 @@
       }
     ],
     "keybindings": [
-      {
-        "command": "byte.codeChat",
-        "key": "ctrl+alt+c",
-        "mac": "cmd+alt+c",
-        "when": "editorHasSelection"
-      },
       {
         "command": "byte.inlineCodeAnalysis",
         "key": "ctrl+alt+i",
@@ -128,44 +117,40 @@
       ],
       "byte.menu": [
         {
-          "command": "byte.codeChat",
+          "command": "byte.inlineCodeAnalysis",
           "group": "z_byte@1"
         },
         {
-          "command": "byte.inlineCodeAnalysis",
+          "command": "byte.askQuestionAboutCode",
           "group": "z_byte@2"
         },
         {
-          "command": "byte.askQuestionAboutCode",
+          "command": "byte.explainCode",
           "group": "z_byte@3"
         },
         {
-          "command": "byte.explainCode",
+          "command": "byte.refactorCode",
           "group": "z_byte@4"
         },
         {
-          "command": "byte.refactorCode",
+          "command": "byte.generateDocs",
           "group": "z_byte@5"
         },
         {
-          "command": "byte.generateDocs",
+          "command": "byte.optimizeCode", 
           "group": "z_byte@6"
         },
         {
-          "command": "byte.optimizeCode", 
+          "command": "byte.generateTests",
           "group": "z_byte@7"
         },
         {
-          "command": "byte.generateTests",
+          "command": "byte.addComments",
           "group": "z_byte@8"
         },
         {
-          "command": "byte.addComments",
-          "group": "z_byte@9"
-        },
-        {
           "command": "byte.findIssues",
-          "group": "z_byte@10"
+          "group": "z_byte@9"
         }
       ]
     },
