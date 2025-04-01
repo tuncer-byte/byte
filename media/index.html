@@ -96,18 +96,11 @@
             <div class="context-info">
                 <span class="new-chat">New chat</span>
                 <span class="context-separator">|</span>
-                <div class="file-context">
-                    <span class="current-file" id="currentFile">package.json</span>
-                    <button id="sendFileButton" class="file-action-button" title="Dosyayı AI'ya gönder">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
-                        </svg>
-                    </button>
-                    <button id="addFileButton" class="file-action-button" title="Başka dosya ekle">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
-                        </svg>
-                    </button>
+                <div class="file-context" id="fileContext" style="display: none;">
+                    <label class="current-file-toggle">
+                        <input type="checkbox" id="includeCurrentFile">
+                        <span class="current-file" id="currentFile"></span>
+                    </label>
                 </div>
                 <div class="context-controls">
                     <label class="agent-toggle">

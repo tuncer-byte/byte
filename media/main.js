@@ -10,9 +10,8 @@
     const aiProviderSelect = document.getElementById('aiProvider');
     const configureButton = document.getElementById('configureButton');
     const currentFileElement = document.getElementById('currentFile');
+    const fileContextElement = document.getElementById('fileContext');
     const agentToggle = document.getElementById('agentToggle');
-    const sendFileButton = document.getElementById('sendFileButton');
-    const addFileButton = document.getElementById('addFileButton');
     
     // Ayarlar Modalı Elementleri
     const settingsModal = document.getElementById('settingsModal');
@@ -34,27 +33,15 @@
     // Şifre Göster/Gizle Düğmeleri
     const togglePasswordButtons = document.querySelectorAll('.toggle-password');
     
-    // Mesajları saklamak için durum
-    let state = vscode.getState() || { 
+    // State tanımlamasına includeCurrentFile ekleyelim
+    const state = {
         messages: [],
-        agentEnabled: true,
-        currentFile: 'package.json',
+        currentFile: '',
         currentFilePath: '',
-        recentFiles: [],
+        agentEnabled: false,
+        includeCurrentFile: false,
         settings: {
-            defaultProvider: 'openai',
-            openai: {
-                apiKey: '',
-                model: 'gpt-3.5-turbo'
-            },
-            gemini: {
-                apiKey: '',
-                model: 'gemini-1.5-flash'
-            },
-            local: {
-                endpoint: 'http://localhost:11434/api/generate',
-                model: 'llama3'
-            },
+            provider: 'openai',
             saveHistory: true
         }
     };
@@ -457,28 +444,33 @@
     
     // Mesaj Gönderme
     function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
+        const userInput = document.getElementById('userInput');
+        const message = userInput.value.trim();
         
-        // Kullanıcı mesajını ekle
-        appendMessage('user', text);
-        
-        // Durumu güncelle
-        state.messages.push({ role: 'user', content: text });
-        vscode.setState(state);
-        
-        // Input'u temizle
-        userInput.value = '';
-        
-        // Yükleniyor göstergesini aç
-        loadingIndicator.style.display = 'block';
-        
-        // VS Code eklentisine mesajı gönder
-        vscode.postMessage({
-            type: 'sendMessage',
-            message: text,
-            provider: aiProviderSelect.value
-        });
+        if (message) {
+            // Kullanıcı mesajını ekle
+            appendMessage('user', message);
+            
+            // Mesajı state'e kaydet
+            state.messages.push({ role: 'user', content: message });
+            
+            // Yükleniyor göstergesini aç
+            loadingIndicator.style.display = 'block';
+            
+            // VS Code'a gönder
+            vscode.postMessage({
+                type: 'sendMessage',
+                message: message,
+                includeCurrentFile: state.includeCurrentFile,
+                currentFilePath: state.currentFilePath
+            });
+            
+            // Input'u temizle
+            userInput.value = '';
+            
+            // State'i güncelle
+            vscode.setState(state);
+        }
     }
     
     // Mesaj gönderme butonu
@@ -511,25 +503,30 @@
         vscode.postMessage({ type: 'clearChat' });
     });
     
-    // Dosyayı AI'ya gönderme butonu
-    sendFileButton.addEventListener('click', () => {
-        // Mevcut dosya içeriğini al ve AI'ya gönder
-        vscode.postMessage({
-            type: 'sendFileToAI',
-            filePath: state.currentFilePath || ''
-        });
-        
-        // Yükleniyor göstergesini aç
-        loadingIndicator.style.display = 'block';
+    // Current file checkbox'ını dinleyelim
+    const includeCurrentFileCheckbox = document.getElementById('includeCurrentFile');
+    includeCurrentFileCheckbox.addEventListener('change', (e) => {
+        state.includeCurrentFile = e.target.checked;
+        vscode.setState(state);
     });
     
-    // Başka dosya ekleme butonu
-    addFileButton.addEventListener('click', () => {
-        // VS Code'a dosya seçim dialogu açma isteği gönder
-        vscode.postMessage({
-            type: 'openFileSelector'
-        });
-    });
+    // Mevcut dosya bilgisini güncelle
+    function updateCurrentFile(fileName, filePath) {
+        if (fileName && filePath) {
+            state.currentFile = fileName;
+            state.currentFilePath = filePath;
+            currentFileElement.textContent = fileName;
+            fileContextElement.style.display = 'block';
+        } else {
+            state.currentFile = '';
+            state.currentFilePath = '';
+            currentFileElement.textContent = '';
+            fileContextElement.style.display = 'none';
+            state.includeCurrentFile = false;
+            includeCurrentFileCheckbox.checked = false;
+        }
+        vscode.setState(state);
+    }
     
     // VS Code'dan gelen mesajları dinle
     window.addEventListener('message', event => {
@@ -595,8 +592,6 @@
                 // Mesaj geçmişini yükle
                 if (message.messages) {
                     state.messages = message.messages;
-                    
-                    // Mevcut mesajları temizle ve yeni mesajları ekle
                     messagesContainer.innerHTML = '';
                     loadMessages();
                 }
@@ -609,8 +604,9 @@
                 
                 // Mevcut dosya bilgisini ayarla
                 if (message.currentFile) {
-                    state.currentFile = message.currentFile;
-                    currentFileElement.textContent = message.currentFile;
+                    updateCurrentFile(message.currentFile, message.currentFilePath);
+                } else {
+                    updateCurrentFile(null, null);
                 }
                 
                 // Provider seçimini ayarla
@@ -618,7 +614,6 @@
                     aiProviderSelect.value = message.provider;
                 }
                 
-                // State'i güncelle
                 vscode.setState(state);
                 break;
                 
@@ -626,12 +621,9 @@
                 // Mevcut dosya değiştiğinde UI'yı güncelle
                 if (message.filePath) {
                     const fileName = message.filePath.split(/[\\/]/).pop() || '';
-                    state.currentFile = fileName;
-                    state.currentFilePath = message.filePath;
-                    currentFileElement.textContent = fileName;
-                    
-                    // State'i güncelle
-                    vscode.setState(state);
+                    updateCurrentFile(fileName, message.filePath);
+                } else {
+                    updateCurrentFile(null, null);
                 }
                 break;
                 

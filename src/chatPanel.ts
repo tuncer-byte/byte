@@ -40,12 +40,16 @@ export class ChatPanel implements vscode.WebviewViewProvider {
         // Mevcut aktif editörü kontrol et
         if (vscode.window.activeTextEditor) {
             this._updateCurrentFile(vscode.window.activeTextEditor.document.uri.fsPath);
+        } else {
+            this._updateCurrentFile(null);
         }
         
         // Aktif editör değiştiğinde olayı dinle
         this._activeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor) {
                 this._updateCurrentFile(editor.document.uri.fsPath);
+            } else {
+                this._updateCurrentFile(null);
             }
         });
     }
@@ -53,7 +57,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     /**
      * Mevcut dosya bilgisini günceller ve WebView'e bildirir
      */
-    private _updateCurrentFile(filePath: string) {
+    private _updateCurrentFile(filePath: string | null) {
         if (filePath) {
             // Dosya adını al (yoldan ayır)
             const fileName = filePath.split(/[\\/]/).pop() || '';
@@ -64,6 +68,16 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                 this._view.webview.postMessage({
                     type: 'currentFileChanged',
                     filePath: filePath
+                });
+            }
+        } else {
+            this._currentFile = '';
+            
+            // WebView'e bildir
+            if (this._view && this._view.visible) {
+                this._view.webview.postMessage({
+                    type: 'currentFileChanged',
+                    filePath: null
                 });
             }
         }
@@ -158,10 +172,21 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                                 return;
                             }
                         }
+
+                        let finalMessage = message.message;
+                        
+                        // Eğer current file dahil edilecekse
+                        if (message.includeCurrentFile && this._currentFile) {
+                            const editor = vscode.window.activeTextEditor;
+                            if (editor) {
+                                const fileContent = editor.document.getText();
+                                finalMessage = `Current file (${this._currentFile}):\n\`\`\`\n${fileContent}\n\`\`\`\n\nUser message:\n${message.message}`;
+                            }
+                        }
                         
                         if (message.provider === 'local') {
                             const settings = await this._aiService.getSettings();
-                            const response = await this._sendOllamaRequest(message.message, settings.local.model);
+                            const response = await this._sendOllamaRequest(finalMessage, settings.local.model);
                             // Yanıtı webview'a gönder
                             this._view?.webview.postMessage({ 
                                 type: 'response', 
@@ -169,7 +194,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                             });
                         } else {
                             // Yükleniyor göstergesi başlat
-                            const response = await this._aiService.sendMessage(message.message);
+                            const response = await this._aiService.sendMessage(finalMessage);
                             
                             // Yanıtı WebView'e gönder
                             if (this._view) {

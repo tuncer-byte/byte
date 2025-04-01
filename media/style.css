@@ -1091,3 +1091,50 @@ margin-bottom: 20px;
     border-color: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
 }
+
+.current-file-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.current-file-toggle input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.current-file-toggle input[type="checkbox"]:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.current-file-toggle input[type="checkbox"]:checked::after {
+    content: "✓";
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    left: 2px;
+    top: -2px;
+}
+
+.current-file {
+    color: var(--foreground);
+    opacity: 0.8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.current-file-toggle input[type="checkbox"]:checked + .current-file {
+    color: var(--primary-color);
+    opacity: 1;
+}
