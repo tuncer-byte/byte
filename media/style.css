@@ -358,6 +358,22 @@ margin-bottom: 20px;
     gap: 15px;
 }
 
+/* Coffee/Chill Mode için stil */
+.coffee-mode, .chill-mode {
+    margin-top: 20px;
+    background-color: rgba(30, 38, 49, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.coffee-mode h3, .chill-mode h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--primary-light);
+    font-weight: 500;
+}
+
 /* Agent Toggle Düğmesi */
 .agent-toggle {
     display: flex;
@@ -418,6 +434,16 @@ margin-bottom: 20px;
 .agent-toggle input:checked + .toggle-slider:before {
     transform: translateX(18px);
     background-color: var(--primary-color);
+}
+
+/* Disabled Toggle Stili */
+.agent-toggle input:disabled + .toggle-slider {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.agent-toggle input:disabled ~ span {
+    opacity: 0.7;
 }
 
 /* Input alanı ve gönderme butonu */

@@ -68,6 +68,9 @@
             agentToggle.checked = state.agentEnabled;
         }
         
+        // Chill modu devre dışı olarak ayarla
+        agentToggle.disabled = true;
+        
         // Mevcut dosya bilgisini göster
         if (state.currentFile) {
             currentFileElement.textContent = state.currentFile;
@@ -75,18 +78,6 @@
         
         // Kayıtlı ayarları yükle
         loadSettings();
-    });
-    
-    // Agent toggle değişikliği
-    agentToggle.addEventListener('change', () => {
-        state.agentEnabled = agentToggle.checked;
-        vscode.setState(state);
-        
-        // VS Code eklentisine agent durumunu bildir
-        vscode.postMessage({
-            type: 'agentStatusChanged',
-            enabled: agentToggle.checked
-        });
     });
     
     // Şifre göster/gizle butonları için olay dinleyicisi
@@ -127,6 +118,63 @@
         
         // Mevcut ayarları form alanlarına doldur
         fillSettingsForm();
+        
+        // Ollama modellerini getir
+        fetchOllamaModels();
+    }
+    
+    // Ollama modellerini getir
+    async function fetchOllamaModels() {
+        try {
+            const response = await fetch('http://localhost:11434/api/tags');
+            if (response.ok) {
+                const data = await response.json();
+                const models = data.models || [];
+                
+                // Local model seçim alanını güncelle
+                updateLocalModelSelect(models);
+            }
+        } catch (error) {
+            console.error('Ollama modelleri alınamadı:', error);
+            // Hata durumunda varsayılan modelleri göster
+            updateLocalModelSelect([]);
+        }
+    }
+    
+    // Local model seçim alanını güncelle
+    function updateLocalModelSelect(models) {
+        const localModelSelect = document.getElementById('localModel');
+        localModelSelect.innerHTML = ''; // Mevcut seçenekleri temizle
+        
+        if (models.length === 0) {
+            // Varsayılan modeller
+            const defaultModels = [
+                { name: 'llama2', label: 'Llama 2' },
+                { name: 'codellama', label: 'CodeLlama' },
+                { name: 'mistral', label: 'Mistral' },
+                { name: 'phi', label: 'Phi' }
+            ];
+            
+            defaultModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                option.textContent = model.label;
+                localModelSelect.appendChild(option);
+            });
+        } else {
+            // Ollama'dan gelen modeller
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                option.textContent = model.name;
+                localModelSelect.appendChild(option);
+            });
+        }
+        
+        // Eğer kaydedilmiş bir model varsa onu seç
+        if (state.settings.local.model) {
+            localModelSelect.value = state.settings.local.model;
+        }
     }
     
     // Ayarlar formuna mevcut ayarları doldur
@@ -635,7 +683,7 @@
                             </div>
                             
                             <div class="coffee-mode">
-                                <h3>Coffee mode</h3>
+                                <h3>Chill mode</h3>
                                 <p>Enable to automatically apply changes and run safe commands</p>
                             </div>
                         </div>

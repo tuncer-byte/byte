@@ -8,6 +8,19 @@ export enum AIProvider {
     Local = 'local'
 }
 
+// Ollama API yanıt tipi
+export interface OllamaResponse {
+    model: string;
+    created_at: string;
+    response: string;
+    done: boolean;
+    context: number[];
+    total_duration: number;
+    load_duration: number;
+    prompt_eval_duration: number;
+    eval_duration: number;
+}
+
 // Mesaj tipi tanımlaması
 export interface Message {
     role: 'user' | 'assistant' | 'system';
@@ -20,6 +33,23 @@ export interface AIServiceState {
     messages: Message[];
 }
 
+export interface AISettings {
+    defaultProvider: string;
+    openai: {
+        apiKey: string;
+        model: string;
+    };
+    gemini: {
+        apiKey: string;
+        model: string;
+    };
+    local: {
+        endpoint: string;
+        model: string;
+    };
+    saveHistory: boolean;
+}
+
 /**
  * AI Servisleri ile entegrasyonu sağlayan sınıf
  */
@@ -28,6 +58,22 @@ export class AIService {
     private context: vscode.ExtensionContext;
     private messages: Message[] = [];
     private outputChannel: vscode.OutputChannel;
+    private _settings: AISettings = {
+        defaultProvider: 'openai',
+        openai: {
+            apiKey: '',
+            model: 'gpt-3.5-turbo'
+        },
+        gemini: {
+            apiKey: '',
+            model: 'gemini-1.5-flash'
+        },
+        local: {
+            endpoint: 'http://localhost:11434/api/generate',
+            model: 'llama2'
+        },
+        saveHistory: true
+    };
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -462,5 +508,34 @@ export class AIService {
             console.error('AI yanıtı alınamadı:', error);
             throw new Error(`AI yanıtı alınırken hata oluştu: ${error.message}`);
         }
+    }
+
+    /**
+     * Mevcut ayarları döndürür
+     */
+    public async getSettings(): Promise<AISettings> {
+        const config = vscode.workspace.getConfiguration('byte');
+        
+        return {
+            defaultProvider: config.get<string>('provider') || 'openai',
+            openai: {
+                apiKey: await this.getOpenAIApiKey() || '',
+                model: config.get<string>('openai.model') || 'gpt-3.5-turbo'
+            },
+            gemini: {
+                apiKey: await this.getGeminiApiKey() || '',
+                model: config.get<string>('gemini.model') || 'gemini-1.5-flash'
+            },
+            local: {
+                endpoint: config.get<string>('local.endpoint') || 'http://localhost:11434/api/generate',
+                model: config.get<string>('local.model') || 'llama2'
+            },
+            saveHistory: config.get<boolean>('saveHistory') !== false
+        };
+    }
+
+    // Ayarları güncelle
+    public async updateSettings(settings: AISettings): Promise<void> {
+        this._settings = settings;
     }
 }

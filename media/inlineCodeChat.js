@@ -148,8 +148,7 @@
                     fileName: currentFileName
                 });
                 
-                // Kullanıcı istediği komutu manuel olarak sohbete ekle
-                appendMessage('Create tests for this code', 'user');
+
             });
         }
 

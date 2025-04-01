@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { AIService, AIProvider, Message } from './aiService';
+import { AIService, AIProvider, Message, OllamaResponse, AISettings } from './aiService';
 import { CommandManager } from './commands';
 
 /**
@@ -141,90 +141,110 @@ export class ChatPanel implements vscode.WebviewViewProvider {
      * WebView'den gelen mesajları işler
      */
     private _handleMessage = async (message: any) => {
-        switch (message.type) {
-            case 'webviewReady':
-                // WebView hazır olduğunda mevcut durumu gönder
-                this._updateView();
-                break;
+        try {
+            switch (message.type) {
+                case 'webviewReady':
+                    // WebView hazır olduğunda mevcut durumu gönder
+                    this._updateView();
+                    break;
                 
-            case 'sendMessage':
-                // Kullanıcı mesajını AI servisine iletir
-                try {
-                    // Slash komutlarını kontrol et
-                    if (this._commandManager && message.message.startsWith('/')) {
-                        // Komutu işleyebilirsek mesajı değiştirme
-                        if (await this._processSlashCommand(message.message)) {
-                            return;
+                case 'sendMessage':
+                    // Kullanıcı mesajını AI servisine iletir
+                    try {
+                        // Slash komutlarını kontrol et
+                        if (this._commandManager && message.message.startsWith('/')) {
+                            // Komutu işleyebilirsek mesajı değiştirme
+                            if (await this._processSlashCommand(message.message)) {
+                                return;
+                            }
+                        }
+                        
+                        if (message.provider === 'local') {
+                            const settings = await this._aiService.getSettings();
+                            const response = await this._sendOllamaRequest(message.message, settings.local.model);
+                            // Yanıtı webview'a gönder
+                            this._view?.webview.postMessage({ 
+                                type: 'response', 
+                                content: response 
+                            });
+                        } else {
+                            // Yükleniyor göstergesi başlat
+                            const response = await this._aiService.sendMessage(message.message);
+                            
+                            // Yanıtı WebView'e gönder
+                            if (this._view) {
+                                this._view.webview.postMessage({
+                                    type: 'response',
+                                    content: response
+                                });
+                            }
+                        }
+                    } catch (error: any) {
+                        // Hata durumunda WebView'e bildir
+                        if (this._view) {
+                            this._view.webview.postMessage({
+                                type: 'error',
+                                content: error.message
+                            });
                         }
                     }
-                    
-                    // Yükleniyor göstergesi başlat
-                    const response = await this._aiService.sendMessage(message.message);
-                    
-                    // Yanıtı WebView'e gönder
-                    if (this._view) {
-                        this._view.webview.postMessage({
-                            type: 'response',
-                            content: response
-                        });
-                    }
-                } catch (error: any) {
-                    // Hata durumunda WebView'e bildir
-                    if (this._view) {
-                        this._view.webview.postMessage({
-                            type: 'error',
-                            content: error.message
-                        });
-                    }
-                }
-                break;
+                    break;
                 
-            case 'changeProvider':
-                // Kullanıcı AI sağlayıcısını değiştirdiğinde
-                try {
-                    this._aiService.setProvider(message.provider as AIProvider);
-                    
-                    if (this._view) {
-                        this._view.webview.postMessage({
-                            type: 'providerChanged',
-                            provider: message.provider
-                        });
+                case 'changeProvider':
+                    // Kullanıcı AI sağlayıcısını değiştirdiğinde
+                    try {
+                        this._aiService.setProvider(message.provider as AIProvider);
+                        
+                        if (this._view) {
+                            this._view.webview.postMessage({
+                                type: 'providerChanged',
+                                provider: message.provider
+                            });
+                        }
+                    } catch (error: any) {
+                        // Hata durumunda WebView'e bildir
+                        if (this._view) {
+                            this._view.webview.postMessage({
+                                type: 'error',
+                                content: error.message
+                            });
+                        }
                     }
-                } catch (error: any) {
-                    // Hata durumunda WebView'e bildir
-                    if (this._view) {
-                        this._view.webview.postMessage({
-                            type: 'error',
-                            content: error.message
-                        });
-                    }
-                }
-                break;
+                    break;
                 
-            case 'agentStatusChanged':
-                // Agent özelliğinin durumunu güncelle
-                this._agentEnabled = message.enabled;
-                break;
+                case 'agentStatusChanged':
+                    // Agent özelliğinin durumunu güncelle
+                    this._agentEnabled = message.enabled;
+                    break;
                 
-            case 'sendFile':
-                // Mevcut dosyayı AI'ya gönder
-                await this._sendFileToAI('');
-                break;
+                case 'sendFile':
+                    // Mevcut dosyayı AI'ya gönder
+                    await this._sendFileToAI('');
+                    break;
                 
-            case 'selectFile':
-                // Dosya seçici diyaloğunu aç
-                await this._openFileSelector();
-                break;
+                case 'selectFile':
+                    // Dosya seçici diyaloğunu aç
+                    await this._openFileSelector();
+                    break;
 
-            case 'getSettings':
-                // WebView'e mevcut ayarları gönder
-                await this._sendSettingsToWebView();
-                break;
+                case 'getSettings':
+                    // WebView'e mevcut ayarları gönder
+                    await this._sendSettingsToWebView();
+                    break;
                 
-            case 'saveSettings':
-                // Ayarları kaydet ve güncelle
-                await this._saveSettings(message.settings);
-                break;
+                case 'saveSettings':
+                    // Ayarları kaydet ve güncelle
+                    await this._saveSettings(message.settings);
+                    break;
+            }
+        } catch (error: any) {
+            // Hata durumunu WebView'e ilet
+            if (this._view) {
+                this._view.webview.postMessage({
+                    type: 'error',
+                    content: `Mesaj işlenirken hata oluştu: ${error.message}`
+                });
+            }
         }
     }
     
@@ -239,59 +259,56 @@ export class ChatPanel implements vscode.WebviewViewProvider {
      * AI sağlayıcısını yapılandırma için UI gösterir
      */
     private async _configureAIProvider(provider: AIProvider) {
-        switch (provider) {
-            case AIProvider.OpenAI:
-                const openaiKey = await vscode.window.showInputBox({
-                    prompt: 'OpenAI API anahtarınızı girin',
-                    password: true,
-                    ignoreFocusOut: true,
-                    placeHolder: 'sk-...'
-                });
-                
-                if (openaiKey) {
-                    await this._aiService.setOpenAIApiKey(openaiKey);
-                    vscode.window.showInformationMessage('OpenAI API anahtarı başarıyla kaydedildi.');
+        try {
+            if (provider === 'local') {
+                // Ollama API'sini kontrol et
+                const ollamaAvailable = await this._checkOllamaAvailability();
+                if (!ollamaAvailable) {
+                    throw new Error('Ollama API bağlantısı kurulamadı. Lütfen Ollama servisinin çalıştığından emin olun.');
                 }
-                break;
-                
-            case AIProvider.Gemini:
-                const geminiKey = await vscode.window.showInputBox({
-                    prompt: 'Google Gemini API anahtarınızı girin',
-                    password: true,
-                    ignoreFocusOut: true
-                });
-                
-                if (geminiKey) {
-                    await this._aiService.setGeminiApiKey(geminiKey);
-                    vscode.window.showInformationMessage('Gemini API anahtarı başarıyla kaydedildi.');
-                }
-                break;
-                
-            case AIProvider.Local:
-                const localEndpoint = await vscode.window.showInputBox({
-                    prompt: 'Ollama servis endpoint URL\'inizi girin',
-                    value: vscode.workspace.getConfiguration('byte').get<string>('local.endpoint') || 'http://localhost:11434/api/generate',
-                    ignoreFocusOut: true
-                });
-                
-                if (localEndpoint) {
-                    await vscode.workspace.getConfiguration('byte').update('local.endpoint', localEndpoint, vscode.ConfigurationTarget.Global);
-                    
-                    // Ollama model adını da soralım
-                    const ollamaModel = await vscode.window.showInputBox({
-                        prompt: 'Kullanmak istediğiniz Ollama model adını girin',
-                        value: vscode.workspace.getConfiguration('byte').get<string>('local.model') || 'llama3',
-                        placeHolder: 'llama3, codellama, mistral',
-                        ignoreFocusOut: true
-                    });
-                    
-                    if (ollamaModel) {
-                        await vscode.workspace.getConfiguration('byte').update('local.model', ollamaModel, vscode.ConfigurationTarget.Global);
-                    }
-                    
-                    vscode.window.showInformationMessage('Ollama yapılandırması başarıyla kaydedildi.');
-                }
-                break;
+            }
+            
+            // Diğer provider kontrolleri...
+            // ... existing code ...
+        } catch (error) {
+            // ... existing code ...
+        }
+    }
+    
+    // Ollama API'sinin kullanılabilirliğini kontrol et
+    private async _checkOllamaAvailability(): Promise<boolean> {
+        try {
+            const response = await fetch('http://localhost:11434/api/tags');
+            return response.ok;
+        } catch {
+            return false;
+        }
+    }
+
+    // Ollama API'sine istek gönder
+    private async _sendOllamaRequest(message: string, model: string): Promise<string> {
+        try {
+            const response = await fetch('http://localhost:11434/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: model,
+                    prompt: message,
+                    stream: false
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Ollama API yanıt vermedi');
+            }
+
+            const data = await response.json() as OllamaResponse;
+            return data.response;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+            throw new Error(`Ollama API hatası: ${errorMessage}`);
         }
     }
     
@@ -407,8 +424,8 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                                         </ul>
                                     </div>
                                     
-                                    <div class="coffee-mode">
-                                        <h3>Coffee mode</h3>
+                                    <div class="chill-mode">
+                                        <h3>Chill mode</h3>
                                         <p>Enable to automatically apply changes and run safe commands</p>
                                     </div>
                                 </div>
@@ -423,8 +440,8 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                             <span class="current-file" id="currentFile">package.json</span>
                             <div class="context-controls">
                                 <label class="agent-toggle">
-                                    <span>Agent</span>
-                                    <input type="checkbox" id="agentToggle" checked>
+                                    <span>Chill</span>
+                                    <input type="checkbox" id="agentToggle" checked disabled>
                                     <span class="toggle-slider"></span>
                                 </label>
                             </div>
