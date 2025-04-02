@@ -56,8 +56,30 @@
         agentEnabled: false,
         includeCurrentFile: false,
         settings: {
-            provider: 'openai',
-            saveHistory: true
+            provider: 'gemini',
+            defaultProvider: 'gemini',
+            saveHistory: true,
+            openai: {
+                apiKey: '',
+                model: 'gpt-3.5-turbo'
+            },
+            gemini: {
+                apiKey: '',
+                model: 'gemini-2.0-flash'
+            },
+            anthropic: {
+                apiKey: '',
+                model: 'claude-3-opus'
+            },
+            local: {
+                endpoint: 'http://localhost:11434/api/generate',
+                model: 'llama3'
+            },
+            autoSwitch: {
+                enabled: false,
+                maxCostPerDay: 1.0,
+                preferredProvider: 'fastest'
+            }
         }
     };
     
@@ -87,8 +109,11 @@
         // Ana AI sağlayıcı select'ine varsayılan değeri ata
         if (state.settings && state.settings.provider) {
             aiProviderSelect.value = state.settings.provider;
+            // Provider display text'i güncelle
+            updateProviderDisplayText(state.settings.provider);
         } else {
-            aiProviderSelect.value = 'openai'; // Varsayılan değer
+            aiProviderSelect.value = 'gemini'; // Varsayılan değer
+            updateProviderDisplayText('gemini');
         }
         
         // Kayıtlı ayarları yükle
@@ -195,7 +220,7 @@
     // Ayarlar formuna mevcut ayarları doldur
     function fillSettingsForm() {
         // Genel ayarlar
-        defaultProviderSelect.value = state.settings.defaultProvider || 'openai';
+        defaultProviderSelect.value = state.settings.defaultProvider || 'gemini';
         saveHistoryCheckbox.checked = state.settings.saveHistory !== undefined ? state.settings.saveHistory : true;
         
         // OpenAI ayarları
@@ -205,6 +230,14 @@
         // Gemini ayarları
         geminiApiKeyInput.value = state.settings.gemini?.apiKey || '';
         geminiModelSelect.value = state.settings.gemini?.model || 'gemini-2.0-flash';
+        
+        // Anthropic ayarları - eğer form alanları varsa
+        const anthropicApiKeyInput = document.getElementById('anthropicApiKey');
+        const anthropicModelSelect = document.getElementById('anthropicModel');
+        if (anthropicApiKeyInput && anthropicModelSelect) {
+            anthropicApiKeyInput.value = state.settings.anthropic?.apiKey || '';
+            anthropicModelSelect.value = state.settings.anthropic?.model || 'claude-3-opus';
+        }
         
         // Yerel ayarlar
         localEndpointInput.value = state.settings.local?.endpoint || 'http://localhost:11434/api/generate';
@@ -221,6 +254,9 @@
         // API anahtarı durumlarını göster
         updateProviderStatus('openai', !!state.settings.openai?.apiKey);
         updateProviderStatus('gemini', !!state.settings.gemini?.apiKey);
+        if (document.querySelector('#anthropicSettings')) {
+            updateProviderStatus('anthropic', !!state.settings.anthropic?.apiKey);
+        }
     }
     
     // Sağlayıcı durum bilgisini güncelle
@@ -247,6 +283,7 @@
     function saveSettings() {
         const settings = {
             provider: aiProviderSelect.value,
+            defaultProvider: defaultProviderSelect.value,
             openai: {
                 apiKey: openaiApiKeyInput.value,
                 model: openaiModelSelect.value
@@ -254,6 +291,10 @@
             gemini: {
                 apiKey: geminiApiKeyInput.value,
                 model: geminiModelSelect.value
+            },
+            anthropic: {
+                apiKey: document.getElementById('anthropicApiKey')?.value || '',
+                model: document.getElementById('anthropicModel')?.value || 'claude-3-opus'
             },
             local: {
                 endpoint: localEndpointInput.value,
@@ -285,6 +326,7 @@
         
         // UI seçimini güncelle
         aiProviderSelect.value = settings.provider;
+        updateProviderDisplayText(settings.provider);
     }
     
     // Ayarlar başarıyla kaydedildiğinde
@@ -292,6 +334,9 @@
         // Başarılı mesajı göster
         settingsStatus.textContent = 'Ayarlar başarıyla kaydedildi!';
         settingsStatus.classList.add('success');
+        
+        // UI'yı güncelle
+        updateProviderDisplayText(state.settings.provider);
         
         // 2 saniye sonra modalı kapat
         setTimeout(() => {
@@ -543,11 +588,81 @@
     
     // AI sağlayıcı değiştirildiğinde
     aiProviderSelect.addEventListener('change', () => {
+        const provider = aiProviderSelect.value;
+        
+        // UI'da provider dropdown etiketini güncelle
+        updateProviderDisplayText(provider);
+        
+        // VS Code'a bildir
         vscode.postMessage({
             type: 'changeProvider',
-            provider: aiProviderSelect.value
+            provider: provider
         });
     });
+    
+    // Sağlayıcı bilgisini dropdown üzerinde güncelle
+    function updateProviderDisplayText(provider) {
+        try {
+            const modelName = getModelName(provider);
+            const providerName = getProviderDisplayName(provider);
+            
+            console.log(`Updating provider display: ${providerName} - Model: ${modelName}`);
+            
+            // Provider adını ve aktif model adını göster
+            const providerLabel = document.querySelector('.select-wrapper .selected-provider');
+            if (providerLabel) {
+                providerLabel.innerHTML = `${providerName}<span class="model-name">${modelName || 'Default'}</span>`;
+            }
+        } catch (error) {
+            console.error('Provider display update error:', error);
+        }
+    }
+    
+    // Sağlayıcı adını daha kullanıcı dostu göster
+    function getProviderDisplayName(provider) {
+        switch (provider) {
+            case 'openai': return 'OpenAI';
+            case 'gemini': return 'Gemini';
+            case 'anthropic': return 'Claude';
+            case 'local': return 'Ollama';
+            default: return provider;
+        }
+    }
+    
+    // Sağlayıcı için aktif model adını getir
+    function getModelName(provider) {
+        if (!state.settings || !state.settings[provider]) {
+            return '';
+        }
+        
+        // Eğer model özelliği yoksa boş string döndür
+        const model = state.settings[provider]?.model;
+        if (!model) {
+            console.log(`Model değeri ${provider} için bulunamadı`, state.settings[provider]);
+            return '';
+        }
+        
+        // Daha kullanıcı dostu ve kısa model isimleri
+        switch(model) {
+            case 'gpt-3.5-turbo': return 'GPT-3.5';
+            case 'gpt-4': return 'GPT-4';
+            case 'gpt-4-turbo': return 'GPT-4T';
+            case 'gemini-2.0-flash': return 'Gem-2.0F';
+            case 'gemini-1.5-pro': return 'Gem-1.5P';
+            case 'gemini-2.0-pro': return 'Gem-2.0P';
+            case 'claude-3-opus': return 'Claude-3O';
+            case 'claude-3-sonnet': return 'Claude-3S';
+            // Yerel modeller için
+            case 'llama3': return 'Llama-3';
+            case 'codellama': return 'Code-Llama';
+            case 'mistral': return 'Mistral';
+            case 'phi': return 'Phi';
+            // Bilinmeyen model ise kısaltma yap
+            default: 
+                // Model ismini maksimum 10 karakter olacak şekilde kısalt
+                return model.length > 10 ? model.substring(0, 9) + '…' : model;
+        }
+    }
     
     // New Chat butonu için event listener
     newChatButton.addEventListener('click', () => {
@@ -712,6 +827,12 @@
                 // WebView başlangıç durumu
                 console.log('WebView init received:', message);
                 
+                // State'i güncelle
+                if (message.settings) {
+                    // Ayarlar varsa onları state'e aktar
+                    state.settings = message.settings;
+                }
+                
                 // Mesaj geçmişini yükle
                 if (message.messages) {
                     state.messages = message.messages;
@@ -734,7 +855,17 @@
                 
                 // Provider seçimini ayarla
                 if (message.provider) {
+                    state.settings.provider = message.provider;
                     aiProviderSelect.value = message.provider;
+                    
+                    // Provider modellerinin varsayılan olarak ayarlanmasını sağla
+                    if (!state.settings.openai) state.settings.openai = {apiKey: '', model: 'gpt-3.5-turbo'};
+                    if (!state.settings.gemini) state.settings.gemini = {apiKey: '', model: 'gemini-2.0-flash'};
+                    if (!state.settings.anthropic) state.settings.anthropic = {apiKey: '', model: 'claude-3-opus'};
+                    if (!state.settings.local) state.settings.local = {endpoint: 'http://localhost:11434/api/generate', model: 'llama3'};
+                    
+                    // Provider display text'i güncelle
+                    updateProviderDisplayText(message.provider);
                 }
                 
                 vscode.setState(state);
@@ -870,16 +1001,28 @@
             case 'settingsUpdated':
                 // Ayarlar güncellendiğinde state'i güncelle
                 if (message.settings) {
-                    state.settings = message.settings;
+                    // Ayarlar objesi içerisindeki undefined değerleri ile ilgilenmemek için
+                    // mevcut state ile birleştir (Object.assign veya spread operatör ile)
+                    state.settings = {...state.settings, ...message.settings};
                     vscode.setState(state);
+                    
+                    // Provider modellerinin ayarlanmış olduğunu kontrol et
+                    if (!state.settings.openai) state.settings.openai = {apiKey: '', model: 'gpt-3.5-turbo'};
+                    if (!state.settings.gemini) state.settings.gemini = {apiKey: '', model: 'gemini-2.0-flash'};
+                    if (!state.settings.anthropic) state.settings.anthropic = {apiKey: '', model: 'claude-3-opus'};
+                    if (!state.settings.local) state.settings.local = {endpoint: 'http://localhost:11434/api/generate', model: 'llama3'};
                     
                     // UI'yı güncelle
                     fillSettingsForm();
-                    aiProviderSelect.value = message.settings.provider;
+                    aiProviderSelect.value = state.settings.provider;
+                    updateProviderDisplayText(state.settings.provider);
                     
                     // API anahtarı durumu güncelle
-                    updateProviderStatus('openai', !!message.settings.openai.apiKey);
-                    updateProviderStatus('gemini', !!message.settings.gemini.apiKey);
+                    updateProviderStatus('openai', !!state.settings.openai.apiKey);
+                    updateProviderStatus('gemini', !!state.settings.gemini.apiKey);
+                    if (document.querySelector('#anthropicSettings')) {
+                        updateProviderStatus('anthropic', !!state.settings.anthropic?.apiKey);
+                    }
                 }
                 break;
                 

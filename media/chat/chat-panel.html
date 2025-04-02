@@ -17,10 +17,11 @@
                 <div class="select-wrapper">
                     <select id="aiProvider">
                         <option value="openai">OpenAI</option>
-                        <option value="gemini">Google Gemini</option>
+                        <option value="gemini" selected>Google Gemini</option>
                         <option value="anthropic">Anthropic Claude</option>
                         <option value="local">Ollama</option>
                     </select>
+                    <div class="selected-provider">Gemini<span class="model-name">Gemini Flash</span></div>
                     <div class="select-arrow">▼</div>
                 </div>
                 <button id="configureButton" class="icon-button" title="Yapılandır">
@@ -312,7 +313,8 @@
                         <label for="defaultProvider">Varsayılan AI Sağlayıcısı</label>
                         <select id="defaultProvider">
                             <option value="openai">OpenAI</option>
-                            <option value="gemini">Google Gemini</option>
+                            <option value="gemini" selected>Google Gemini</option>
+                            <option value="anthropic">Anthropic Claude</option>
                             <option value="local">Ollama (Yerel)</option>
                         </select>
                     </div>
