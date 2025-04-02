@@ -3,7 +3,7 @@
   "displayName": "Byte AI Assistant",
   "description": "AI-powered coding assistant that helps developers write, analyze, refactor, and optimize code. Features include code explanation, documentation generation, unit test creation, and intelligent suggestions to improve code quality and productivity.",
   "version": "0.0.4",
-  "publisher": "byte", 
+  "publisher": "byte",
   "author": {
     "name": "Tuncer Bagcabasi"
   },
@@ -137,7 +137,7 @@
           "group": "z_byte@5"
         },
         {
-          "command": "byte.optimizeCode", 
+          "command": "byte.optimizeCode",
           "group": "z_byte@6"
         },
         {
@@ -251,18 +251,22 @@
           "properties": {
             "maxCostPerDay": {
               "type": "number",
-              "default": 1.0,
+              "default": 1,
               "description": "Maximum cost allowed per day in USD"
             },
             "preferredProvider": {
               "type": "string",
-              "enum": ["fastest", "cheapest", "most-accurate"],
+              "enum": [
+                "fastest",
+                "cheapest",
+                "most-accurate"
+              ],
               "default": "most-accurate",
               "description": "Preferred optimization strategy for auto-switching"
             }
           },
           "default": {
-            "maxCostPerDay": 1.0,
+            "maxCostPerDay": 1,
             "preferredProvider": "most-accurate"
           },
           "description": "Auto-switch configuration metrics"
@@ -291,6 +295,8 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.7",
     "node-fetch": "^2.6.7"
   }
 }

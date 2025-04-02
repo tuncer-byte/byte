@@ -1,94 +1,84 @@
-# Byte - AI Coding Assistant
+# Byte AI Assistant
 
-![Project Architecture and Flow](public/architect.png)
+A powerful AI assistant for Visual Studio Code that helps you write, understand, and improve your code.
 
-Byte is a powerful Visual Studio Code extension that enhances your coding workflow with AI-powered assistance. It provides a chat interface and code analysis tools designed to help you write, understand, refactor, and optimize your code.
+![Byte AI Assistant](media/icon.png)
 
 ## Features
 
-### Multi-Provider AI Integration
-Byte supports different AI providers, allowing you to choose the one that best suits your needs:
-- **OpenAI** - Utilize OpenAI's powerful language models
-- **Google Gemini** - Leverage Google's advanced Gemini AI models
-- **Local Models (Ollama)** - Connect to locally running AI models through Ollama on your own computer
+- 🤖 **AI Chat**: Talk to AI models directly in VS Code
+- 🔍 **Code Analysis**: Get explanations and insights about your code
+- 🛠️ **Code Refactoring**: Improve your code with AI-powered suggestions
+- 📝 **Documentation Generation**: Generate comprehensive documentation
+- 🧪 **Test Generation**: Create unit tests for your code
+- 🚀 **Performance Optimization**: Get suggestions to optimize your code
+- 📊 **Code Issue Detection**: Find potential bugs and code smells
 
-### Intelligent Code Assistant
-- **Code Analysis** - Get detailed explanations and analyses of your selected code blocks
-- **Chat with Code** - Ask questions and get answers about your selected code blocks
-- **Code Improvement** - Receive suggestions to improve your code quality
-- **Documentation Generation** - Automatically generate comprehensive documentation
-- **Code Optimization** - Optimize your code for performance, memory, or readability
-- **Issue Detection** - Find potential bugs, security vulnerabilities, and code smells
-- **Unit Test Generation** - Automatically create unit tests for your code
+## AI Providers
 
-### Intuitive User Interface
-- **Chat Panel** - Convenient chat interface in the sidebar
-- **Code Analysis Panel** - Panel that analyzes selected code blocks and provides chat functionality
-- **Context-Aware Responses** - AI understands your current file and project context
+Byte supports multiple AI providers:
 
-## Installation
+- OpenAI (GPT models)
+- Google Gemini
+- Anthropic Claude
+- Local models via Ollama
 
-1. Open the VS Code extensions panel (Ctrl+Shift+X / Cmd+Shift+X)
-2. Search for "Byte AI Assistant"
-3. Click Install
+## Getting Started
 
-## Quick Start
+1. Install the extension from the VS Code marketplace
+2. Configure your preferred AI provider via the `/configure` command
+3. Start chatting with the AI via the Byte panel in the sidebar
+4. Use slash commands like `/explain`, `/refactor`, `/docs` to process your code
 
-1. Open the Byte panel by clicking the Byte icon in the activity bar
-2. Configure your preferred AI provider by clicking the ⚙️ button
-3. Start chatting with Byte!
+## Commands
 
-## Code Analysis and Chat
+| Command | Description |
+|---------|-------------|
+| `/explain` | Explain the selected code |
+| `/refactor` | Get suggestions to improve your code |
+| `/docs` | Generate documentation for your code |
+| `/optimize` | Get performance optimization suggestions |
+| `/comments` | Add detailed comments to your code |
+| `/issues` | Find potential bugs and code smells |
+| `/tests` | Generate unit tests for your code |
+| `/help` | See a list of all available commands |
 
-There are two ways to analyze code and chat with Byte:
+## Code Analysis
 
-1. **Code Analysis**:
-   - Select text and right-click
-   - Choose "Analyze Code" from the "Byte AI Assistant" menu
-   - The selected code will be analyzed and information will be provided
+Select any code in your editor and use the "Analyze Selected Code" command or right-click menu to get an instant analysis of your code, including:
 
-2. **Ask Question About Code**:
-   - Select text and right-click
-   - Choose "Ask Question About Code" from the "Byte AI Assistant" menu
-   - Enter your question about the code and the AI will respond
+- Explanation of how it works
+- Potential issues and improvement suggestions
+- Best practices recommendations
 
-## Keyboard Shortcuts
+## Development
 
-| Command | Shortcut (Windows/Linux) | Shortcut (Mac) |
-|---------|--------------------------|----------------|
-| Analyze Code | Ctrl+Alt+I | Cmd+Alt+I |
-| Ask Question About Code | Ctrl+Alt+Q | Cmd+Alt+Q |
+For development details, see [ARCHITECTURE.md](src/ARCHITECTURE.md) for information about the codebase structure.
 
-## Extension Settings
+### Building from Source
 
-This extension provides the following settings:
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/byte.git
 
-* `byte.provider`: Set the default AI provider (openai, gemini, local)
-* `byte.openai.apiKey`: Your OpenAI API key (stored securely)
-* `byte.gemini.apiKey`: Your Google Gemini API key (stored securely)
-* `byte.local.endpoint`: URL endpoint for your local AI model (default: http://localhost:11434/api/generate)
-* `byte.local.model`: Model name to use in Ollama (default: llama3)
+# Install dependencies
+npm install
 
-## Architecture
+# Build the extension
+npm run build
 
-The extension follows a modular architecture:
-
-1. **Extension Core** - Handles activation, command registration, and UI initialization
-2. **AI Service** - Manages communication with AI providers and message history
-3. **Chat Panel** - WebView-based UI for user interaction
-4. **Command Manager** - Processes extension commands
-5. **Inline Code Analysis** - Analyzes selected code blocks and provides chat functionality about the code
-
-## Contributing
-
-If you want to contribute to the project, please submit a Pull Request to the GitHub repository or open an Issue.
+# Package the extension
+npm run package
+```
 
 ## License
 
-This extension is licensed under the [MIT License](LICENSE).
+MIT License
 
 ## Privacy
 
-Byte sends code snippets and queries to the configured AI provider. Please review the privacy policy of your chosen AI provider for details on how they handle your data.
+Your code is processed according to the privacy policy of the AI provider you choose. Code is sent only when you explicitly request analysis. No code is stored or logged by the extension itself.
 
-**Enjoy using Byte AI Assistant!**
+## Feedback
+
+We welcome feedback and contributions! Please open an issue on GitHub or use the "Provide Feedback" command in the extension.

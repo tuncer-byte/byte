@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { AIService } from './services/ai';
-import { ChatPanel } from './chatPanel';
+import { InlineCodeChat } from './views/inline-chat';
 import { CommandManager } from './commands';
-import { InlineCodeChat } from './inlineCodeChat';
+import { ChatPanel } from './views/chat';
 
 // Global terminal değişkeni
 let byteTerminal: vscode.Terminal | undefined;
