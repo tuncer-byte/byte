@@ -79,6 +79,11 @@ export class MessageHandler {
                     // Kodu aktif editöre uygula
                     await this.applyCodeToEditor(message.code);
                     break;
+                    
+                case 'runCode':
+                    // Terminal komutunu çalıştır
+                    await this.runCodeInTerminal(message.code);
+                    break;
             }
         } catch (error: any) {
             // Hata durumunu WebView'e ilet
@@ -294,6 +299,27 @@ export class MessageHandler {
             vscode.window.showErrorMessage('Kodu uygulamak için açık bir editör gereklidir.');
             
             this.sendErrorToWebView('Kodu uygulamak için açık bir editör gerekli. Lütfen bir dosya açın.');
+        }
+    }
+    
+    /**
+     * Kodu terminalde çalıştırır
+     */
+    private async runCodeInTerminal(code: string): Promise<void> {
+        if (!code) {
+            return;
+        }
+        
+        try {
+            // VS Code terminali oluştur ve komutu çalıştır
+            vscode.commands.executeCommand('byte.runInTerminal', code);
+            
+            // Başarı mesajı göster
+            vscode.window.showInformationMessage('Komut terminalde çalıştırılıyor.');
+        } catch (error: any) {
+            // Hata durumunda WebView'e bildir
+            this.sendErrorToWebView(`Komut çalıştırılırken hata oluştu: ${error.message}`);
+            vscode.window.showErrorMessage(`Komut çalıştırılırken hata oluştu: ${error.message}`);
         }
     }
     

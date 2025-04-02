@@ -375,6 +375,19 @@
             
             // Mesaj alanını en alta kaydır
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Kod vurgulamasını uygula
+            setTimeout(() => {
+                try {
+                    document.querySelectorAll('pre code').forEach((block) => {
+                        if (!block.classList.contains('hljs')) {
+                            hljs.highlightElement(block);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Highlight.js error:', error);
+                }
+            }, 10);
         }
     }
     
@@ -393,7 +406,7 @@
         contentDiv.classList.add('message-content');
         
         // Markdown formatlaması uygula (basitleştirilmiş)
-        let formattedContent = formatMarkdown(content);
+        let formattedContent = formatMarkdown(content, role);
         
         // Eğer mesaj bir komutsa ve kullanıcı mesajıysa, komutu vurgula
         if (isCommand && role === 'user') {
@@ -426,7 +439,7 @@
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
-                <span>Kopyala</span>
+                <span>Copy</span>
             `;
             
             copyButton.addEventListener('click', () => {
@@ -437,7 +450,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
-                            <span>Kopyalandı!</span>
+                            <span>Copied!</span>
                         `;
                         
                         setTimeout(() => {
@@ -447,7 +460,7 @@
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                 </svg>
-                                <span>Kopyala</span>
+                                <span>Copy</span>
                             `;
                         }, 2000);
                     });
@@ -462,11 +475,39 @@
     }
     
     // Geliştirilmiş Markdown formatlaması
-    function formatMarkdown(text) {
+    function formatMarkdown(text, role = 'assistant') {
         if (!text) return '';
         
-        // Kod bloklarını işle - dil desteği eklendi
+        // Kod bloklarını işle - dil desteği ve syntax highlighting eklendi
         text = text.replace(/```(\w*)([\s\S]*?)```/g, function(match, language, code) {
+            // Dil belirteci yoksa varsayılan dilleri kontrol et
+            if (!language || language === '') {
+                // Kod içeriğine bakarak yaygın dilleri tespit et
+                if (code.includes('function') || code.includes('const ') || code.includes('let ') || 
+                    code.includes('var ') || code.includes('() =>') || code.includes('export ')) {
+                    
+                    // TypeScript veya JavaScript tespiti
+                    if (code.includes('interface ') || code.includes('type ') || 
+                        code.includes(':') || code.includes('<T>')) {
+                        language = 'typescript';
+                    } else {
+                        language = 'javascript';
+                    }
+                } else if (code.includes('<!DOCTYPE') || code.includes('<html') || 
+                           code.includes('</div>') || code.includes('<script>')) {
+                    language = 'html';
+                } else if (code.includes('import ') && code.includes('from ')) {
+                    language = 'typescript';
+                } else if (code.includes('{') && code.includes('}') && 
+                          (code.includes('"') || code.includes("'"))) {
+                    language = 'json';
+                } else if (code.includes('class ') && code.includes('extends ')) {
+                    language = 'typescript';
+                } else {
+                    language = '';
+                }
+            }
+            
             const langClass = language ? ` class="language-${language}"` : '';
             const formattedCode = escapeHtml(code.trim());
             
@@ -474,15 +515,34 @@
             const langBadge = language ? `<div class="code-language">${language}</div>` : '';
             let actionButtons = '';
             
-            // Butonları oluştur - kod içeriğini direct olarak gönder back-ticks olmadan
-            if (language === 'bash' || language === 'sh') {
-                actionButtons = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;
-            } else if (language && language !== 'output' && language !== 'text' && language !== 'console') {
-                actionButtons = `<button class="apply-code-button" data-code="${escapeHtml(code.trim())}">Apply</button>`;
+            // Sadece AI mesajları için butonları göster
+            if (role === 'assistant') {
+                // Butonları oluştur - kod içeriğini direct olarak gönder back-ticks olmadan
+                if (language === 'bash' || language === 'sh') {
+                    actionButtons = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;
+                } else if (language && language !== 'output' && language !== 'text' && language !== 'console') {
+                    actionButtons = `<button class="apply-code-button" data-code="${escapeHtml(code.trim())}">Apply</button>`;
+                }
             }
 
-            // Header'ı ve kod içeriğini birleştir - butonu sağ üst köşeye yerleştirmek için kod değişikliği
-            return `<pre>${langBadge}<div style="position:absolute;top:0;right:0;z-index:10;">${actionButtons}</div><code${langClass}>${formattedCode}</code></pre>`;
+            // Header'ı ve kod içeriğini birleştir - butonu sağ üst köşeye yerleştir
+            const preElement = `<pre>${langBadge}<div style="position:absolute;top:0;right:0;z-index:10;">${actionButtons}</div><code${langClass}>${formattedCode}</code></pre>`;
+            
+            // Timeout'la highlight.js'yi çalıştır
+            setTimeout(() => {
+                try {
+                    // Tüm <pre><code> bloklarını seç ve highlight.js uygula
+                    document.querySelectorAll('pre code').forEach((block) => {
+                        if (!block.classList.contains('hljs')) {
+                            hljs.highlightElement(block);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Highlight.js error:', error);
+                }
+            }, 0);
+            
+            return preElement;
         });
         
         // Satır içi kod
@@ -931,6 +991,19 @@
                 // Mesajı görüntüle
                 appendMessage('assistant', message.content);
                 
+                // Kod vurgulamasını uygula
+                setTimeout(() => {
+                    try {
+                        document.querySelectorAll('pre code').forEach((block) => {
+                            if (!block.classList.contains('hljs')) {
+                                hljs.highlightElement(block);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Highlight.js error:', error);
+                    }
+                }, 10);
+                
                 // Mesaj state'e kaydedildiyse, state'i güncelle
                 // (Mesaj state'e VS Code tarafından kaydediliyor, state güncellemesine gerek yok)
                 
@@ -1303,6 +1376,33 @@
         }
     `;
     document.head.appendChild(customStyles);
+
+    // Kod butonları için event listener
+    document.addEventListener('click', function(e) {
+        // Run code butonları
+        if (e.target.classList.contains('run-code-button')) {
+            const code = e.target.getAttribute('data-code');
+            if (code) {
+                // VS Code'a mesaj gönder
+                vscode.postMessage({
+                    type: 'runCode',
+                    code: code
+                });
+            }
+        }
+        
+        // Apply code butonları
+        if (e.target.classList.contains('apply-code-button')) {
+            const code = e.target.getAttribute('data-code');
+            if (code) {
+                // VS Code'a mesaj gönder
+                vscode.postMessage({
+                    type: 'applyCode',
+                    code: code
+                });
+            }
+        }
+    });
 
     // Komut girişi dinleyicisi
     commandInput.addEventListener('input', function() {
