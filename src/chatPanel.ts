@@ -269,6 +269,44 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                         vscode.commands.executeCommand('byte.runInTerminal', message.command);
                     }
                     break;
+                    
+                case 'applyCode':
+                    // Kodu aktif editöre uygula
+                    if (message.code) {
+                        const editor = vscode.window.activeTextEditor;
+                        if (editor) {
+                            // Kodu temizle - AI'nin yorum satırlarını temizle
+                            const cleanCode = this._cleanCodeForApply(message.code);
+                            
+                            // Editörde değişiklik yap
+                            editor.edit(editBuilder => {
+                                // Eğer seçili alan varsa, onu değiştir
+                                if (!editor.selection.isEmpty) {
+                                    editBuilder.replace(editor.selection, cleanCode);
+                                } else {
+                                    // Seçili alan yoksa, imlecin olduğu yere ekle
+                                    editBuilder.insert(editor.selection.active, cleanCode);
+                                }
+                            }).then(success => {
+                                if (success) {
+                                    vscode.window.showInformationMessage(`Kod başarıyla uygulandı.`);
+                                } else {
+                                    vscode.window.showErrorMessage('Kod uygulanırken bir hata oluştu.');
+                                }
+                            });
+                        } else {
+                            // Açık bir editör yoksa hata mesajı göster
+                            vscode.window.showErrorMessage('Kodu uygulamak için açık bir editör gereklidir.');
+                            
+                            if (this._view) {
+                                this._view.webview.postMessage({
+                                    type: 'error',
+                                    content: 'Kodu uygulamak için açık bir editör gerekli. Lütfen bir dosya açın.'
+                                });
+                            }
+                        }
+                    }
+                    break;
             }
         } catch (error: any) {
             // Hata durumunu WebView'e ilet
@@ -1201,5 +1239,20 @@ Example: \`/explain function sum(a, b) { return a + b; }\`
                 error: errorMessage
             });
         }
+    }
+
+    private _cleanCodeForApply(code: string): string {
+        // Yorum satırlarını temizleme
+        // 1. /* ... */ çok satırlı yorumları temizle
+        // 2. // ... tek satırlı yorumları temizle
+        let cleanCode = code
+            .replace(/\/\*[\s\S]*?\*\//g, '') // Çok satırlı yorumları kaldır
+            .replace(/\/\/.*?($|\n)/g, '$1'); // Tek satırlı yorumları kaldır
+
+        // Kod bloğunun yorum satırları olmadan da çalışır olduğundan emin ol
+        // Örneğin, ardışık boş satırları tek boş satıra düşür
+        cleanCode = cleanCode.replace(/\n\s*\n\s*\n/g, '\n\n');
+        
+        return cleanCode;
     }
 }

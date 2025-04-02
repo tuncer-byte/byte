@@ -795,14 +795,15 @@ body, html {
     position: absolute;
     top: 0;
     left: 0; /* Sağdan sola aldık */
-    background-color: rgba(255, 123, 35, 0.2);
-    color: var(--primary-color);
+    background-color: rgba(0, 0, 0, 0.5); /* Darker background for better contrast */
+    color: var(--foreground);
     font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 0 0 5px 0; /* Köşe yuvarlaklığını düzenledik */
+    padding: 3px 6px;
+    border-radius: 0 0 4px 0; /* Adjust border radius */
     font-family: 'SFMono-Regular', Consolas, monospace;
     font-weight: 500;
     text-transform: uppercase;
+    z-index: 5; /* Ensure it's above the code block */
 }
 
 /* Markdown listeleri için stiller */
@@ -1461,4 +1462,119 @@ body, html {
     cursor: not-allowed;
 }
 
-/* Message Stilleri Arasına Ekle */
+/* Apply Butonu ve Dosya Etiketi Stilleri */
+.apply-button-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    z-index: 20; /* Daha yüksek z-index değeri */
+    padding: 2px 0;
+}
+
+.apply-code-button {
+    background-color: rgba(255, 123, 35, 0.6); /* Daha belirgin arka plan */
+    color: white; /* Daha okunaklı beyaz yazı */
+    font-size: 12px;
+    font-weight: 600; /* Daha kalın yazı */
+    padding: 2px 10px;
+    border-radius: 0 5px 0 0;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 5px; /* Dosya adıyla arasında biraz boşluk */
+}
+
+.apply-code-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-1px); /* Hafif yükselme efekti */
+}
+
+.apply-code-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.current-file-label {
+    color: rgba(230, 230, 230, 0.8); /* Daha görünür dosya adı */
+    font-size: 11px;
+    margin-right: 5px;
+    margin-left: 5px;
+    font-style: italic;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background-color: rgba(0, 0, 0, 0.3); /* Koyu arka plan ekle */
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Kod bloğu stilleri */
+pre {
+    position: relative;
+    margin: 1rem 0;
+    padding: 0;
+    background: var(--code-background);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: var(--code-header-background, rgba(0, 0, 0, 0.1));
+    border-bottom: 1px solid var(--border-color);
+}
+
+.code-language {
+    font-size: 0.85em;
+    color: var(--foreground-secondary);
+    font-family: var(--font-mono);
+}
+
+.code-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.run-code-button,
+.apply-code-button {
+    padding: 4px 12px;
+    font-size: 0.85em;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--button-background);
+    color: var(--button-foreground);
+}
+
+.run-code-button:hover,
+.apply-code-button:hover {
+    background: var(--button-hover-background);
+}
+
+.run-code-button:active,
+.apply-code-button:active {
+    transform: translateY(1px);
+}
+
+.run-code-button:disabled,
+.apply-code-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+pre code {
+    display: block;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    line-height: 1.5;
+}

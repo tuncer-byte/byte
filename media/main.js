@@ -84,6 +84,13 @@
             currentFileElement.textContent = state.currentFile;
         }
         
+        // Ana AI sağlayıcı select'ine varsayılan değeri ata
+        if (state.settings && state.settings.provider) {
+            aiProviderSelect.value = state.settings.provider;
+        } else {
+            aiProviderSelect.value = 'openai'; // Varsayılan değer
+        }
+        
         // Kayıtlı ayarları yükle
         loadSettings();
     });
@@ -188,24 +195,32 @@
     // Ayarlar formuna mevcut ayarları doldur
     function fillSettingsForm() {
         // Genel ayarlar
-        defaultProviderSelect.value = state.settings.defaultProvider;
-        saveHistoryCheckbox.checked = state.settings.saveHistory;
+        defaultProviderSelect.value = state.settings.defaultProvider || 'openai';
+        saveHistoryCheckbox.checked = state.settings.saveHistory !== undefined ? state.settings.saveHistory : true;
         
         // OpenAI ayarları
-        openaiApiKeyInput.value = state.settings.openai.apiKey || '';
-        openaiModelSelect.value = state.settings.openai.model || 'gpt-3.5-turbo';
+        openaiApiKeyInput.value = state.settings.openai?.apiKey || '';
+        openaiModelSelect.value = state.settings.openai?.model || 'gpt-3.5-turbo';
         
         // Gemini ayarları
-        geminiApiKeyInput.value = state.settings.gemini.apiKey || '';
-        geminiModelSelect.value = state.settings.gemini.model || 'gemini-1.5-flash';
+        geminiApiKeyInput.value = state.settings.gemini?.apiKey || '';
+        geminiModelSelect.value = state.settings.gemini?.model || 'gemini-2.0-flash';
         
         // Yerel ayarlar
-        localEndpointInput.value = state.settings.local.endpoint || 'http://localhost:11434/api/generate';
-        localModelSelect.value = state.settings.local.model || 'llama3';
+        localEndpointInput.value = state.settings.local?.endpoint || 'http://localhost:11434/api/generate';
+        localModelSelect.value = state.settings.local?.model || 'llama3';
+        
+        // Otomatik geçiş ayarları - önceden değeri yoksa varsayılan değerler ata
+        autoSwitchCheckbox.checked = state.settings.autoSwitch?.enabled || false;
+        maxCostPerDay.value = state.settings.autoSwitch?.maxCostPerDay || 1.0;
+        preferredProvider.value = state.settings.autoSwitch?.preferredProvider || 'fastest';
+        
+        // Otomatik geçiş ayarları görünürlüğünü ayarla
+        autoSwitchSettings.style.display = autoSwitchCheckbox.checked ? 'block' : 'none';
         
         // API anahtarı durumlarını göster
-        updateProviderStatus('openai', !!state.settings.openai.apiKey);
-        updateProviderStatus('gemini', !!state.settings.gemini.apiKey);
+        updateProviderStatus('openai', !!state.settings.openai?.apiKey);
+        updateProviderStatus('gemini', !!state.settings.gemini?.apiKey);
     }
     
     // Sağlayıcı durum bilgisini güncelle
@@ -395,16 +410,19 @@
             const langClass = language ? ` class="language-${language}"` : '';
             const formattedCode = escapeHtml(code.trim());
             
-            // Dil belirteci gösterimi eklendi (solda)
+            // Dil belirteci ve butonlar için üst kısım (header) oluştur
             const langBadge = language ? `<div class="code-language">${language}</div>` : '';
+            let actionButtons = '';
             
-            // Bash veya sh dili ise Run butonu ekle (sağda)
-            let runButton = '';
+            // Butonları oluştur
             if (language === 'bash' || language === 'sh') {
-                runButton = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;
+                actionButtons = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;
+            } else if (language && language !== 'output' && language !== 'text' && language !== 'console') {
+                actionButtons = `<button class="apply-code-button" data-code="${escapeHtml(code.trim())}">Apply</button>`;
             }
-            
-            return `<pre>${langBadge}${runButton}<code${langClass}>${formattedCode}</code></pre>`;
+
+            // Header'ı ve kod içeriğini birleştir
+            return `<pre>${langBadge}${actionButtons}<code${langClass}>${formattedCode}</code></pre>`;
         });
         
         // Satır içi kod
@@ -727,8 +745,17 @@
                 if (message.filePath) {
                     const fileName = message.filePath.split(/[\\/]/).pop() || '';
                     updateCurrentFile(fileName, message.filePath);
+                    
+                    // Apply butonlarının yanındaki dosya etiketlerini güncelle
+                    updateAllFileLabels();
                 } else {
                     updateCurrentFile(null, null);
+                    
+                    // Apply butonlarının yanındaki dosya etiketlerini temizle
+                    const fileLabels = document.querySelectorAll('.current-file-label');
+                    fileLabels.forEach(label => {
+                        label.textContent = '';
+                    });
                 }
                 break;
                 
@@ -1051,7 +1078,7 @@
     // Sayfa yüklendiğinde mesajları göster
     loadMessages();
     
-    // Run butonu için olay dinleyicisini ekle
+    // Run butonu ve Apply butonu için olay dinleyicileri
     document.addEventListener('click', function(event) {
         // Run butonuna tıklandığında
         if (event.target.classList.contains('run-code-button')) {
@@ -1074,5 +1101,40 @@
                 }, 2000);
             }
         }
+        
+        // Apply butonuna tıklandığında
+        if (event.target.classList.contains('apply-code-button')) {
+            const code = event.target.getAttribute('data-code');
+            if (code) {
+                // VS Code extension'a kodu gönder
+                vscode.postMessage({
+                    type: 'applyCode',
+                    code: code
+                });
+                
+                // Butonun görünümünü güncelle
+                event.target.textContent = 'Applied!';
+                event.target.disabled = true;
+                
+                // Belirli bir süre sonra butonu eski haline getir
+                setTimeout(() => {
+                    event.target.textContent = 'Apply';
+                    event.target.disabled = false;
+                }, 2000);
+            }
+        }
     });
+    
+    // Mevcut dosya bilgilerini bütün dosya etiketlerine güncelle
+    function updateAllFileLabels() {
+        const fileLabels = document.querySelectorAll('.current-file-label');
+        if (fileLabels.length > 0 && state.currentFile) {
+            fileLabels.forEach(label => {
+                label.textContent = state.currentFile;
+            });
+        }
+    }
+    
+    // Sayfa yüklendiğinde mesajları göster
+    loadMessages();
 })();
