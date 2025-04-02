@@ -333,7 +333,9 @@
     function handleSettingsSaved() {
         // Başarılı mesajı göster
         settingsStatus.textContent = 'Ayarlar başarıyla kaydedildi!';
+        settingsStatus.classList.remove('error');
         settingsStatus.classList.add('success');
+        settingsStatus.classList.add('show');
         
         // UI'yı güncelle
         updateProviderDisplayText(state.settings.provider);
@@ -341,7 +343,6 @@
         // 2 saniye sonra modalı kapat
         setTimeout(() => {
             closeSettingsModal();
-            settingsStatus.textContent = '';
             settingsStatus.classList.remove('show');
         }, 2000);
     }
@@ -875,17 +876,44 @@
         if (fileName && filePath) {
             state.currentFile = fileName;
             state.currentFilePath = filePath;
+            
+            // Ekrandaki görüntüyü güncelle
             currentFileElement.textContent = fileName;
-            fileContextElement.style.display = 'block';
+            currentFileElement.title = filePath; // Tam yolu tooltip olarak göster
+            
+            // Dosya bilgisini içeren div'i göster ve sınıfını güncelle
+            const fileContextDiv = document.getElementById('fileContext');
+            if (fileContextDiv) {
+                fileContextDiv.style.display = 'flex';
+                fileContextDiv.classList.add('active-file');
+            }
         } else {
             state.currentFile = '';
             state.currentFilePath = '';
+            
+            // Ekrandaki görüntüyü temizle
             currentFileElement.textContent = '';
-            fileContextElement.style.display = 'none';
-            state.includeCurrentFile = false;
-            includeCurrentFileCheckbox.checked = false;
+            currentFileElement.title = '';
+            
+            // Dosya bilgisini içeren div'i gizle
+            const fileContextDiv = document.getElementById('fileContext');
+            if (fileContextDiv) {
+                fileContextDiv.style.display = 'none';
+                fileContextDiv.classList.remove('active-file');
+            }
+            
+            // Dosya dahil etme seçeneğini de kapat
+            if (document.getElementById('includeCurrentFile')) {
+                document.getElementById('includeCurrentFile').checked = false;
+                state.includeCurrentFile = false;
+            }
         }
+        
+        // State'i güncelle
         vscode.setState(state);
+        
+        // Dosya adını içeren tüm etiketleri güncelle
+        updateAllFileLabels();
     }
     
     // VS Code'dan gelen mesajları dinle
@@ -1052,19 +1080,10 @@
             case 'currentFileChanged':
                 // Mevcut dosya değiştiğinde UI'yı güncelle
                 if (message.filePath) {
-                    const fileName = message.filePath.split(/[\\/]/).pop() || '';
+                    const fileName = message.fileName || message.filePath.split(/[\\/]/).pop() || '';
                     updateCurrentFile(fileName, message.filePath);
-                    
-                    // Apply butonlarının yanındaki dosya etiketlerini güncelle
-                    updateAllFileLabels();
                 } else {
                     updateCurrentFile(null, null);
-                    
-                    // Apply butonlarının yanındaki dosya etiketlerini temizle
-                    const fileLabels = document.querySelectorAll('.current-file-label');
-                    fileLabels.forEach(label => {
-                        label.textContent = '';
-                    });
                 }
                 break;
                 

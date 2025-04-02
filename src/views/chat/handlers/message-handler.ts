@@ -109,24 +109,18 @@ export class MessageHandler {
      */
     private async handleUserMessage(message: WebViewMessage): Promise<void> {
         try {
-            // Önce kullanıcının mesajını webview'e gönder - sadece bir kez yapılacak
+            // Mesajı işlemeden önce yükleniyor göstergesini etkinleştir
             if (this.view) {
                 this.view.webview.postMessage({
-                    type: 'userMessage',
-                    content: message.message,
-                    isCommand: message.message.startsWith('/')
+                    type: 'loadingStart'
                 });
             }
+
+            // Önemli: Mesajı WebView'e göndermiyoruz - bu işlem chat-panel.js tarafında yapılıyor
+            // Bu sayede çift mesaj sorunu önlenmiş oluyor
             
             // Slash komutlarını kontrol et
             if (this.commandManager && message.message.startsWith('/')) {
-                // Yükleniyor göstergesini aç (slash komut yanıtı beklerken)
-                if (this.view) {
-                    this.view.webview.postMessage({
-                        type: 'loadingStart'
-                    });
-                }
-                
                 // Komutu işleyebilirsek mesajı değiştirme
                 if (await processSlashCommand(message.message, this.aiService, this.view)) {
                     return;
@@ -142,13 +136,6 @@ export class MessageHandler {
                     const fileContent = editor.document.getText();
                     finalMessage = `Current file (${this.currentFile}):\n\`\`\`\n${fileContent}\n\`\`\`\n\nUser message:\n${message.message}`;
                 }
-            }
-            
-            // Yükleniyor göstergesini aç
-            if (this.view) {
-                this.view.webview.postMessage({
-                    type: 'loadingStart'
-                });
             }
             
             if (message.provider === 'local') {
@@ -349,13 +336,14 @@ export class MessageHandler {
         if (filePath) {
             // Dosya adını al (yoldan ayır)
             const fileName = filePath.split(/[\\/]/).pop() || '';
-            this.currentFile = fileName;
+            this.currentFile = filePath; // Tam yolu saklıyoruz
             
             // WebView'e bildir
             if (this.view && this.view.visible) {
                 this.view.webview.postMessage({
                     type: 'currentFileChanged',
-                    filePath: filePath
+                    filePath: filePath,
+                    fileName: fileName
                 });
             }
         } else {

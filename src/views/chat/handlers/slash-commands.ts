@@ -445,6 +445,7 @@ export const helpCommandHandler: SlashCommandHandler = async (
     
 Here are the available commands:
 
+- **/code** - Kod üret, özellikler ekle veya hataları düzelt
 - **/explain** - Açık dosyayı veya seçili kodu açıkla (örnek: /explain veya /explain for döngüsünün amacını açıkla)
 - **/review** veya **/refactor** - Kodu incele veya iyileştir
 - **/docs** - Kod için dokümantasyon oluştur
@@ -466,6 +467,45 @@ Tüm komutlar için:
         view.webview.postMessage({
             type: 'response',
             content: helpMessage
+        });
+    }
+    
+    return true;
+};
+
+/**
+ * /code komutunu işleyen handler
+ */
+export const codeCommandHandler: SlashCommandHandler = async (
+    command, parts, selectedText, aiService, view
+) => {
+    // Eğer kullanıcı komutla birlikte ek açıklama yazdıysa
+    const extraInstruction = command.substring(parts[0].length).trim();
+    
+    // Prompt hazırlama
+    let codePrompt = `Lütfen aşağıdaki gereksinime göre kod üretin:`;
+    
+    if (extraInstruction) {
+        codePrompt += `\n\n${extraInstruction}`;
+    } else {
+        codePrompt += `\n\nKullanıcı istek yapmadı. Lütfen daha fazla bilgi için sorun.`;
+    }
+    
+    // Eğer seçili kod varsa, bunu bağlam olarak kullan
+    if (selectedText && selectedText.trim().length > 0) {
+        codePrompt += `\n\nMevcut kod bağlamı:\n\`\`\`\n${selectedText}\n\`\`\``;
+    }
+    
+    codePrompt += `\n\nLütfen çalışan, hatasız, tam ve kapsamlı bir kod üretin. Gerektiğinde açıklamalarla birlikte dönüş yapın.`;
+    
+    // Kodu üretme isteğini gönder
+    const generatedCode = await aiService.sendMessage(codePrompt);
+    
+    // Yanıtı WebView'e gönder
+    if (view) {
+        view.webview.postMessage({
+            type: 'response',
+            content: generatedCode
         });
     }
     
@@ -521,6 +561,9 @@ export async function processSlashCommand(
     // Komutları işle
     try {
         switch (command) {
+            case '/code':
+                return await codeCommandHandler(command, parts, selectedText, aiService, view);
+            
             case '/explain':
                 return await explainCommandHandler(command, parts, selectedText, aiService, view);
                 

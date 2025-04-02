@@ -1983,3 +1983,55 @@ pre code {
     font-weight: 600;
     margin-right: 8px;
 }
+
+/* Aktif dosya ve dosya bağlamı gösterimi için CSS */
+.file-context {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+    padding: 3px 8px;
+    background-color: rgba(30, 30, 30, 0.15);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.file-context.active-file {
+    background-color: rgba(255, 125, 0, 0.15);
+    border: 1px solid rgba(255, 125, 0, 0.3);
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+}
+
+.current-file-toggle {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.current-file-toggle input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+.file-label {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-label-title {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-bottom: 2px;
+}
+
+.current-file {
+    font-weight: 600;
+    color: var(--primary-color);
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -46,13 +46,42 @@ export class ChatPanel implements ChatPanelProvider {
         }
         
         // Aktif editör değiştiğinde olayı dinle
-        this.activeEditorDisposable = vscode.window.onDidChangeActiveTextEditor(editor => {
-            if (editor) {
-                this.messageHandler.updateCurrentFile(editor.document.uri.fsPath);
-            } else {
-                this.messageHandler.updateCurrentFile(null);
-            }
-        });
+        this.activeEditorDisposable = vscode.Disposable.from(
+            // Aktif editör değişimini dinle
+            vscode.window.onDidChangeActiveTextEditor(editor => {
+                if (editor) {
+                    this.messageHandler.updateCurrentFile(editor.document.uri.fsPath);
+                } else {
+                    this.messageHandler.updateCurrentFile(null);
+                }
+            }),
+            
+            // Dosya içeriği değiştiğinde 
+            vscode.workspace.onDidChangeTextDocument(event => {
+                // Sadece aktif editör dosyası değiştiyse güncelle
+                if (vscode.window.activeTextEditor && 
+                    event.document === vscode.window.activeTextEditor.document) {
+                    // Dosya içeriği değiştiğini bildir - mevcut file path'i kullan
+                    this.messageHandler.updateCurrentFile(event.document.uri.fsPath);
+                }
+            }),
+            
+            // Yeni dosya açıldığında
+            vscode.workspace.onDidOpenTextDocument(document => {
+                if (vscode.window.activeTextEditor && 
+                    document === vscode.window.activeTextEditor.document) {
+                    this.messageHandler.updateCurrentFile(document.uri.fsPath);
+                }
+            }),
+            
+            // Dosya kaydetme olayı
+            vscode.workspace.onDidSaveTextDocument(document => {
+                if (vscode.window.activeTextEditor && 
+                    document === vscode.window.activeTextEditor.document) {
+                    this.messageHandler.updateCurrentFile(document.uri.fsPath);
+                }
+            })
+        );
     }
     
     /**
