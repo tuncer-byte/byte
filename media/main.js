@@ -394,10 +394,11 @@
         text = text.replace(/```(\w*)([\s\S]*?)```/g, function(match, language, code) {
             const langClass = language ? ` class="language-${language}"` : '';
             const formattedCode = escapeHtml(code.trim());
-            // Dil belirteci gösterimi eklendi
+            
+            // Dil belirteci gösterimi eklendi (solda)
             const langBadge = language ? `<div class="code-language">${language}</div>` : '';
             
-            // Bash veya sh dili ise Run butonu ekle
+            // Bash veya sh dili ise Run butonu ekle (sağda)
             let runButton = '';
             if (language === 'bash' || language === 'sh') {
                 runButton = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;

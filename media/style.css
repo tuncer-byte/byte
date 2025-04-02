@@ -794,12 +794,12 @@ body, html {
 .code-language {
     position: absolute;
     top: 0;
-    right: 0;
+    left: 0; /* Sağdan sola aldık */
     background-color: rgba(255, 123, 35, 0.2);
     color: var(--primary-color);
     font-size: 10px;
     padding: 2px 8px;
-    border-radius: 0 5px 0 5px;
+    border-radius: 0 0 5px 0; /* Köşe yuvarlaklığını düzenledik */
     font-family: 'SFMono-Regular', Consolas, monospace;
     font-weight: 500;
     text-transform: uppercase;
@@ -1438,7 +1438,7 @@ body, html {
 .run-code-button {
     position: absolute;
     top: 0;
-    right: 32px; /* Dil etiketinin yanında olacak */
+    right: 0; /* Run butonu sağda kalacak */
     background-color: rgba(255, 123, 35, 0.2);
     color: var(--primary-color);
     font-size: 12px;

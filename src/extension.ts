@@ -4,6 +4,8 @@ import { ChatPanel } from './chatPanel';
 import { CommandManager } from './commands';
 import { InlineCodeChat } from './inlineCodeChat';
 
+// Global terminal değişkeni
+let byteTerminal: vscode.Terminal | undefined;
 
 // Eklenti aktif edildiğinde çağrılır
 export function activate(context: vscode.ExtensionContext) {
@@ -30,12 +32,24 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
     
+    // Terminal komutlarını dinle
+    vscode.window.onDidCloseTerminal(terminal => {
+        if (terminal === byteTerminal) {
+            byteTerminal = undefined;
+        }
+    });
+    
     // Terminal komutu çalıştırma özelliği ekle
     context.subscriptions.push(
         vscode.commands.registerCommand('byte.runInTerminal', (command: string) => {
-            const terminal = vscode.window.createTerminal('Byte AI Terminal');
-            terminal.show();
-            terminal.sendText(command);
+            // Eğer terminal yoksa oluştur
+            if (!byteTerminal) {
+                byteTerminal = vscode.window.createTerminal('Byte AI Terminal');
+            }
+            
+            // Terminali göster ve komutu çalıştır
+            byteTerminal.show();
+            byteTerminal.sendText(command);
         })
     );
     
