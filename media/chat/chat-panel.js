@@ -378,7 +378,7 @@
     }
     
     // Mesajı ekrana ekle
-    function appendMessage(role, content) {
+    function appendMessage(role, content, isCommand = false) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         
@@ -393,8 +393,22 @@
         
         // Markdown formatlaması uygula (basitleştirilmiş)
         let formattedContent = formatMarkdown(content);
-        contentDiv.innerHTML = formattedContent;
         
+        // Eğer mesaj bir komutsa ve kullanıcı mesajıysa, komutu vurgula
+        if (isCommand && role === 'user') {
+            // Slash komutunu bul
+            const commandMatch = content.match(/^(\/[a-z\-]+)(\s|$)/);
+            if (commandMatch && commandMatch[1]) {
+                const command = commandMatch[1];
+                // Komutu vurgula
+                formattedContent = formattedContent.replace(
+                    command,
+                    `<span class="highlighted-command">${command}</span>`
+                );
+            }
+        }
+        
+        contentDiv.innerHTML = formattedContent;
         messageDiv.appendChild(contentDiv);
         
         // AI mesajları için ekstra butonlar
@@ -544,8 +558,8 @@
         const message = userInput.value.trim();
         
         if (message) {
-            // Kullanıcı mesajını ekle
-            appendMessage('user', message);
+            // Kullanıcı mesajını ekle, slash komutuysa vurgula
+            appendMessage('user', message, message.startsWith('/'));
             
             // Mesajı state'e kaydet
             state.messages.push({ role: 'user', content: message });
@@ -563,6 +577,7 @@
             
             // Input'u temizle
             userInput.value = '';
+            userInput.style.height = 'auto';
             
             // State'i güncelle
             vscode.setState(state);
@@ -580,10 +595,117 @@
         }
     });
     
-    // Textarea otomatik yükseklik ayarı
-    userInput.addEventListener('input', () => {
+    // Slash komutlarını anlık vurgulama fonksiyonu
+    function highlightInputCommand() {
+        const text = userInput.value;
+        // Eğer slash ile başlıyorsa
+        if (text.startsWith('/')) {
+            // Komut metni (boşluğa kadar olan kısım)
+            const commandPart = text.match(/^(\/[a-z\-]+)(\s|$)/);
+            
+            if (commandPart) {
+                const command = commandPart[1];
+                
+                // Bilinen komutlar
+                const knownCommands = ['/explain', '/review', '/refactor', '/docs', 
+                                    '/generate-docs', '/documentation', '/optimize', 
+                                    '/comments', '/add-comments', '/issues', '/analyze', 
+                                    '/find-issues', '/tests', '/test', '/unittests', '/help'];
+                
+                // Eğer bilinen bir komutsa
+                if (knownCommands.includes(command)) {
+                    // Özel CSS sınıfı ekle
+                    userInput.classList.add('has-command');
+                    
+                    // Özel CSS stil oluştur veya güncelle
+                    let commandStyle = document.getElementById('command-highlight-style');
+                    if (!commandStyle) {
+                        commandStyle = document.createElement('style');
+                        commandStyle.id = 'command-highlight-style';
+                        document.head.appendChild(commandStyle);
+                    }
+                    
+                    // İlk satırı turuncu yap ve arkaplanı hafif turuncu olsun
+                    commandStyle.textContent = `
+                        #userInput.has-command {
+                            color: var(--foreground);
+                        }
+                        
+                        #userInput.has-command::first-line {
+                            color: #ff7d00;
+                            font-weight: bold;
+                        }
+                    `;
+                    return;
+                }
+            }
+        }
+        
+        // Eğer slash komutu değilse veya bilinmeyen bir komutsa
+        userInput.classList.remove('has-command');
+        const commandStyle = document.getElementById('command-highlight-style');
+        if (commandStyle) {
+            commandStyle.textContent = '';
+        }
+    }
+
+    // Textarea input event listener
+    userInput.addEventListener('input', function() {
+        // Alanın yüksekliğini otomatik ayarla
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        
+        // Komutu anlık vurgula
+        highlightInputCommand();
+    });
+
+    // Komut metnini input alanına formatlı bir şekilde yerleştir
+    function formatCommandInInput(command) {
+        userInput.value = '';
+        userInput.focus();
+        
+        // Komut metnini giriş alanına ekle ve sonunda boşluk bırak
+        userInput.value = command + ' ';
+        
+        // Textarea yüksekliğini güncelle
         userInput.style.height = 'auto';
         userInput.style.height = Math.min(userInput.scrollHeight, 150) + 'px';
+        
+        // Komutu vurgula
+        highlightInputCommand();
+        
+        // İmleci input sonuna yerleştir
+        userInput.selectionStart = userInput.selectionEnd = userInput.value.length;
+    }
+
+    // Komut önerisine tıklama
+    const suggestionItems = commandSuggestions.querySelectorAll('.command-suggestion-item');
+    suggestionItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const command = this.getAttribute('data-command');
+            closeCommandModal();
+            
+            // Komut metinini formatlı bir şekilde yerleştir
+            formatCommandInInput(command);
+        });
+    });
+
+    // Slash tuşu dinleyicisi
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '/' && document.activeElement !== commandInput && document.activeElement !== userInput) {
+            e.preventDefault();
+            openCommandModal();
+        }
+    });
+
+    // Komut modalı kapatma butonu
+    closeCommandBtn.addEventListener('click', closeCommandModal);
+
+    // Komut modalı dışına tıklama
+    window.addEventListener('click', function(e) {
+        if (e.target === commandModal) {
+            closeCommandModal();
+        }
     });
     
     // AI sağlayıcı değiştirildiğinde
@@ -788,7 +910,7 @@
                 
             case 'userMessage':
                 // Kullanıcı mesajını ekle (Slash komut işlemi için)
-                appendMessage('user', message.content);
+                appendMessage('user', message.content, message.isCommand);
                 
                 // Durumu güncelle
                 state.messages.push({ role: 'user', content: message.content });
@@ -798,6 +920,13 @@
             case 'loadingStart':
                 // Yükleniyor göstergesini aç
                 loadingIndicator.style.display = 'block';
+                loadingIndicator.classList.add('active');
+                break;
+                
+            case 'loadingStop':
+                // Yükleniyor göstergesini kapat
+                loadingIndicator.style.display = 'none';
+                loadingIndicator.classList.remove('active');
                 break;
                 
             case 'providerChanged':
@@ -821,6 +950,55 @@
                 
                 // Otomatik kaydır
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                break;
+                
+            case 'highlightCommand':
+                // Slash komutunu turuncu renge döndür
+                if (message.command) {
+                    console.log("highlightCommand mesajı alındı: ", message.command);
+                    
+                    const lastUserMessage = messagesContainer.querySelector('.user-message:last-child .message-content');
+                    if (lastUserMessage) {
+                        // Mevcut içeriği al
+                        const content = lastUserMessage.innerHTML;
+                        
+                        // Komutun HTML'deki karşılığını bul
+                        const commandText = message.command;
+                        const escapedCommand = commandText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        
+                        // Regex ile içeriği değiştir - tam olarak komutu eşleştir
+                        const commandRegex = new RegExp(`(${escapedCommand})(?=\\s|<|$)`, 'g');
+                        
+                        const highlightedContent = content.replace(
+                            commandRegex,
+                            '<span class="highlighted-command">$1</span>'
+                        );
+                        
+                        if (content !== highlightedContent) {
+                            console.log('Command highlighted');
+                            lastUserMessage.innerHTML = highlightedContent;
+                        } else {
+                            console.log('No match found for command in content');
+                            console.log('Content:', content);
+                            console.log('Command:', commandText);
+                            console.log('RegExp:', commandRegex);
+                            
+                            // HTML olarak encode edilmiş içerikte de ara
+                            const plainContent = lastUserMessage.textContent;
+                            if (plainContent.includes(commandText)) {
+                                // Doğrudan innerHTML olarak ayarla
+                                const newContent = plainContent.replace(
+                                    commandText,
+                                    `<span class="highlighted-command">${commandText}</span>`
+                                );
+                                lastUserMessage.innerHTML = newContent;
+                                console.log('Applied direct HTML replacement');
+                            }
+                        }
+                    } else {
+                        console.log('User message element not found');
+                    }
+                }
                 break;
                 
             case 'init':
@@ -1066,6 +1244,38 @@
         }
     }
 
+    // Mevcut dosya bilgilerini bütün dosya etiketlerine güncelle
+    function updateAllFileLabels() {
+        const fileLabels = document.querySelectorAll('.current-file-label');
+        if (fileLabels.length > 0 && state.currentFile) {
+            fileLabels.forEach(label => {
+                label.textContent = state.currentFile;
+            });
+        }
+    }
+    
+    // Sayfa yüklendiğinde mesajları göster
+    loadMessages();
+
+    // CSS stillerini sayfaya ekle
+    const customStyles = document.createElement('style');
+    customStyles.textContent = `
+        .highlighted-command {
+            color: #ff7d00 !important;
+            font-weight: bold;
+            background-color: rgba(255, 125, 0, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        
+        .user-message .message-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    `;
+    document.head.appendChild(customStyles);
+
     // Komut girişi dinleyicisi
     commandInput.addEventListener('input', function() {
         const text = this.textContent;
@@ -1076,9 +1286,9 @@
         
         // Komut önerilerini filtrele
         const query = text.toLowerCase().trim();
-        const suggestionItems = commandSuggestions.querySelectorAll('.command-suggestion-item');
+        const menuItems = commandSuggestions.querySelectorAll('.command-suggestion-item');
         
-        suggestionItems.forEach(item => {
+        menuItems.forEach(item => {
             const commandText = item.getAttribute('data-command').toLowerCase();
             if (query === '/' || commandText.includes(query)) {
                 item.style.display = 'flex';
@@ -1095,189 +1305,8 @@
             const command = this.textContent.trim();
             closeCommandModal();
             
-            // Komut metinini turuncu renk ve boşluk ile ayarla
+            // Komut metinini uygula
             formatCommandInInput(command);
         }
     });
-    
-    // Komut önerisine tıklama
-    const suggestionItems = commandSuggestions.querySelectorAll('.command-suggestion-item');
-    suggestionItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const command = this.getAttribute('data-command');
-            closeCommandModal();
-            
-            // Komut metinini turuncu renk ve boşluk ile ayarla
-            formatCommandInInput(command);
-        });
-    });
-    
-    // Komut metnini input alanına formatlı bir şekilde yerleştir
-    function formatCommandInInput(command) {
-        userInput.value = '';
-        userInput.focus();
-        
-        // Komut metnini giriş alanına ekle ve sonunda boşluk bırak
-        userInput.value = command + ' ';
-        
-        // Rengini değiştir
-        highlightCommandInInput();
-        
-        // İmleci input sonuna yerleştir
-        userInput.selectionStart = userInput.selectionEnd = userInput.value.length;
-    }
-    
-    // Input alanında komutu vurgula
-    function highlightCommandInInput() {
-        // Özel sınıf ekle
-        userInput.classList.add('has-command');
-        
-        // Özel CSS stil ekle
-        const commandStyle = document.createElement('style');
-        commandStyle.id = 'command-highlight-style';
-        
-        // Eğer daha önce bir stil eklenmişse, onu kaldır
-        const existingStyle = document.getElementById('command-highlight-style');
-        if (existingStyle) {
-            existingStyle.remove();
-        }
-        
-        // Yeni stili ekle
-        commandStyle.innerHTML = `
-            #userInput.has-command {
-                color: var(--foreground);
-            }
-            
-            #userInput.has-command::first-line {
-                color: var(--primary-color);
-            }
-        `;
-        document.head.appendChild(commandStyle);
-        
-        // Kullanıcı bir şey yazdığında olayı dinle
-        userInput.addEventListener('input', onUserInputChange);
-    }
-    
-    // Kullanıcı input içeriğini değiştirdiğinde kontrol et
-    function onUserInputChange() {
-        const text = userInput.value;
-        const hasCommand = text.match(/^\/[a-z]+\s/);
-        
-        if (!hasCommand) {
-            // Artık komut yoksa, vurgulamayı kaldır
-            userInput.classList.remove('has-command');
-            
-            // Event listener'ı temizle
-            userInput.removeEventListener('input', onUserInputChange);
-            
-            // Özel stili kaldır
-            const commandStyle = document.getElementById('command-highlight-style');
-            if (commandStyle) {
-                commandStyle.remove();
-            }
-        }
-    }
-
-    // Slash tuşu dinleyicisi
-    document.addEventListener('keydown', function(e) {
-        if (e.key === '/' && document.activeElement !== commandInput && document.activeElement !== userInput) {
-            e.preventDefault();
-            openCommandModal();
-        }
-    });
-
-    // Komut modalı kapatma butonu
-    closeCommandBtn.addEventListener('click', closeCommandModal);
-
-    // Komut modalı dışına tıklama
-    window.addEventListener('click', function(e) {
-        if (e.target === commandModal) {
-            closeCommandModal();
-        }
-    });
-    
-    // Otomatik geçiş ayarlarının görünürlüğünü kontrol et
-    autoSwitchCheckbox.addEventListener('change', () => {
-        autoSwitchSettings.style.display = autoSwitchCheckbox.checked ? 'block' : 'none';
-    });
-    
-    // Ayarları kaydetme butonu için event listener
-    document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-        saveSettings();
-        showSettingsStatus('Ayarlar kaydedildi', 'success');
-    });
-    
-    // Ayarlar durumunu göster
-    function showSettingsStatus(message, type = 'info') {
-        const statusElement = document.getElementById('settingsStatus');
-        statusElement.textContent = message;
-        statusElement.className = `settings-status ${type}`;
-        setTimeout(() => {
-            statusElement.textContent = '';
-            statusElement.className = 'settings-status';
-        }, 3000);
-    }
-    
-    // Sayfa yüklendiğinde mesajları göster
-    loadMessages();
-    
-    // Run butonu ve Apply butonu için olay dinleyicileri
-    document.addEventListener('click', function(event) {
-        // Run butonuna tıklandığında
-        if (event.target.classList.contains('run-code-button')) {
-            const command = event.target.getAttribute('data-code');
-            if (command) {
-                // VS Code extension'a komutu gönder
-                vscode.postMessage({
-                    type: 'runTerminalCommand',
-                    command: command
-                });
-                
-                // Butonun görünümünü güncelle
-                event.target.textContent = 'Running...';
-                event.target.disabled = true;
-                
-                // Belirli bir süre sonra butonu eski haline getir
-                setTimeout(() => {
-                    event.target.textContent = 'Run';
-                    event.target.disabled = false;
-                }, 2000);
-            }
-        }
-        
-        // Apply butonuna tıklandığında
-        if (event.target.classList.contains('apply-code-button')) {
-            const code = event.target.getAttribute('data-code');
-            if (code) {
-                // VS Code extension'a kodu gönder
-                vscode.postMessage({
-                    type: 'applyCode',
-                    code: code
-                });
-                
-                // Butonun görünümünü güncelle
-                event.target.textContent = 'Applied!';
-                event.target.disabled = true;
-                
-                // Belirli bir süre sonra butonu eski haline getir
-                setTimeout(() => {
-                    event.target.textContent = 'Apply';
-                    event.target.disabled = false;
-                }, 2000);
-            }
-        }
-    });
-    
-    // Mevcut dosya bilgilerini bütün dosya etiketlerine güncelle
-    function updateAllFileLabels() {
-        const fileLabels = document.querySelectorAll('.current-file-label');
-        if (fileLabels.length > 0 && state.currentFile) {
-            fileLabels.forEach(label => {
-                label.textContent = state.currentFile;
-            });
-        }
-    }
-    
-    // Sayfa yüklendiğinde mesajları göster
-    loadMessages();
 })();

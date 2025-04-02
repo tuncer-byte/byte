@@ -2,7 +2,7 @@
   "name": "byte",
   "displayName": "Byte AI Assistant",
   "description": "AI-powered coding assistant that helps developers write, analyze, refactor, and optimize code. Features include code explanation, documentation generation, unit test creation, and intelligent suggestions to improve code quality and productivity.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "byte",
   "author": {
     "name": "Tuncer Bagcabasi"
@@ -16,6 +16,7 @@
   "engines": {
     "vscode": "^1.98.0"
   },
+  
   "categories": [
     "Other",
     "Programming Languages",

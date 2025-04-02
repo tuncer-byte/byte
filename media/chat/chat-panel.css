@@ -1960,3 +1960,26 @@ pre code {
     display: inline-block;
     vertical-align: middle;
 }
+
+/* Komut stilleri */
+.message-content .highlighted-command {
+    color: #ff7d00 !important;
+    font-weight: bold !important;
+    background-color: rgba(255, 125, 0, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+/* Mesaj içeriği için metin düzeni */
+.user-message .message-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Özel komut önerisi modal stilleri */
+.command-suggestion-item .command-name {
+    color: #ff7d00;
+    font-weight: 600;
+    margin-right: 8px;
+}
