@@ -1230,6 +1230,15 @@
             case 'updateProvider':
                 aiProviderSelect.value = message.provider;
                 break;
+                
+            case 'settingsMessage':
+                // Ayarlar mesajı alındığında
+                if (message.status === 'success') {
+                    handleSettingsSaved();
+                } else if (message.status === 'error') {
+                    handleSettingsError(message.message);
+                }
+                break;
         }
     });
     
