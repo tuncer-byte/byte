@@ -4,7 +4,7 @@ import { Message } from '../types';
 import { AILogger } from '../utils/logger';
 
 /**
- * OpenAI servisi ile iletişim kuran provider sınıfı
+ * Provider class that communicates with OpenAI service
  */
 export class OpenAIProvider {
     private logger: AILogger;
@@ -14,21 +14,21 @@ export class OpenAIProvider {
     }
     
     /**
-     * OpenAI API'sine istek gönderir
+     * Sends a request to OpenAI API
      */
     public async callOpenAI(userMessage: string, messages: Message[]): Promise<string> {
-        // API anahtarını secret storage'dan al
+        // Get API key from secret storage
         let apiKey = await this.getApiKey();
         
         if (!apiKey) {
-            throw new Error('OpenAI API anahtarı bulunamadı. Lütfen yapılandırın.');
+            throw new Error('OpenAI API key not found. Please configure it.');
         }
         
-        // OpenAI chat formatındaki mesaj geçmişini oluştur
+        // Create message history in OpenAI chat format
         const formattedMessages = this.formatMessages(messages);
         formattedMessages.push({ role: 'user', content: userMessage });
         
-        this.logger.log('OpenAI API isteği gönderiliyor...');
+        this.logger.log('Sending OpenAI API request...');
         
         try {
             const config = vscode.workspace.getConfiguration('byte');
@@ -49,33 +49,50 @@ export class OpenAIProvider {
             
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`OpenAI API Hatası: ${response.status} - ${JSON.stringify(errorData)}`);
+                throw new Error(`OpenAI API Error: ${response.status} - ${JSON.stringify(errorData)}`);
             }
             
             const data = await response.json();
             const assistantResponse = data.choices[0].message.content;
             
-            this.logger.log('OpenAI API yanıtı alındı');
+            this.logger.log('OpenAI API response received');
             return assistantResponse;
         } catch (error: any) {
-            this.logger.log(`OpenAI API Hatası: ${error.message}`, true);
-            throw new Error(`OpenAI API isteği başarısız: ${error.message}`);
+            this.logger.log(`OpenAI API Error: ${error.message}`, true);
+            throw new Error(`OpenAI API request failed: ${error.message}`);
         }
     }
     
     /**
-     * OpenAI API mesaj formatına dönüştürme
+     * Converts messages to OpenAI API format
      */
     private formatMessages(messages: Message[]): any[] {
-        // Sistem mesajı ekle
+        // Add system message with enhanced prompt
         const formattedMessages = [
             { 
                 role: 'system', 
-                content: 'Sen Byte adlı bir kodlama asistanısın. Kullanıcıların programlama sorularına yardımcı ol. Yanıtlarında Türkçe dil kurallarına uy ve net, anlaşılır olarak cevap ver. Kod örnekleri ve açıklamalar ekleyebilirsin.'
+                content: `You are Byte, an advanced coding assistant designed to help developers with programming tasks.
+
+CAPABILITIES:
+- Provide clear, concise explanations of programming concepts
+- Generate high-quality code examples with detailed comments
+- Debug and troubleshoot code issues with step-by-step analysis
+- Suggest best practices and optimization techniques
+- Explain complex algorithms and data structures
+
+GUIDELINES:
+- Always respond in Turkish, following proper grammar and clarity
+- Prioritize modern, maintainable coding practices
+- Include code examples when relevant to illustrate concepts
+- Break down complex topics into understandable components
+- Provide context and explanations alongside code solutions
+- When appropriate, suggest alternative approaches with pros/cons
+
+Your primary goal is to help users become better programmers through thoughtful, educational responses that address their specific needs.`
             }
         ];
         
-        // Son 10 mesajı ekle (limit)
+        // Add last 10 messages (limit)
         const recentMessages = messages.slice(-10);
         recentMessages.forEach(message => {
             formattedMessages.push({
@@ -88,13 +105,13 @@ export class OpenAIProvider {
     }
     
     /**
-     * OpenAI API anahtarını güvenli depodan alır
+     * Gets OpenAI API key from secure storage
      */
     public async getApiKey(): Promise<string | undefined> {
-        // Önce secret storage'dan anahtarı almayı dene
-        let apiKey = await this.context.secrets.get('openai-api-key');
+        // First try to get the key from secret storage
+        let apiKey = await this.context.secrets.get('byte.openai.apiKey');
         
-        // Secret storage'da yoksa, ayarlardan al
+        // If not in secret storage, get from settings
         if (!apiKey) {
             const config = vscode.workspace.getConfiguration('byte');
             apiKey = config.get<string>('openai.apiKey');
@@ -104,10 +121,10 @@ export class OpenAIProvider {
     }
     
     /**
-     * OpenAI API anahtarını güvenli depoya kaydeder
+     * Saves OpenAI API key to secure storage
      */
     public async setApiKey(apiKey: string): Promise<void> {
-        await this.context.secrets.store('openai-api-key', apiKey);
-        this.logger.log('OpenAI API anahtarı güvenli depoya kaydedildi');
+        await this.context.secrets.store('byte.openai.apiKey', apiKey);
+        this.logger.log('OpenAI API key saved to secure storage');
     }
-} 
+}

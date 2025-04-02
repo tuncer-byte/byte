@@ -4,7 +4,7 @@ import { Message } from '../types';
 import { AILogger } from '../utils/logger';
 
 /**
- * Google Gemini servisi ile iletişim kuran provider sınıfı
+ * Provider class that communicates with Google Gemini service
  */
 export class GeminiProvider {
     private logger: AILogger;
@@ -14,28 +14,28 @@ export class GeminiProvider {
     }
     
     /**
-     * Google Gemini API'sine istek gönderir
+     * Sends a request to Google Gemini API
      */
     public async callGemini(userMessage: string, messages: Message[]): Promise<string> {
-        // API anahtarını al
+        // Get API key
         let apiKey = await this.getApiKey();
         
         if (!apiKey) {
-            throw new Error('Google Gemini API anahtarı bulunamadı. Lütfen yapılandırın.');
+            throw new Error('Google Gemini API key not found. Please configure it.');
         }
         
-        // Yapılandırmadan model adını al, varsayılan olarak gemini-1.5-flash kullan
+        // Get model name from configuration, use gemini-1.5-flash as default
         const config = vscode.workspace.getConfiguration('byte');
         const modelName = config.get<string>('gemini.model') || 'gemini-1.5-flash';
         
-        this.logger.log(`Gemini API isteği gönderiliyor (model: ${modelName})...`);
+        this.logger.log(`Sending Gemini API request (model: ${modelName})...`);
         
         try {
-            // Gemini API endpoint'i - model adını dinamik olarak ayarla
+            // Gemini API endpoint - dynamically set the model name
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
             
-            // Kullanıcı mesajını ve geçmiş sohbeti birleştir
-            const promptText = this.formatMessages(messages) + "\n\nKullanıcı: " + userMessage;
+            // Format messages for the API request
+            const formattedMessages = this.formatMessagesForAPI(messages, userMessage);
             
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -43,71 +43,108 @@ export class GeminiProvider {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    contents: [
-                        {
-                            parts: [
-                                { text: promptText }
-                            ]
-                        }
-                    ],
+                    contents: formattedMessages,
                     generationConfig: {
-                        temperature: 0.7
-                    }
+                        temperature: 0.7,
+                        maxOutputTokens: 2048,
+                        topP: 0.95,
+                        topK: 40
+                    },
+                    safetySettings: [
+                        {
+                            category: "HARM_CATEGORY_HARASSMENT",
+                            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                        },
+                        {
+                            category: "HARM_CATEGORY_HATE_SPEECH",
+                            threshold: "BLOCK_MEDIUM_AND_ABOVE"
+                        }
+                    ]
                 })
             });
             
             if (!response.ok) {
                 const errorData = await response.json();
-                this.logger.log(`Gemini API yanıt hatası: ${JSON.stringify(errorData)}`, true);
+                this.logger.log(`Gemini API response error: ${JSON.stringify(errorData)}`, true);
                 
-                // Eğer model bulunamadı hatası alındıysa, desteklenen modelleri göster
+                // If model not found error, show supported models
                 if (errorData.error && errorData.error.code === 404) {
-                    throw new Error(`Gemini API Hatası: Model "${modelName}" bulunamadı. Lütfen gemini-1.5-flash veya gemini-1.0-pro gibi geçerli bir model kullanın.`);
+                    throw new Error(`Gemini API Error: Model "${modelName}" not found. Please use a valid model like gemini-1.5-flash or gemini-1.5-pro.`);
                 }
                 
-                throw new Error(`Gemini API Hatası: ${response.status} - ${JSON.stringify(errorData)}`);
+                throw new Error(`Gemini API Error: ${response.status} - ${JSON.stringify(errorData)}`);
             }
             
             const data = await response.json();
             const assistantResponse = data.candidates[0].content.parts[0].text;
             
-            this.logger.log('Gemini API yanıtı alındı');
+            this.logger.log('Received Gemini API response');
             return assistantResponse;
         } catch (error: any) {
-            this.logger.log(`Gemini API Hatası: ${error.message}`, true);
-            throw new Error(`Gemini API isteği başarısız: ${error.message}`);
+            this.logger.log(`Gemini API Error: ${error.message}`, true);
+            throw new Error(`Gemini API request failed: ${error.message}`);
         }
     }
     
     /**
-     * Gemini API için mesaj formatına dönüştürme
+     * Formats messages for the Gemini API in the new format
      */
-    private formatMessages(messages: Message[]): string {
-        // Sistem yönergeleri
-        let result = "Sen Byte adlı bir kodlama asistanısın. Kullanıcıların programlama sorularına yardımcı ol. Yanıtlarında Türkçe dil kurallarına uy ve net, anlaşılır olarak cevap ver.\n\n";
+    private formatMessagesForAPI(messages: Message[], currentUserMessage: string): any[] {
+        const formattedContents = [];
         
-        // Son 5 mesajı ekle (limit)
-        const recentMessages = messages.slice(-5);
-        
-        recentMessages.forEach(message => {
-            if (message.role === 'user') {
-                result += `Kullanıcı: ${message.content}\n\n`;
-            } else {
-                result += `Asistan: ${message.content}\n\n`;
-            }
+        // Add system message as the first message
+        formattedContents.push({
+            role: "user",
+            parts: [{
+                text: `You are Byte, an intelligent coding assistant. You help users with programming questions and provide clear, concise explanations. 
+                
+Guidelines:
+- Always respond in Turkish with proper grammar and clear explanations
+- Provide code examples when relevant
+- Explain complex concepts in simple terms
+- When showing code, include comments to explain key parts
+- Format your responses with markdown for readability
+- If you're unsure about something, acknowledge it rather than guessing
+- Focus on being helpful, accurate, and educational
+                
+Now, please assist the user with their programming questions.`
+            }]
         });
         
-        return result;
+        formattedContents.push({
+            role: "model",
+            parts: [{
+                text: "Merhaba! Ben Byte, kodlama asistanınız. Programlama sorularınızda size yardımcı olmak için buradayım. Nasıl yardımcı olabilirim?"
+            }]
+        });
+        
+        // Add conversation history (last 10 messages)
+        const recentMessages = messages.slice(-10);
+        
+        recentMessages.forEach(message => {
+            formattedContents.push({
+                role: message.role === 'user' ? 'user' : 'model',
+                parts: [{ text: message.content }]
+            });
+        });
+        
+        // Add current user message
+        formattedContents.push({
+            role: 'user',
+            parts: [{ text: currentUserMessage }]
+        });
+        
+        return formattedContents;
     }
     
     /**
-     * Google Gemini API anahtarını güvenli depodan alır
+     * Gets Google Gemini API key from secure storage
      */
     public async getApiKey(): Promise<string | undefined> {
-        // Önce secret storage'dan anahtarı almayı dene
-        let apiKey = await this.context.secrets.get('gemini-api-key');
+        // First try to get the key from secret storage
+        let apiKey = await this.context.secrets.get('byte.gemini.apiKey');
         
-        // Secret storage'da yoksa, ayarlardan al
+        // If not in secret storage, get from settings
         if (!apiKey) {
             const config = vscode.workspace.getConfiguration('byte');
             apiKey = config.get<string>('gemini.apiKey');
@@ -117,10 +154,10 @@ export class GeminiProvider {
     }
     
     /**
-     * Google Gemini API anahtarını güvenli depoya kaydeder
+     * Saves Google Gemini API key to secure storage
      */
     public async setApiKey(apiKey: string): Promise<void> {
-        await this.context.secrets.store('gemini-api-key', apiKey);
-        this.logger.log('Gemini API anahtarı güvenli depoya kaydedildi');
+        await this.context.secrets.store('byte.gemini.apiKey', apiKey);
+        this.logger.log('Gemini API key saved to secure storage');
     }
-} 
+}

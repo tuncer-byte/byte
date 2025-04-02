@@ -414,15 +414,15 @@
             const langBadge = language ? `<div class="code-language">${language}</div>` : '';
             let actionButtons = '';
             
-            // Butonları oluştur
+            // Butonları oluştur - kod içeriğini direct olarak gönder back-ticks olmadan
             if (language === 'bash' || language === 'sh') {
                 actionButtons = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;
             } else if (language && language !== 'output' && language !== 'text' && language !== 'console') {
                 actionButtons = `<button class="apply-code-button" data-code="${escapeHtml(code.trim())}">Apply</button>`;
             }
 
-            // Header'ı ve kod içeriğini birleştir
-            return `<pre>${langBadge}${actionButtons}<code${langClass}>${formattedCode}</code></pre>`;
+            // Header'ı ve kod içeriğini birleştir - butonu sağ üst köşeye yerleştirmek için kod değişikliği
+            return `<pre>${langBadge}<div style="position:absolute;top:0;right:0;z-index:10;">${actionButtons}</div><code${langClass}>${formattedCode}</code></pre>`;
         });
         
         // Satır içi kod

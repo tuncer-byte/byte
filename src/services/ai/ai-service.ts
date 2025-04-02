@@ -16,7 +16,7 @@ import { ProviderSelector } from './utils/provider-selector';
 import { DEFAULT_AI_SETTINGS } from './utils/constants';
 
 /**
- * AI Servisleri ile entegrasyonu sağlayan sınıf
+ * Class that provides integration with AI Services
  */
 export class AIService {
     private currentProvider: AIProvider;
@@ -26,7 +26,7 @@ export class AIService {
     private providerSelector: ProviderSelector;
     private _settings: AISettings = DEFAULT_AI_SETTINGS;
     
-    // Provider sınıfları
+    // Provider classes
     private openAIProvider: OpenAIProvider;
     private geminiProvider: GeminiProvider;
     private localProvider: LocalProvider;
@@ -37,28 +37,28 @@ export class AIService {
         this.logger = new AILogger();
         this.providerSelector = new ProviderSelector();
         
-        // Provider'ları başlat
+        // Initialize providers
         this.openAIProvider = new OpenAIProvider(context);
         this.geminiProvider = new GeminiProvider(context);
         this.localProvider = new LocalProvider();
         this.anthropicProvider = new AnthropicProvider(context);
         
-        // Kayıtlı yapılandırmayı yükle
+        // Load saved configuration
         const config = vscode.workspace.getConfiguration('byte');
         this.currentProvider = config.get<AIProvider>('provider') || AIProvider.OpenAI;
         
-        // Kayıtlı tüm mesajları yükle (isteğe bağlı)
+        // Load all saved messages (optional)
         const savedState = context.workspaceState.get<AIServiceState>('aiServiceState');
         if (savedState) {
             this.currentProvider = savedState.provider;
             this.messages = savedState.messages;
         }
         
-        this.logger.log(`AI Servisi başlatıldı. Aktif sağlayıcı: ${this.currentProvider}`);
+        this.logger.log(`AI Service started. Active provider: ${this.currentProvider}`);
     }
 
     /**
-     * Mesaj geçmişini temizler
+     * Clears message history
      */
     public clearMessages(): void {
         this.messages = [];
@@ -66,7 +66,7 @@ export class AIService {
     }
 
     /**
-     * Mevcut durumu kaydeder
+     * Saves current state
      */
     private saveState(): void {
         const state: AIServiceState = {
@@ -77,41 +77,41 @@ export class AIService {
     }
 
     /**
-     * AI Servis sağlayıcısını değiştirir
+     * Changes the AI Service provider
      */
     public setProvider(provider: AIProvider): void {
         this.currentProvider = provider;
-        this.logger.log(`AI sağlayıcı değiştirildi: ${provider}`);
+        this.logger.log(`AI provider changed: ${provider}`);
         
-        // Yapılandırmayı güncelle
+        // Update configuration
         vscode.workspace.getConfiguration('byte').update('provider', provider, vscode.ConfigurationTarget.Global);
         
         this.saveState();
     }
 
     /**
-     * Mevcut sağlayıcıyı döndürür
+     * Returns the current provider
      */
     public getProvider(): AIProvider {
         return this.currentProvider;
     }
 
     /**
-     * Mevcut sohbet geçmişini döndürür
+     * Returns the current chat history
      */
     public getMessages(): Message[] {
         return [...this.messages];
     }
 
     /**
-     * AI servisine bir istek gönderir
+     * Sends a request to the AI service
      */
     public async sendMessage(userMessage: string): Promise<string> {
         try {
-            // Mesaj karmaşıklığını hesapla (basit bir metrik)
-            const taskComplexity = userMessage.length / 100; // 0-1 arası bir değer
+            // Calculate message complexity (simple metric)
+            const taskComplexity = userMessage.length / 100; // Value between 0-1
 
-            // Optimal sağlayıcıyı seç
+            // Select optimal provider
             const optimalProvider = await this.providerSelector.selectOptimalProvider(
                 this.currentProvider,
                 this._settings,
@@ -120,16 +120,16 @@ export class AIService {
             );
             
             if (optimalProvider !== this.currentProvider) {
-                this.logger.log(`Otomatik geçiş: ${this.currentProvider} -> ${optimalProvider}`);
+                this.logger.log(`Automatic switch: ${this.currentProvider} -> ${optimalProvider}`);
                 this.setProvider(optimalProvider);
             }
 
-            // Kullanıcı mesajını geçmişe ekle
+            // Add user message to history
             this.messages.push({ role: 'user', content: userMessage });
             
             let response: string;
             
-            // Seçili sağlayıcıya göre istek gönder
+            // Send request based on selected provider
             switch (this.currentProvider) {
                 case AIProvider.OpenAI:
                     response = await this.openAIProvider.callOpenAI(userMessage, this.messages);
@@ -144,59 +144,59 @@ export class AIService {
                     response = await this.anthropicProvider.callAnthropic(userMessage, this.messages);
                     break;
                 default:
-                    throw new Error('Desteklenmeyen AI sağlayıcı');
+                    throw new Error('Unsupported AI provider');
             }
             
-            // Maliyeti güncelle
+            // Update cost
             this.providerSelector.updateCost(
                 this.currentProvider,
                 userMessage.length,
                 response.length
             );
 
-            // AI yanıtını geçmişe ekle
+            // Add AI response to history
             this.messages.push({ role: 'assistant', content: response });
             
-            // Durumu kaydet
+            // Save state
             this.saveState();
             
             return response;
         } catch (error: any) {
-            this.logger.log(`Hata: ${error.message}`, true);
+            this.logger.log(`Error: ${error.message}`, true);
             throw error;
         }
     }
 
     /**
-     * Kod açıklama istekleri için özel prompt
+     * Special prompt for code explanation requests
      */
     public async explainCode(code: string): Promise<string> {
-        const prompt = `Aşağıdaki kodu satır satır açıkla ve ne yaptığını detaylı olarak anlat:\n\n\`\`\`\n${code}\n\`\`\``;
+        const prompt = `Explain the following code line by line and describe in detail what it does:\n\n\`\`\`\n${code}\n\`\`\``;
         return this.sendMessage(prompt);
     }
 
     /**
-     * Kod refaktör istekleri için özel prompt
+     * Special prompt for code refactoring requests
      */
     public async refactorCode(code: string): Promise<string> {
-        const prompt = `Aşağıdaki kodu daha okunabilir, verimli ve iyi pratiklere uygun olacak şekilde refaktör et. Açıklamalar ve iyileştirme nedenleri ekle:\n\n\`\`\`\n${code}\n\`\`\``;
+        const prompt = `Refactor the following code to make it more readable, efficient, and compliant with best practices. Add explanations and reasons for improvements:\n\n\`\`\`\n${code}\n\`\`\``;
         return this.sendMessage(prompt);
     }
 
     /**
-     * Mesaj geçmişine göre AI yanıtı alır
-     * @param messages Mesaj geçmişi
-     * @returns AI yanıtı
+     * Gets AI response based on message history
+     * @param messages Message history
+     * @returns AI response
      */
     public async getResponse(messages: {role: string, content: string}[]): Promise<string> {
         try {
-            // Son kullanıcı mesajını al
+            // Get the last user message
             const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
             
-            // Mevcut mesaj geçmişinin bir kopyasını oluştur
+            // Create a copy of the current message history
             const currentMessages = this.getMessages();
             
-            // Sistem mesajını ilet
+            // Forward system message
             const systemMessage = messages.find(m => m.role === 'system')?.content;
             if (systemMessage) {
                 currentMessages.unshift({
@@ -205,17 +205,17 @@ export class AIService {
                 });
             }
             
-            // Yanıtı al
+            // Get response
             const response = await this.sendMessage(lastUserMessage);
             return response;
         } catch (error: any) {
-            console.error('AI yanıtı alınamadı:', error);
-            throw new Error(`AI yanıtı alınırken hata oluştu: ${error.message}`);
+            console.error('Failed to get AI response:', error);
+            throw new Error(`Error while getting AI response: ${error.message}`);
         }
     }
 
     /**
-     * Mevcut ayarları döndürür
+     * Returns current settings
      */
     public async getSettings(): Promise<AISettings> {
         const config = vscode.workspace.getConfiguration('byte');
@@ -247,12 +247,12 @@ export class AIService {
         };
     }
 
-    // Ayarları güncelle
+    // Update settings
     public async updateSettings(settings: AISettings): Promise<void> {
         this._settings = settings;
     }
     
-    // API Anahtarlarını set etme yardımcı metodları
+    // Helper methods for setting API keys
     public async setOpenAIApiKey(apiKey: string): Promise<void> {
         await this.openAIProvider.setApiKey(apiKey);
     }

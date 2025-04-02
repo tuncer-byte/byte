@@ -1479,11 +1479,14 @@ body, html {
     font-size: 12px;
     font-weight: 600; /* Daha kalın yazı */
     padding: 2px 10px;
-    border-radius: 0 5px 0 0;
+    border-radius: 0 5px 0 5px; /* Sağ üste yerleşim için köşe yuvarlama ayarı */
     border: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-left: 5px; /* Dosya adıyla arasında biraz boşluk */
+    position: relative; /* Pozisyon ayarı */
+    z-index: 10; /* Z-index değeri */
+    margin-right: 0; /* Sağdan boşluk kaldır */
+    margin-left: auto; /* Otomatik sol boşluk (sağa yaslamak için) */
 }
 
 .apply-code-button:hover {

@@ -155,10 +155,21 @@ export function detectTestFramework(languageId: string): string {
  * Uygulanacak kodu uygun hale getirir
  */
 export function cleanCodeForApply(code: string): string {
+    // Kod bloğunun içindeki kodu çıkar 
+    let extractedCode = code;
+    
+    // Backtick ```language ve ``` gibi markdown kod blok işaretleyicilerini temizle
+    const codeBlockRegex = /^```[\w-]*\s*([\s\S]*?)```$/;
+    const match = extractedCode.match(codeBlockRegex);
+    
+    if (match && match[1]) {
+        extractedCode = match[1].trim();
+    }
+    
     // Yorum satırlarını temizleme
     // 1. /* ... */ çok satırlı yorumları temizle
     // 2. // ... tek satırlı yorumları temizle
-    let cleanCode = code
+    let cleanCode = extractedCode
         .replace(/\/\*[\s\S]*?\*\//g, '') // Çok satırlı yorumları kaldır
         .replace(/\/\/.*?($|\n)/g, '$1'); // Tek satırlı yorumları kaldır
 

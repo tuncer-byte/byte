@@ -258,17 +258,19 @@ export class MessageHandler {
         
         const editor = vscode.window.activeTextEditor;
         if (editor) {
-            // Kodu temizle - AI'nin yorum satırlarını temizle
+            // Kodu temizle - AI'nin yorum satırlarını temizle ve kod bloğu belirteçlerini kaldır
             const cleanCode = cleanCodeForApply(code);
             
             // Editörde değişiklik yap
             editor.edit(editBuilder => {
-                // Eğer seçili alan varsa, onu değiştir
                 if (!editor.selection.isEmpty) {
+                    // Eğer seçili alan varsa, onu değiştir
                     editBuilder.replace(editor.selection, cleanCode);
                 } else {
-                    // Seçili alan yoksa, imlecin olduğu yere ekle
-                    editBuilder.insert(editor.selection.active, cleanCode);
+                    // Seçili alan yoksa, tam kod bloğunu ekle - imlecin olduğu satırın başına
+                    const position = editor.selection.active;
+                    const lineStart = position.with(position.line, 0);
+                    editBuilder.insert(lineStart, cleanCode + '\n');
                 }
             }).then(success => {
                 if (success) {

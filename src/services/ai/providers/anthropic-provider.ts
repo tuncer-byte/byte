@@ -4,7 +4,7 @@ import { Message } from '../types';
 import { AILogger } from '../utils/logger';
 
 /**
- * Anthropic Claude servisi ile iletişim kuran provider sınıfı
+ * Provider class that communicates with the Anthropic Claude service
  */
 export class AnthropicProvider {
     private logger: AILogger;
@@ -14,22 +14,22 @@ export class AnthropicProvider {
     }
     
     /**
-     * Anthropic Claude API'sine istek gönderir
+     * Sends a request to the Anthropic Claude API
      */
     public async callAnthropic(userMessage: string, messages: Message[]): Promise<string> {
         const apiKey = await this.getApiKey();
         
         if (!apiKey) {
-            throw new Error('Anthropic API anahtarı bulunamadı. Lütfen yapılandırın.');
+            throw new Error('Anthropic API key not found. Please configure it.');
         }
 
         const config = vscode.workspace.getConfiguration('byte');
         const model = config.get<string>('anthropic.model') || 'claude-3-sonnet';
 
-        this.logger.log(`Anthropic API isteği gönderiliyor (model: ${model})...`);
+        this.logger.log(`Sending Anthropic API request (model: ${model})...`);
 
         try {
-            // Claude mesajlarını formatla
+            // Format messages for Claude
             const claudeMessages = this.formatMessages(messages, userMessage);
             
             const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -42,41 +42,62 @@ export class AnthropicProvider {
                 body: JSON.stringify({
                     model: model,
                     messages: claudeMessages,
-                    max_tokens: 1000
+                    max_tokens: 4000,
+                    temperature: 0.7,
+                    top_p: 0.95,
+                    top_k: 40
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`Anthropic API Hatası: ${response.status} - ${JSON.stringify(errorData)}`);
+                throw new Error(`Anthropic API Error: ${response.status} - ${JSON.stringify(errorData)}`);
             }
 
             const data = await response.json();
             return data.content[0].text;
         } catch (error: any) {
-            this.logger.log(`Anthropic API Hatası: ${error.message}`, true);
-            throw new Error(`Anthropic API isteği başarısız: ${error.message}`);
+            this.logger.log(`Anthropic API Error: ${error.message}`, true);
+            throw new Error(`Anthropic API request failed: ${error.message}`);
         }
     }
     
     /**
-     * Claude API için mesaj formatına dönüştürme
+     * Converts messages to Claude API format
      */
     private formatMessages(messages: Message[], currentUserMessage: string): any[] {
-        // Sistem mesajını ekle
+        // Create system message with enhanced prompt
         const systemMessage = {
             role: 'system',
-            content: 'Sen Byte adlı bir kodlama asistanısın. Kullanıcıların programlama sorularına yardımcı ol. Yanıtlarında Türkçe dil kurallarına uy ve net, anlaşılır olarak cevap ver. Kod örnekleri ve açıklamalar ekleyebilirsin.'
+            content: `You are Byte, an advanced coding assistant designed to help developers write better code.
+
+Key responsibilities:
+- Provide clear, accurate, and helpful responses to programming questions
+- Explain complex concepts in simple terms with relevant examples
+- Debug code issues with detailed explanations
+- Suggest optimizations and best practices
+- Adapt your responses to the user's skill level
+
+Guidelines:
+- Prioritize clarity and correctness in your explanations
+- Include code examples when relevant
+- Explain your reasoning step by step
+- When appropriate, suggest alternative approaches
+- Respond in Turkish unless specifically asked to use another language
+- Format code blocks properly with appropriate syntax highlighting
+- Be concise but thorough in your explanations
+
+Remember that your goal is to help the user become a better programmer through thoughtful guidance and education.`
         };
         
-        // Mevcut mesajları Claude formatına dönüştür
+        // Convert existing messages to Claude format
         const claudeMessages = [];
         
-        // Sistem mesajını ekle
+        // Add system message
         claudeMessages.push(systemMessage);
         
-        // Son 10 mesajı ekle (limit)
-        const recentMessages = messages.slice(-10);
+        // Add last 15 messages (increased from 10)
+        const recentMessages = messages.slice(-15);
         recentMessages.forEach(message => {
             claudeMessages.push({
                 role: message.role === 'assistant' ? 'assistant' : 'user',
@@ -84,7 +105,7 @@ export class AnthropicProvider {
             });
         });
         
-        // Mevcut kullanıcı mesajını ekle
+        // Add current user message with context enhancement
         claudeMessages.push({
             role: 'user',
             content: currentUserMessage
@@ -94,7 +115,7 @@ export class AnthropicProvider {
     }
     
     /**
-     * Anthropic API anahtarını güvenli depodan alır
+     * Gets the Anthropic API key from secure storage
      */
     public async getApiKey(): Promise<string | undefined> {
         const config = vscode.workspace.getConfiguration('byte');
@@ -102,10 +123,10 @@ export class AnthropicProvider {
     }
     
     /**
-     * Anthropic API anahtarını güvenli depoya kaydeder
+     * Saves the Anthropic API key to secure storage
      */
     public async setApiKey(apiKey: string): Promise<void> {
         await this.context.secrets.store('byte.anthropic.apiKey', apiKey);
-        this.logger.log('Anthropic API anahtarı güvenli depoya kaydedildi');
+        this.logger.log('Anthropic API key saved to secure storage');
     }
 } 
