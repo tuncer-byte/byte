@@ -34,6 +34,20 @@
     // Şifre Göster/Gizle Düğmeleri
     const togglePasswordButtons = document.querySelectorAll('.toggle-password');
     
+    // Komut modalı
+    const commandModal = document.getElementById('commandModal');
+    const commandInput = document.getElementById('commandInput');
+    const closeCommandBtn = document.getElementById('closeCommandBtn');
+    const commandSuggestions = document.getElementById('commandSuggestions');
+    
+    // Komut listesi
+    const commands = {
+        '/code': 'to generate new feature or fix bug',
+        '/explain': 'file or selected code',
+        '/review': 'code to recommend improvements',
+        '/unittests': 'to generate unit tests'
+    };
+    
     // State tanımlamasına includeCurrentFile ekleyelim
     const state = {
         messages: [],
@@ -46,6 +60,12 @@
             saveHistory: true
         }
     };
+    
+    // Otomatik geçiş ayarlarını yönet
+    const autoSwitchCheckbox = document.getElementById('autoSwitch');
+    const autoSwitchSettings = document.getElementById('autoSwitchSettings');
+    const maxCostPerDay = document.getElementById('maxCostPerDay');
+    const preferredProvider = document.getElementById('preferredProvider');
     
     // Sayfa yüklendiğinde VS Code'a hazır olduğumuzu bildir
     window.addEventListener('load', () => {
@@ -210,9 +230,8 @@
     
     // Ayarları kaydet
     function saveSettings() {
-        // Form verilerini topla
         const settings = {
-            defaultProvider: defaultProviderSelect.value,
+            provider: aiProviderSelect.value,
             openai: {
                 apiKey: openaiApiKeyInput.value,
                 model: openaiModelSelect.value
@@ -224,6 +243,11 @@
             local: {
                 endpoint: localEndpointInput.value,
                 model: localModelSelect.value
+            },
+            autoSwitch: {
+                enabled: autoSwitchCheckbox.checked,
+                maxCostPerDay: parseFloat(maxCostPerDay.value),
+                preferredProvider: preferredProvider.value
             },
             saveHistory: saveHistoryCheckbox.checked
         };
@@ -245,7 +269,7 @@
         settingsStatus.classList.add('show');
         
         // UI seçimini güncelle
-        aiProviderSelect.value = settings.defaultProvider;
+        aiProviderSelect.value = settings.provider;
     }
     
     // Ayarlar başarıyla kaydedildiğinde
@@ -372,7 +396,14 @@
             const formattedCode = escapeHtml(code.trim());
             // Dil belirteci gösterimi eklendi
             const langBadge = language ? `<div class="code-language">${language}</div>` : '';
-            return `<pre>${langBadge}<code${langClass}>${formattedCode}</code></pre>`;
+            
+            // Bash veya sh dili ise Run butonu ekle
+            let runButton = '';
+            if (language === 'bash' || language === 'sh') {
+                runButton = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;
+            }
+            
+            return `<pre>${langBadge}${runButton}<code${langClass}>${formattedCode}</code></pre>`;
         });
         
         // Satır içi kod
@@ -816,16 +847,231 @@
                     
                     // UI'yı güncelle
                     fillSettingsForm();
-                    aiProviderSelect.value = message.settings.defaultProvider;
+                    aiProviderSelect.value = message.settings.provider;
                     
                     // API anahtarı durumu güncelle
                     updateProviderStatus('openai', !!message.settings.openai.apiKey);
                     updateProviderStatus('gemini', !!message.settings.gemini.apiKey);
                 }
                 break;
+                
+            case 'loadSettings':
+                loadSettings(message.settings);
+                break;
+                
+            case 'updateProvider':
+                aiProviderSelect.value = message.provider;
+                break;
         }
     });
     
+    // Komut modalını aç
+    function openCommandModal() {
+        commandModal.classList.add('active');
+        commandInput.focus();
+        commandInput.textContent = '/';
+        placeCaretAtEnd(commandInput);
+        
+        // Önerileri göster
+        commandSuggestions.style.display = 'flex';
+    }
+
+    // Komut modalını kapat
+    function closeCommandModal() {
+        commandModal.classList.remove('active');
+        commandInput.textContent = '';
+    }
+
+    // İmleci contenteditable div'in sonuna yerleştir
+    function placeCaretAtEnd(el) {
+        el.focus();
+        if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+    // Komut girişi dinleyicisi
+    commandInput.addEventListener('input', function() {
+        const text = this.textContent;
+        if (!text.startsWith('/')) {
+            this.textContent = '/';
+            placeCaretAtEnd(this);
+        }
+        
+        // Komut önerilerini filtrele
+        const query = text.toLowerCase().trim();
+        const suggestionItems = commandSuggestions.querySelectorAll('.command-suggestion-item');
+        
+        suggestionItems.forEach(item => {
+            const commandText = item.getAttribute('data-command').toLowerCase();
+            if (query === '/' || commandText.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // Enter tuşu dinleyicisi
+    commandInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const command = this.textContent.trim();
+            closeCommandModal();
+            
+            // Komut metinini turuncu renk ve boşluk ile ayarla
+            formatCommandInInput(command);
+        }
+    });
+    
+    // Komut önerisine tıklama
+    const suggestionItems = commandSuggestions.querySelectorAll('.command-suggestion-item');
+    suggestionItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const command = this.getAttribute('data-command');
+            closeCommandModal();
+            
+            // Komut metinini turuncu renk ve boşluk ile ayarla
+            formatCommandInInput(command);
+        });
+    });
+    
+    // Komut metnini input alanına formatlı bir şekilde yerleştir
+    function formatCommandInInput(command) {
+        userInput.value = '';
+        userInput.focus();
+        
+        // Komut metnini giriş alanına ekle ve sonunda boşluk bırak
+        userInput.value = command + ' ';
+        
+        // Rengini değiştir
+        highlightCommandInInput();
+        
+        // İmleci input sonuna yerleştir
+        userInput.selectionStart = userInput.selectionEnd = userInput.value.length;
+    }
+    
+    // Input alanında komutu vurgula
+    function highlightCommandInInput() {
+        // Özel sınıf ekle
+        userInput.classList.add('has-command');
+        
+        // Özel CSS stil ekle
+        const commandStyle = document.createElement('style');
+        commandStyle.id = 'command-highlight-style';
+        
+        // Eğer daha önce bir stil eklenmişse, onu kaldır
+        const existingStyle = document.getElementById('command-highlight-style');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+        
+        // Yeni stili ekle
+        commandStyle.innerHTML = `
+            #userInput.has-command {
+                color: var(--foreground);
+            }
+            
+            #userInput.has-command::first-line {
+                color: var(--primary-color);
+            }
+        `;
+        document.head.appendChild(commandStyle);
+        
+        // Kullanıcı bir şey yazdığında olayı dinle
+        userInput.addEventListener('input', onUserInputChange);
+    }
+    
+    // Kullanıcı input içeriğini değiştirdiğinde kontrol et
+    function onUserInputChange() {
+        const text = userInput.value;
+        const hasCommand = text.match(/^\/[a-z]+\s/);
+        
+        if (!hasCommand) {
+            // Artık komut yoksa, vurgulamayı kaldır
+            userInput.classList.remove('has-command');
+            
+            // Event listener'ı temizle
+            userInput.removeEventListener('input', onUserInputChange);
+            
+            // Özel stili kaldır
+            const commandStyle = document.getElementById('command-highlight-style');
+            if (commandStyle) {
+                commandStyle.remove();
+            }
+        }
+    }
+
+    // Slash tuşu dinleyicisi
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '/' && document.activeElement !== commandInput && document.activeElement !== userInput) {
+            e.preventDefault();
+            openCommandModal();
+        }
+    });
+
+    // Komut modalı kapatma butonu
+    closeCommandBtn.addEventListener('click', closeCommandModal);
+
+    // Komut modalı dışına tıklama
+    window.addEventListener('click', function(e) {
+        if (e.target === commandModal) {
+            closeCommandModal();
+        }
+    });
+    
+    // Otomatik geçiş ayarlarının görünürlüğünü kontrol et
+    autoSwitchCheckbox.addEventListener('change', () => {
+        autoSwitchSettings.style.display = autoSwitchCheckbox.checked ? 'block' : 'none';
+    });
+    
+    // Ayarları kaydetme butonu için event listener
+    document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+        saveSettings();
+        showSettingsStatus('Ayarlar kaydedildi', 'success');
+    });
+    
+    // Ayarlar durumunu göster
+    function showSettingsStatus(message, type = 'info') {
+        const statusElement = document.getElementById('settingsStatus');
+        statusElement.textContent = message;
+        statusElement.className = `settings-status ${type}`;
+        setTimeout(() => {
+            statusElement.textContent = '';
+            statusElement.className = 'settings-status';
+        }, 3000);
+    }
+    
     // Sayfa yüklendiğinde mesajları göster
     loadMessages();
+    
+    // Run butonu için olay dinleyicisini ekle
+    document.addEventListener('click', function(event) {
+        // Run butonuna tıklandığında
+        if (event.target.classList.contains('run-code-button')) {
+            const command = event.target.getAttribute('data-code');
+            if (command) {
+                // VS Code extension'a komutu gönder
+                vscode.postMessage({
+                    type: 'runTerminalCommand',
+                    command: command
+                });
+                
+                // Butonun görünümünü güncelle
+                event.target.textContent = 'Running...';
+                event.target.disabled = true;
+                
+                // Belirli bir süre sonra butonu eski haline getir
+                setTimeout(() => {
+                    event.target.textContent = 'Run';
+                    event.target.disabled = false;
+                }, 2000);
+            }
+        }
+    });
 })();

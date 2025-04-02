@@ -261,6 +261,14 @@ export class ChatPanel implements vscode.WebviewViewProvider {
                     // Ayarları kaydet ve güncelle
                     await this._saveSettings(message.settings);
                     break;
+                    
+                case 'runTerminalCommand':
+                    // Terminal komutunu çalıştır
+                    if (message.command) {
+                        // VS Code terminali oluştur ve komutu çalıştır
+                        vscode.commands.executeCommand('byte.runInTerminal', message.command);
+                    }
+                    break;
             }
         } catch (error: any) {
             // Hata durumunu WebView'e ilet

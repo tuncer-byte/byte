@@ -2,7 +2,7 @@
   "name": "byte",
   "displayName": "Byte AI Assistant",
   "description": "AI-powered coding assistant that helps developers write, analyze, refactor, and optimize code. Features include code explanation, documentation generation, unit test creation, and intelligent suggestions to improve code quality and productivity.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "byte", 
   "author": {
     "name": "Tuncer Bagcabasi"
@@ -168,7 +168,8 @@
           "enum": [
             "openai",
             "gemini",
-            "local"
+            "local",
+            "anthropic"
           ],
           "default": "openai",
           "description": "Select AI service provider"
@@ -209,13 +210,62 @@
         },
         "byte.local.model": {
           "type": "string",
-          "default": "llama3",
-          "description": "Model name to use in Ollama (llama3, codellama, mistral, etc.)"
+          "enum": [
+            "llama3",
+            "codellama",
+            "mistral",
+            "mixtral",
+            "neural-chat",
+            "phi"
+          ],
+          "default": "codellama",
+          "description": "Model name to use in Ollama"
         },
         "byte.saveHistory": {
           "type": "boolean",
           "default": true,
           "description": "Save chat history between sessions"
+        },
+        "byte.anthropic.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key for Claude models"
+        },
+        "byte.anthropic.model": {
+          "type": "string",
+          "enum": [
+            "claude-3-opus",
+            "claude-3-sonnet",
+            "claude-3-haiku"
+          ],
+          "default": "claude-3-sonnet",
+          "description": "Anthropic Claude model to use"
+        },
+        "byte.autoSwitch": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable automatic model switching based on task complexity and cost optimization"
+        },
+        "byte.autoSwitch.metrics": {
+          "type": "object",
+          "properties": {
+            "maxCostPerDay": {
+              "type": "number",
+              "default": 1.0,
+              "description": "Maximum cost allowed per day in USD"
+            },
+            "preferredProvider": {
+              "type": "string",
+              "enum": ["fastest", "cheapest", "most-accurate"],
+              "default": "most-accurate",
+              "description": "Preferred optimization strategy for auto-switching"
+            }
+          },
+          "default": {
+            "maxCostPerDay": 1.0,
+            "preferredProvider": "most-accurate"
+          },
+          "description": "Auto-switch configuration metrics"
         }
       }
     }

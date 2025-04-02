@@ -3,8 +3,7 @@ import { AIService } from './aiService';
 import { ChatPanel } from './chatPanel';
 import { CommandManager } from './commands';
 import { InlineCodeChat } from './inlineCodeChat';
-import * as fs from 'fs';
-import * as path from 'path';
+
 
 // Eklenti aktif edildiğinde çağrılır
 export function activate(context: vscode.ExtensionContext) {
@@ -29,6 +28,15 @@ export function activate(context: vscode.ExtensionContext) {
             ChatPanel.viewType,
             chatPanel
         )
+    );
+    
+    // Terminal komutu çalıştırma özelliği ekle
+    context.subscriptions.push(
+        vscode.commands.registerCommand('byte.runInTerminal', (command: string) => {
+            const terminal = vscode.window.createTerminal('Byte AI Terminal');
+            terminal.show();
+            terminal.sendText(command);
+        })
     );
     
     // Komut yöneticisi oluştur ve komutları kaydet

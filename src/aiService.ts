@@ -5,7 +5,8 @@ import fetch from 'node-fetch';
 export enum AIProvider {
     OpenAI = 'openai',
     Gemini = 'gemini',
-    Local = 'local'
+    Local = 'local',
+    Anthropic = 'anthropic'
 }
 
 // Ollama API yanıt tipi
@@ -47,8 +48,35 @@ export interface AISettings {
         endpoint: string;
         model: string;
     };
+    anthropic: {
+        apiKey: string;
+        model: string;
+    };
+    autoSwitch: {
+        enabled: boolean;
+        maxCostPerDay: number;
+        preferredProvider: 'fastest' | 'cheapest' | 'most-accurate';
+    };
     saveHistory: boolean;
 }
+
+// Model maliyetleri ve performans metrikleri
+interface ModelMetrics {
+    costPer1kTokens: number;
+    averageResponseTime: number;
+    accuracyScore: number;
+}
+
+const MODEL_METRICS: Record<string, ModelMetrics> = {
+    'gpt-3.5-turbo': { costPer1kTokens: 0.0015, averageResponseTime: 1000, accuracyScore: 0.85 },
+    'gpt-4': { costPer1kTokens: 0.03, averageResponseTime: 2000, accuracyScore: 0.95 },
+    'gpt-4-turbo': { costPer1kTokens: 0.01, averageResponseTime: 1500, accuracyScore: 0.92 },
+    'claude-3-opus': { costPer1kTokens: 0.015, averageResponseTime: 1800, accuracyScore: 0.94 },
+    'claude-3-sonnet': { costPer1kTokens: 0.008, averageResponseTime: 1200, accuracyScore: 0.90 },
+    'claude-3-haiku': { costPer1kTokens: 0.003, averageResponseTime: 800, accuracyScore: 0.85 },
+    'gemini-1.5-pro': { costPer1kTokens: 0.0025, averageResponseTime: 1100, accuracyScore: 0.88 },
+    'gemini-1.5-flash': { costPer1kTokens: 0.001, averageResponseTime: 500, accuracyScore: 0.82 }
+};
 
 /**
  * AI Servisleri ile entegrasyonu sağlayan sınıf
@@ -58,6 +86,8 @@ export class AIService {
     private context: vscode.ExtensionContext;
     private messages: Message[] = [];
     private outputChannel: vscode.OutputChannel;
+    private dailyCost: number = 0;
+    private lastCostReset: Date = new Date();
     private _settings: AISettings = {
         defaultProvider: 'openai',
         openai: {
@@ -70,7 +100,16 @@ export class AIService {
         },
         local: {
             endpoint: 'http://localhost:11434/api/generate',
-            model: 'llama2'
+            model: 'codellama'
+        },
+        anthropic: {
+            apiKey: '',
+            model: 'claude-3-sonnet'
+        },
+        autoSwitch: {
+            enabled: false,
+            maxCostPerDay: 1.0,
+            preferredProvider: 'most-accurate'
         },
         saveHistory: true
     };
@@ -144,6 +183,16 @@ export class AIService {
      */
     public async sendMessage(userMessage: string): Promise<string> {
         try {
+            // Mesaj karmaşıklığını hesapla (basit bir metrik)
+            const taskComplexity = userMessage.length / 100; // 0-1 arası bir değer
+
+            // Optimal sağlayıcıyı seç
+            const optimalProvider = await this.selectOptimalProvider(taskComplexity);
+            if (optimalProvider !== this.currentProvider) {
+                this.log(`Otomatik geçiş: ${this.currentProvider} -> ${optimalProvider}`);
+                this.setProvider(optimalProvider);
+            }
+
             // Kullanıcı mesajını geçmişe ekle
             this.messages.push({ role: 'user', content: userMessage });
             
@@ -160,10 +209,24 @@ export class AIService {
                 case AIProvider.Local:
                     response = await this.callLocalModel(userMessage);
                     break;
+                case AIProvider.Anthropic:
+                    response = await this.callAnthropic(userMessage);
+                    break;
                 default:
                     throw new Error('Desteklenmeyen AI sağlayıcı');
             }
             
+            // Maliyeti güncelle
+            if (this.currentProvider !== AIProvider.Local) {
+                const config = vscode.workspace.getConfiguration('byte');
+                const model = config.get<string>(`${this.currentProvider}.model`);
+                if (model && MODEL_METRICS[model]) {
+                    // Yaklaşık token sayısını hesapla (4 karakter = 1 token)
+                    const totalTokens = (userMessage.length + response.length) / 4;
+                    this.dailyCost += (totalTokens / 1000) * MODEL_METRICS[model].costPer1kTokens;
+                }
+            }
+
             // AI yanıtını geçmişe ekle
             this.messages.push({ role: 'assistant', content: response });
             
@@ -530,6 +593,15 @@ export class AIService {
                 endpoint: config.get<string>('local.endpoint') || 'http://localhost:11434/api/generate',
                 model: config.get<string>('local.model') || 'llama2'
             },
+            anthropic: {
+                apiKey: await this.getAnthropicApiKey() || '',
+                model: config.get<string>('anthropic.model') || 'claude-3-sonnet'
+            },
+            autoSwitch: {
+                enabled: config.get<boolean>('autoSwitch.enabled') !== false,
+                maxCostPerDay: config.get<number>('autoSwitch.maxCostPerDay') || 1.0,
+                preferredProvider: (config.get<string>('autoSwitch.preferredProvider') || 'most-accurate') as 'fastest' | 'cheapest' | 'most-accurate'
+            },
             saveHistory: config.get<boolean>('saveHistory') !== false
         };
     }
@@ -537,5 +609,137 @@ export class AIService {
     // Ayarları güncelle
     public async updateSettings(settings: AISettings): Promise<void> {
         this._settings = settings;
+    }
+
+    private async selectOptimalProvider(taskComplexity: number): Promise<AIProvider> {
+        if (!this._settings.autoSwitch.enabled) {
+            return this.currentProvider;
+        }
+
+        // Günlük maliyet limitini kontrol et
+        const now = new Date();
+        if (now.getDate() !== this.lastCostReset.getDate()) {
+            this.dailyCost = 0;
+            this.lastCostReset = now;
+        }
+
+        if (this.dailyCost >= this._settings.autoSwitch.maxCostPerDay) {
+            this.log('Günlük maliyet limiti aşıldı, yerel modele geçiliyor...');
+            return AIProvider.Local;
+        }
+
+        const config = vscode.workspace.getConfiguration('byte');
+        const availableProviders = new Map<AIProvider, ModelMetrics>();
+
+        // Kullanılabilir modelleri topla
+        if (await this.getOpenAIApiKey()) {
+            const model = config.get<string>('openai.model') || 'gpt-3.5-turbo';
+            availableProviders.set(AIProvider.OpenAI, MODEL_METRICS[model]);
+        }
+        if (await this.getGeminiApiKey()) {
+            const model = config.get<string>('gemini.model') || 'gemini-1.5-flash';
+            availableProviders.set(AIProvider.Gemini, MODEL_METRICS[model]);
+        }
+        if (await this.getAnthropicApiKey()) {
+            const model = config.get<string>('anthropic.model') || 'claude-3-sonnet';
+            availableProviders.set(AIProvider.Anthropic, MODEL_METRICS[model]);
+        }
+        availableProviders.set(AIProvider.Local, {
+            costPer1kTokens: 0,
+            averageResponseTime: 2000,
+            accuracyScore: 0.75
+        });
+
+        // Tercih edilen stratejiye göre en iyi sağlayıcıyı seç
+        switch (this._settings.autoSwitch.preferredProvider) {
+            case 'fastest':
+                return this.selectFastestProvider(availableProviders);
+            case 'cheapest':
+                return this.selectCheapestProvider(availableProviders);
+            case 'most-accurate':
+                return this.selectMostAccurateProvider(availableProviders, taskComplexity);
+            default:
+                return this.currentProvider;
+        }
+    }
+
+    private selectFastestProvider(providers: Map<AIProvider, ModelMetrics>): AIProvider {
+        let fastest = { provider: AIProvider.Local, time: Infinity };
+        for (const [provider, metrics] of providers) {
+            if (metrics.averageResponseTime < fastest.time) {
+                fastest = { provider, time: metrics.averageResponseTime };
+            }
+        }
+        return fastest.provider;
+    }
+
+    private selectCheapestProvider(providers: Map<AIProvider, ModelMetrics>): AIProvider {
+        let cheapest = { provider: AIProvider.Local, cost: Infinity };
+        for (const [provider, metrics] of providers) {
+            if (metrics.costPer1kTokens < cheapest.cost) {
+                cheapest = { provider, cost: metrics.costPer1kTokens };
+            }
+        }
+        return cheapest.provider;
+    }
+
+    private selectMostAccurateProvider(providers: Map<AIProvider, ModelMetrics>, taskComplexity: number): AIProvider {
+        let best = { provider: AIProvider.Local, score: -Infinity };
+        for (const [provider, metrics] of providers) {
+            const score = metrics.accuracyScore * taskComplexity;
+            if (score > best.score) {
+                best = { provider, score };
+            }
+        }
+        return best.provider;
+    }
+
+    public async getAnthropicApiKey(): Promise<string | undefined> {
+        const config = vscode.workspace.getConfiguration('byte');
+        return await this.context.secrets.get('byte.anthropic.apiKey') || config.get('anthropic.apiKey');
+    }
+
+    public async setAnthropicApiKey(apiKey: string): Promise<void> {
+        await this.context.secrets.store('byte.anthropic.apiKey', apiKey);
+    }
+
+    private async callAnthropic(userMessage: string): Promise<string> {
+        const apiKey = await this.getAnthropicApiKey();
+        
+        if (!apiKey) {
+            throw new Error('Anthropic API anahtarı bulunamadı. Lütfen yapılandırın.');
+        }
+
+        const config = vscode.workspace.getConfiguration('byte');
+        const model = config.get<string>('anthropic.model') || 'claude-3-sonnet';
+
+        this.log(`Anthropic API isteği gönderiliyor (model: ${model})...`);
+
+        try {
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: userMessage }],
+                    max_tokens: 1000
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Anthropic API Hatası: ${response.status} - ${JSON.stringify(errorData)}`);
+            }
+
+            const data = await response.json();
+            return data.content[0].text;
+        } catch (error: any) {
+            this.log(`Anthropic API Hatası: ${error.message}`, true);
+            throw new Error(`Anthropic API isteği başarısız: ${error.message}`);
+        }
     }
 }

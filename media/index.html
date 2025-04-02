@@ -18,6 +18,7 @@
                     <select id="aiProvider">
                         <option value="openai">OpenAI</option>
                         <option value="gemini">Google Gemini</option>
+                        <option value="anthropic">Anthropic Claude</option>
                         <option value="local">Ollama</option>
                     </select>
                     <div class="select-arrow">▼</div>
@@ -55,28 +56,34 @@
                         </div>
                         
                         <div class="assistant-intro">
-                            <div class="assistant-icon">B</div>
+                            <div class="assistant-icon">
+                                <img src="icon.png" alt="Byte AI Assistant" class="assistant-logo">
+                            </div>
                             <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
                         </div>
                         
                         <div class="quick-commands">
-                            <h3>Quick commands</h3>
+                            <h3>Quick Commands</h3>
                             <div class="command-list">
                                 <div class="command-item">
                                     <span class="command">/code</span>
-                                    <span class="command-desc">to generate new feature or fix bug</span>
+                                    <span class="shortcut">Right Click > Generate Code</span>
+                                    <span class="command-desc">generate new feature or fix bug</span>
                                 </div>
                                 <div class="command-item">
                                     <span class="command">/explain</span>
-                                    <span class="command-desc">file or selected code</span>
+                                    <span class="shortcut">Right Click > Explain</span>
+                                    <span class="command-desc">explain file or selected code</span>
                                 </div>
                                 <div class="command-item">
                                     <span class="command">/review</span>
-                                    <span class="command-desc">code to recommend improvements</span>
+                                    <span class="shortcut">Right Click > Review</span>
+                                    <span class="command-desc">recommend code improvements</span>
                                 </div>
                                 <div class="command-item">
                                     <span class="command">/unittests</span>
-                                    <span class="command-desc">to generate unit tests</span>
+                                    <span class="shortcut">Right Click > Generate Tests</span>
+                                    <span class="command-desc">generate unit tests</span>
                                 </div>
                             </div>
                         </div>
@@ -224,6 +231,46 @@
                         </div>
                     </div>
 
+                    <div class="settings-group" id="anthropicSettings">
+                        <div class="settings-group-header">
+                            <div class="provider-icon anthropic-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="currentColor"/>
+                                    <path d="M12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM12 16C9.79 16 8 14.21 8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16Z" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <div class="provider-info">
+                                <h4>Anthropic Claude</h4>
+                                <span class="provider-status">API Anahtarı Gerekli</span>
+                            </div>
+                        </div>
+                        <div class="settings-group-body">
+                            <div class="settings-field">
+                                <label for="anthropicApiKey">API Anahtarı</label>
+                                <div class="api-key-input">
+                                    <input type="password" id="anthropicApiKey" placeholder="Anthropic API anahtarınızı girin">
+                                    <button class="toggle-password" data-for="anthropicApiKey">
+                                        <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
+                                        </svg>
+                                        <svg class="eye-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" fill="currentColor"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span class="info-tip">API anahtarı güvenli bir şekilde saklanacaktır</span>
+                            </div>
+                            <div class="settings-field">
+                                <label for="anthropicModel">Model</label>
+                                <select id="anthropicModel">
+                                    <option value="claude-3-opus">Claude 3 Opus</option>
+                                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                                    <option value="claude-3-haiku">Claude 3 Haiku</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="settings-group" id="localSettings">
                         <div class="settings-group-header">
                             <div class="provider-icon local-icon">
@@ -272,6 +319,31 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="settings-section">
+                    <h3>Otomatik Geçiş Ayarları</h3>
+                    <div class="settings-field">
+                        <div class="checkbox-field">
+                            <input type="checkbox" id="autoSwitch">
+                            <label for="autoSwitch">Otomatik model geçişini etkinleştir</label>
+                        </div>
+                        <span class="info-tip">Görev karmaşıklığı ve maliyet optimizasyonuna göre otomatik model seçimi</span>
+                    </div>
+                    <div class="settings-field" id="autoSwitchSettings">
+                        <label for="maxCostPerDay">Günlük Maksimum Maliyet (USD)</label>
+                        <input type="number" id="maxCostPerDay" min="0" step="0.1" value="1.0">
+                        <span class="info-tip">0 değeri limitsiz anlamına gelir</span>
+                    </div>
+                    <div class="settings-field">
+                        <label for="preferredProvider">Tercih Edilen Optimizasyon</label>
+                        <select id="preferredProvider">
+                            <option value="fastest">En Hızlı</option>
+                            <option value="cheapest">En Ucuz</option>
+                            <option value="most-accurate">En Doğru</option>
+                        </select>
+                        <span class="info-tip">Otomatik geçiş için öncelikli strateji</span>
+                    </div>
+                </div>
             </div>
             <div class="settings-footer">
                 <div class="settings-status" id="settingsStatus"></div>
@@ -283,6 +355,40 @@
         </div>
     </div>
     
+    <!-- Komut Modalı -->
+    <div id="commandModal" class="command-modal">
+        <div class="command-modal-header">
+            <h3>Komut</h3>
+            <button id="closeCommandBtn" class="close-button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
+                </svg>
+            </button>
+        </div>
+        <div class="command-modal-content">
+            <div id="commandInput" class="command-input" contenteditable="true" spellcheck="false"></div>
+            <div class="command-description">Komut seçin ve Enter tuşuna basın</div>
+            <div id="commandSuggestions" class="command-list-suggestions">
+                <div class="command-suggestion-item" data-command="/code">
+                    <span class="command-suggestion-name">/code</span>
+                    <span class="command-suggestion-desc">to generate new feature or fix bug</span>
+                </div>
+                <div class="command-suggestion-item" data-command="/explain">
+                    <span class="command-suggestion-name">/explain</span>
+                    <span class="command-suggestion-desc">file or selected code</span>
+                </div>
+                <div class="command-suggestion-item" data-command="/review">
+                    <span class="command-suggestion-name">/review</span>
+                    <span class="command-suggestion-desc">code to recommend improvements</span>
+                </div>
+                <div class="command-suggestion-item" data-command="/unittests">
+                    <span class="command-suggestion-name">/unittests</span>
+                    <span class="command-suggestion-desc">to generate unit tests</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="{{scriptUri}}"></script>
 </body>
 </html>

@@ -153,7 +153,6 @@ body, html {
 /* Modern welcome-message stilleri */
 .welcome-message {
 
-    padding: 32px;
     transition: all 0.3s ease;
 }
 
@@ -478,11 +477,24 @@ body, html {
     max-height: 150px;
     outline: none;
     font-family: inherit;
+    overflow: hidden;
+}
+
+/* Komut renklendirme */
+#userInput[value^="/code"], 
+#userInput[value^="/explain"],
+#userInput[value^="/review"],
+#userInput[value^="/unittests"] {
+    color: var(--primary-color);
 }
 
 #userInput::placeholder {
     color: rgba(230, 230, 230, 0.4);
     font-style: italic;
+}
+
+#userInput:focus::placeholder {
+    color: transparent;
 }
 
 .send-button {
@@ -666,32 +678,51 @@ body, html {
 }
 
 .command-item {
-    background: transparent;
-    border: none;
-    padding: 12px 0;
-    transition: all 0.3s ease;
-    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
 .command-item:hover {
-    background: transparent;
-    border: none;
-    transform: translateX(5px);
+    background-color: rgba(255, 123, 35, 0.1);
 }
 
 .command {
-    display: inline-block;
-    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
     color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    min-width: 80px;
+}
+
+.shortcut {
+    color: rgba(230, 230, 230, 0.6);
     font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 4px;
+    padding: 2px 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    min-width: 160px;
 }
 
 .command-desc {
-    font-size: 13px;
     color: rgba(230, 230, 230, 0.7);
-    display: block;
+    font-size: 13px;
+    flex: 1;
+}
+
+.quick-commands h3 {
+    color: var(--foreground);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.command-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 /* Assistant intro için stiller */
@@ -705,15 +736,19 @@ body, html {
 
 .assistant-icon {
     background: var(--primary-color);
-    color: white;
     width: 32px;
     height: 32px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 16px;
+    overflow: hidden;
+}
+
+.assistant-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .assistant-intro p {
@@ -1207,3 +1242,223 @@ body, html {
     color: var(--primary-color);
     opacity: 1;
 }
+
+.command-modal {
+    position: fixed;
+    top: auto;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    background: var(--message-ai-background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    width: 400px;
+    max-width: 90vw;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.command-modal.active {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.command-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.command-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.command-modal-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.command-input {
+    background: var(--input-background);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--primary-color);
+    font-size: 14px;
+    width: 100%;
+    transition: all 0.2s ease;
+    min-height: 40px;
+}
+
+.command-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(255, 123, 35, 0.2);
+}
+
+.command-description {
+    font-size: 13px;
+    color: rgba(230, 230, 230, 0.7);
+    margin-top: 4px;
+}
+
+.command-list-suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.command-suggestion-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--input-background);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.command-suggestion-item:hover {
+    background: rgba(255, 123, 35, 0.1);
+}
+
+.command-suggestion-name {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-right: 10px;
+}
+
+.command-suggestion-desc {
+    color: rgba(230, 230, 230, 0.7);
+    font-size: 13px;
+}
+
+.anthropic-icon {
+    background-color: #5436DA;
+    border-radius: 50%;
+    padding: 4px;
+}
+
+.anthropic-icon svg {
+    fill: white;
+}
+
+#autoSwitchSettings {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: var(--vscode-editor-background);
+    border-radius: 4px;
+}
+
+#autoSwitchSettings input[type="number"] {
+    width: 100px;
+    padding: 4px 8px;
+    border: 1px solid var(--vscode-input-border);
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border-radius: 2px;
+}
+
+#autoSwitchSettings input[type="number"]:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder);
+}
+
+.checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.checkbox-field input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.checkbox-field label {
+    user-select: none;
+    cursor: pointer;
+}
+
+#preferredProvider {
+    width: 100%;
+    max-width: 200px;
+}
+
+.info-tip {
+    display: block;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Animasyonlar */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.settings-group {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Responsive Tasarım */
+@media (max-width: 600px) {
+    .settings-section {
+        padding: 10px;
+    }
+    
+    #autoSwitchSettings {
+        margin-top: 5px;
+        padding: 5px;
+    }
+    
+    .settings-field {
+        margin-bottom: 10px;
+    }
+}
+
+/* Run Butonu Stilleri */
+.run-code-button {
+    position: absolute;
+    top: 0;
+    right: 32px; /* Dil etiketinin yanında olacak */
+    background-color: rgba(255, 123, 35, 0.2);
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 0 5px 0 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.run-code-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.run-code-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Message Stilleri Arasına Ekle */

@@ -24,7 +24,7 @@ export class CommandManager {
             })
         );
         
-        // Seçili kodu açıklama komutu
+        // Seçili kodu açıklama komutuP
         context.subscriptions.push(
             vscode.commands.registerCommand('byte.explainCode', async () => {
                 await this.explainSelectedCode();
