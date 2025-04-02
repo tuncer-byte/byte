@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code Chat</title>
-    <link rel="stylesheet" href="inlineCodeChat.css">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; img-src ${webview.cspSource} https:;">
+    <link rel="stylesheet" href="inline-chat.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{styleUri}}; script-src {{scriptUri}}; img-src https:;">
 </head>
 <body>
     <div class="chat-container">
@@ -71,6 +71,6 @@
             </div>
         </div>
     </div>
-    <script src="inlineCodeChat.js"></script>
+    <script src="inline-chat.js"></script>
 </body>
 </html> 

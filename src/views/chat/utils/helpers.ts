@@ -8,15 +8,15 @@ import * as fs from 'fs';
 export function getWebviewContent(extensionUri: vscode.Uri, webview: vscode.Webview): string {
     // WebView kaynaklarına erişim için URI'lar
     const scriptUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'media', 'main.js')
+        vscode.Uri.joinPath(extensionUri, 'media', 'chat', 'chat-panel.js')
     );
     
     const styleUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'media', 'style.css')
+        vscode.Uri.joinPath(extensionUri, 'media', 'chat', 'chat-panel.css')
     );
     
     // HTML şablonunu oku
-    const htmlPath = vscode.Uri.joinPath(extensionUri, 'media', 'index.html');
+    const htmlPath = vscode.Uri.joinPath(extensionUri, 'media', 'chat', 'chat-panel.html');
     let htmlContent = '';
     
     try {

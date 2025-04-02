@@ -28,6 +28,7 @@
     --assistant-message-background: var(--message-ai-background, #1A1F27);
     --hover-border: var(--primary-color, #FF7B23);
     --code-highlight-bg: var(--message-user-background, #1E2631);
+    --code-block-bg: var(--background, #0D1117);
 }
 
 * {
@@ -144,7 +145,7 @@ body {
     position: relative;
     background-color: var(--background-color);
     min-height: 100px;
-    padding: 8px;
+    padding: 12px;
     display: block !important;
 }
 
@@ -154,7 +155,7 @@ body {
     background-color: var(--badge-background);
     color: var(--badge-foreground);
     border-radius: 3px;
-    margin: 8px 0 0 16px;
+    margin: 0 0 8px 0;
     display: inline-block;
     position: sticky;
     top: 8px;
@@ -162,31 +163,22 @@ body {
 }
 
 #codeBlock {
-    margin: 8px 0;
-    padding: 8px 16px 16px;
-    overflow: auto;
-    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
-    font-size: 12px;
-    line-height: 1.5;
-    white-space: pre;
-    tab-size: 4;
-    max-height: 300px;
-    width: 100%;
-    box-sizing: border-box;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background-color: var(--background-color);
+    background-color: var(--code-block-bg);
+    padding: 12px;
+    margin: 8px 0;
+    overflow-x: auto;
+    border-radius: 6px;
 }
 
 #codeBlock code {
-    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
     display: block;
-    color: var(--foreground-color);
     white-space: pre;
-    overflow-wrap: normal;
-    overflow-x: auto;
-    min-height: 1em;
-    padding: 4px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
+    color: var(--foreground-color);
+    font-size: 12px;
+    line-height: 1.5;
+    tab-size: 4;
 }
 
 /* Chat Section */
@@ -552,17 +544,4 @@ textarea:focus {
     font-size: 12px;
     color: var(--foreground-color);
     opacity: 0.8;
-}
-
-/* Kod blok elementinin gizlenmesi */
-#codeBlock {
-    border: none;
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    overflow: visible;
-}
-
-#codeBlock code {
-    display: none;
 } 

@@ -63,17 +63,14 @@ export class InlineChatMessageHandler {
         }
 
         // Kullanıcı mesajını WebView'a gönder
-        await this.panel.webview.postMessage({
+        this.panel.webview.postMessage({
             command: 'addMessage',
-            message: text,
-            type: 'user'
+            text: text,
+            role: 'user'
         });
 
-        // Yükleniyor durumunu başlat
+        // Yükleniyor durumunu başlat (loadingIndicator.active sınıfı artık WebView JS tarafında yönetiliyor)
         this.isProcessing = true;
-        await this.panel.webview.postMessage({
-            command: 'startLoading'
-        });
 
         try {
             // Satır bilgisini hesapla
@@ -110,24 +107,25 @@ export class InlineChatMessageHandler {
             this.messageHistory.push({ role: 'assistant', content: response });
 
             // AI yanıtını WebView'a gönder
-            await this.panel.webview.postMessage({
-                command: 'addMessage',
-                message: response,
-                type: 'assistant'
-            });
-        } catch (error) {
             if (this.panel) {
-                await this.panel.webview.postMessage({
-                    command: 'error',
-                    message: 'An error occurred while getting the response. Please try again.'
+                this.panel.webview.postMessage({
+                    command: 'addMessage',
+                    text: response,
+                    role: 'assistant'
                 });
             }
-            console.error('AI response error:', error);
+        } catch (error) {
+            if (this.panel) {
+                console.error('AI response error:', error);
+                const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+                this.panel.webview.postMessage({
+                    command: 'addMessage',
+                    text: `Yanıt alınırken bir hata oluştu: ${errorMessage}. Lütfen tekrar deneyin.`,
+                    role: 'assistant'
+                });
+            }
         } finally {
             this.isProcessing = false;
-            if (this.panel) {
-                await this.panel.webview.postMessage({ command: 'stopLoading' });
-            }
         }
     }
     
@@ -141,10 +139,10 @@ export class InlineChatMessageHandler {
         
         // Panele kod bilgilerini bildir
         this.panel.webview.postMessage({
-            command: 'updateCodeInfo',
+            command: 'setCode',
             code,
             fileName,
-            languageId,
+            language: languageId,
             lineInfo
         });
     }

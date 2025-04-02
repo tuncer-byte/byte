@@ -387,90 +387,65 @@
         }, 5000);
     }
 
-    // VS Code'dan gelen mesajları dinle
+    // VS Code'dan gelen mesajları işle
     window.addEventListener('message', event => {
         const message = event.data;
-        console.log(`Received message with command: ${message.command}`);
         
         switch (message.command) {
-            case 'updateCode':
-                try {
-                    // Kodu ve dil bilgisini güncelle
-                    currentCode = message.code || '';
-                    currentLanguage = message.languageId || '';
-                    currentFileName = message.fileName || '';
-                    const lineInfo = message.lineInfo || '';
+            case 'setCode':
+                console.log('Received setCode command:', message);
+                
+                // Kod içeriğini ayarla
+                if (message.code && codeBlock) {
+                    currentCode = message.code;
                     
-                    console.log(`Received code: Length=${currentCode.length}, Language=${currentLanguage}, LineInfo=${lineInfo}`);
-                    
-                    // Kod bloğu yerine dosya bilgisi göster
-                    const codeContent = document.getElementById('codeContent');
-                    if (codeContent) {
-                        codeContent.style.display = 'block';
-                        console.log('Code content section is now visible');
+                    if (codeBlock.tagName === 'CODE') {
+                        codeBlock.textContent = message.code;
                     } else {
-                        console.error('Code content element (#codeContent) not found');
-                    }
-                    
-                    // codeBlock'un içeriğini dosya adı ve satır numaralarıyla değiştir
-                    const codeBlockElement = document.getElementById('codeBlock');
-                    if (codeBlockElement) {
-                        // Eski içeriği temizle
-                        codeBlockElement.innerHTML = '';
-                        
-                        // Dosya bilgisini göster
-                        const fileInfoElement = document.createElement('div');
-                        fileInfoElement.className = 'file-info';
-                        
-                        const fileName = currentFileName || 'Unnamed File';
-                        fileInfoElement.innerHTML = `
-                            <div class="file-name">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
-                                <span>${fileName}</span>
-                            </div>
-                            <div class="line-info">${lineInfo}</div>
-                        `;
-                        
-                        codeBlockElement.appendChild(fileInfoElement);
-                        console.log('Updated UI with file information');
-                    } else {
-                        console.error('Code block element not found for update');
-                    }
-                    
-                    // Dil rozetini güncelle
-                    if (languageBadge) {
-                        if (currentLanguage) {
-                            languageBadge.textContent = currentLanguage;
-                            languageBadge.style.display = 'inline-block';
-                            console.log(`Updated language badge to show: ${currentLanguage}`);
+                        const codeElement = codeBlock.querySelector('code');
+                        if (codeElement) {
+                            codeElement.textContent = message.code;
                         } else {
-                            languageBadge.style.display = 'none';
-                            console.log('Language badge hidden (no language specified)');
+                            const newCodeElement = document.createElement('code');
+                            newCodeElement.textContent = message.code;
+                            codeBlock.innerHTML = '';
+                            codeBlock.appendChild(newCodeElement);
                         }
-                    } else {
-                        console.error('Language badge element not found');
                     }
                     
-                    // Düğmeleri etkinleştir (kod varsa)
-                    if (currentCode) {
-                        if (fixCodeBtn) fixCodeBtn.disabled = false;
-                        if (optimizeCodeBtn) optimizeCodeBtn.disabled = false;
-                        if (testCodeBtn) testCodeBtn.disabled = false;
-                        if (explainCodeBtn) explainCodeBtn.disabled = false;
-                        if (copyCodeBtn) copyCodeBtn.disabled = false;
-                        console.log('Buttons enabled as code is available');
-                    } else {
-                        console.error('No code received, buttons will remain disabled');
+                    // CodeBlock görünürlüğünü ayarla
+                    const parent = codeBlock.parentElement;
+                    if (parent) {
+                        parent.style.display = 'block';
                     }
                     
-                    console.log('Code update complete');
-                } catch (error) {
-                    console.error('Error updating code in UI:', error);
-                    showError('An error occurred while displaying the code.');
+                    console.log('Code content set successfully');
+                } else {
+                    console.warn('Code content is empty or code block element not found');
                 }
+                
+                // Programlama dilini ayarla
+                if (message.language && languageBadge) {
+                    currentLanguage = message.language;
+                    languageBadge.textContent = message.language;
+                    languageBadge.style.display = 'inline-block';
+                    console.log('Language badge updated:', message.language);
+                } else {
+                    console.warn('Language is empty or language badge element not found');
+                }
+                
+                // Dosya adını kaydet
+                if (message.fileName) {
+                    currentFileName = message.fileName;
+                }
+                
+                // Tüm düğmeleri etkinleştir
+                if (fixCodeBtn) fixCodeBtn.disabled = false;
+                if (optimizeCodeBtn) optimizeCodeBtn.disabled = false;
+                if (testCodeBtn) testCodeBtn.disabled = false;
+                if (explainCodeBtn) explainCodeBtn.disabled = false;
+                if (copyCodeBtn) copyCodeBtn.disabled = false;
+                
                 break;
                 
             case 'addMessage':

@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as marked from 'marked';
-import * as hljs from 'highlight.js';
 
 /**
  * WebView HTML içeriğini oluşturur
@@ -17,18 +15,18 @@ export function getInlineChatWebviewContent(
 ): string {
     // WebView kaynaklarına erişim için URI'lar
     const scriptUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'media', 'inlineCodeChat.js')
+        vscode.Uri.joinPath(extensionUri, 'media', 'inline-chat', 'inline-chat.js')
     );
     
     const styleUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(extensionUri, 'media', 'inlineCodeChat.css')
+        vscode.Uri.joinPath(extensionUri, 'media', 'inline-chat', 'inline-chat.css')
     );
     
     // Kod satır sayısını hesapla
     const lineInfo = `${lineCount} satır`;
     
     // HTML şablonunu oku
-    const htmlPath = vscode.Uri.joinPath(extensionUri, 'media', 'inlineCodeChat.html');
+    const htmlPath = vscode.Uri.joinPath(extensionUri, 'media', 'inline-chat', 'inline-chat.html');
     let htmlContent = '';
     
     try {
@@ -36,13 +34,55 @@ export function getInlineChatWebviewContent(
         const fileUri = htmlPath.fsPath;
         htmlContent = fs.readFileSync(fileUri, 'utf8');
         
-        // Dosya içindeki placeholder'ları değiştir
+        // Content-Security-Policy meta etiketini güncellemek için regex
+        htmlContent = htmlContent.replace(
+            /<meta http-equiv="Content-Security-Policy"[^>]*>/,
+            `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; img-src ${webview.cspSource} https:;">`
+        );
+        
+        // Stil ve script etiketlerini güncellemek için regex
+        htmlContent = htmlContent.replace(
+            /<link rel="stylesheet" href="inline-chat.css">/,
+            `<link rel="stylesheet" href="${styleUri}">`
+        );
+        
+        htmlContent = htmlContent.replace(
+            /<script src="inline-chat.js"><\/script>/,
+            `<script src="${scriptUri}"></script>`
+        );
+        
+        // Kod ve diğer bilgileri ekle
+        if (code) {
+            const escapedCode = code.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+                
+            const codeBlockElement = htmlContent.match(/<pre id="codeBlock".*?>([\s\S]*?)<\/pre>/);
+            if (codeBlockElement) {
+                htmlContent = htmlContent.replace(
+                    /<pre id="codeBlock".*?>([\s\S]*?)<\/pre>/,
+                    `<pre id="codeBlock" class="code-block"><code>${escapedCode}</code></pre>`
+                );
+            }
+        }
+        
+        // Dosya adı, dil ID'si ve satır bilgisini ekle
+        if (languageId) {
+            htmlContent = htmlContent.replace(
+                /<div id="languageBadge" class="code-language"><\/div>/,
+                `<div id="languageBadge" class="code-language">${languageId}</div>`
+            );
+        }
+        
+        // Alternatif placeholder değiştirme yöntemi
         htmlContent = htmlContent
             .replace(/\{\{scriptUri\}\}/g, scriptUri.toString())
             .replace(/\{\{styleUri\}\}/g, styleUri.toString())
-            .replace(/\{\{fileName\}\}/g, fileName)
-            .replace(/\{\{languageId\}\}/g, languageId)
-            .replace(/\{\{lineInfo\}\}/g, lineInfo);
+            .replace(/\{\{fileName\}\}/g, fileName || '')
+            .replace(/\{\{languageId\}\}/g, languageId || '')
+            .replace(/\{\{lineInfo\}\}/g, lineInfo || '');
             
     } catch (error) {
         // Hata durumunda basit bir HTML oluştur
@@ -188,6 +228,7 @@ export function getInlineChatWebviewContent(
                     font-size: 0.9em;
                 }
             </style>
+            <link rel="stylesheet" href="${styleUri}">
         </head>
         <body>
             <div class="code-header">
