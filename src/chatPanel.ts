@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { AIService, AIProvider, Message, OllamaResponse, AISettings } from './aiService';
+import { AIService, AIProvider, Message, OllamaResponse, AISettings } from './services/ai';
 import { CommandManager } from './commands';
 
 /**
@@ -1095,8 +1095,9 @@ Example: \`/explain function sum(a, b) { return a + b; }\`
     private async _sendSettingsToWebView() {
         try {
             // API anahtarlarını al (güvenli depolama alanından)
-            const openaiApiKey = await this._aiService.getOpenAIApiKey();
-            const geminiApiKey = await this._aiService.getGeminiApiKey();
+            const settings = await this._aiService.getSettings();
+            const openaiApiKey = settings.openai.apiKey;
+            const geminiApiKey = settings.gemini.apiKey;
             
             // Yapılandırma ayarlarını al
             const config = vscode.workspace.getConfiguration('byte');
@@ -1108,14 +1109,14 @@ Example: \`/explain function sum(a, b) { return a + b; }\`
             const saveHistory = config.get<boolean>('saveHistory') !== false;
             
             // Ayarları bir nesne olarak yapılandır
-            const settings = {
+            const settingsObject = {
                 defaultProvider,
                 openai: {
-                    apiKey: openaiApiKey || '',
+                    apiKey: openaiApiKey || "",
                     model: openaiModel
                 },
                 gemini: {
-                    apiKey: geminiApiKey || '',
+                    apiKey: geminiApiKey || "",
                     model: geminiModel
                 },
                 local: {
@@ -1125,11 +1126,11 @@ Example: \`/explain function sum(a, b) { return a + b; }\`
                 saveHistory
             };
             
-            // WebView'e gönder
+            // WebView'e ayarları gönder
             if (this._view) {
                 this._view.webview.postMessage({
                     type: 'settingsUpdated',
-                    settings
+                    settings: settingsObject
                 });
             }
         } catch (error: any) {
@@ -1160,68 +1161,27 @@ Example: \`/explain function sum(a, b) { return a + b; }\`
                 return;
             }
             
-            // OpenAI API anahtarını güvenli alana kaydet
-            if (settings.openai.apiKey) {
-                try {
+            // API anahtarlarını güvenli depolamaya kaydet
+            try {
+                if (settings.openai.apiKey) {
                     await this._aiService.setOpenAIApiKey(settings.openai.apiKey);
-                } catch (err: any) {
-                    console.error('OpenAI API anahtarı kaydedilirken hata oluştu:', err);
-                    this._sendSettingsError(`OpenAI API anahtarı kaydedilemedi: ${err.message}`);
-                    return;
                 }
-            }
-            
-            // Gemini API anahtarını güvenli alana kaydet
-            if (settings.gemini.apiKey) {
-                try {
+                
+                if (settings.gemini.apiKey) {
                     await this._aiService.setGeminiApiKey(settings.gemini.apiKey);
-                } catch (err: any) {
-                    console.error('Gemini API anahtarı kaydedilirken hata oluştu:', err);
-                    this._sendSettingsError(`Gemini API anahtarı kaydedilemedi: ${err.message}`);
-                    return;
                 }
-            }
-            
-            // Model ayarlarını ayrı ayrı kaydet ve hata kontrolü yap
-            try {
-                await config.update('openai.model', settings.openai.model, vscode.ConfigurationTarget.Global);
-            } catch (err: any) {
-                // Model ayarını kaydetmeye devam eder ama kullanıcıyı bilgilendiririz
-                console.warn('openai.model ayarı kaydedilemedi, devam ediliyor', err);
-            }
-            
-            try {
-                await config.update('gemini.model', settings.gemini.model, vscode.ConfigurationTarget.Global);
-            } catch (err: any) {
-                console.warn('gemini.model ayarı kaydedilemedi, devam ediliyor', err);
-            }
-            
-            // Yerel API ayarlarını kaydet
-            try {
-                await config.update('local.endpoint', settings.local.endpoint, vscode.ConfigurationTarget.Global);
-                await config.update('local.model', settings.local.model, vscode.ConfigurationTarget.Global);
-            } catch (err: any) {
-                console.warn('Yerel model ayarları kaydedilemedi, devam ediliyor', err);
-            }
-            
-            // Geçmiş kaydetme ayarını güncelle
-            try {
-                await config.update('saveHistory', settings.saveHistory, vscode.ConfigurationTarget.Global);
-            } catch (err: any) {
-                console.warn('saveHistory ayarı kaydedilemedi, devam ediliyor', err);
-            }
-            
-            // Başarılı mesajını WebView'e gönder
-            if (this._view) {
-                this._view.webview.postMessage({
-                    type: 'settingsSaved',
-                    success: true
-                });
-            }
-            
-            // Sağlayıcı değiştiyse, AI servisini de güncelle
-            if (settings.defaultProvider !== this._aiService.getProvider()) {
-                this._aiService.setProvider(settings.defaultProvider as AIProvider);
+                
+                if (settings.anthropic.apiKey) {
+                    await this._aiService.setAnthropicApiKey(settings.anthropic.apiKey);
+                }
+                
+                // Ayarları güncelle
+                await this._aiService.updateSettings(settings);
+                
+                // Mesaj göster
+                this._sendSettingsMessage('success', 'Ayarlar başarıyla kaydedildi!');
+            } catch (error: any) {
+                this._sendSettingsError(`Ayarlar kaydedilirken hata oluştu: ${error.message}`);
             }
         } catch (error: any) {
             console.error('Ayarlar kaydedilirken genel hata oluştu:', error);
@@ -1237,6 +1197,19 @@ Example: \`/explain function sum(a, b) { return a + b; }\`
             this._view.webview.postMessage({
                 type: 'settingsError',
                 error: errorMessage
+            });
+        }
+    }
+
+    /**
+     * Ayarlar için durum mesajını gönderir
+     */
+    private _sendSettingsMessage(status: 'success' | 'error' | 'info', message: string) {
+        if (this._view) {
+            this._view.webview.postMessage({
+                type: 'settingsMessage',
+                status,
+                message
             });
         }
     }

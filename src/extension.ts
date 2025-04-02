@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AIService } from './aiService';
+import { AIService } from './services/ai';
 import { ChatPanel } from './chatPanel';
 import { CommandManager } from './commands';
 import { InlineCodeChat } from './inlineCodeChat';

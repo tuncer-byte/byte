@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ChatPanel } from './chatPanel';
-import { AIProvider, AIService } from './aiService';
+import { AIProvider, AIService } from './services/ai';
 import * as fs from 'fs';
 import * as path from 'path';
 
