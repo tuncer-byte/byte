@@ -94,8 +94,7 @@
             if (button) {
                 button.addEventListener('click', () => {
                     vscode.postMessage({ command: action });
-                    // Kullanıcı sorusunu ekle
-                    addMessage(buttonActions[action], 'user');
+                    // Kullanıcı mesajı VS Code tarafından eklenecek, burada ekleme yapmıyoruz
                 });
             }
         });
@@ -196,9 +195,6 @@
         const text = userInput.value.trim();
         if (!text) return;
         
-        // Kullanıcı mesajını ekle
-        addMessage(text, 'user');
-        
         // VS Code'a mesajı gönder
         vscode.postMessage({
             command: 'sendMessage',
@@ -259,56 +255,23 @@
         }
     }
     
-    // Yeni mesaj oluştur
+    // Mesaj elementi oluştur
     function createMessageElement(text, role) {
-        const messageElement = document.createElement('div');
-        messageElement.className = `message ${role}-message`;
-        
-        // Mesaj başlığı (avatar ve rol)
-        const messageHeader = document.createElement('div');
-        messageHeader.className = 'message-header';
-        
-        // Avatar
-        const avatarElement = document.createElement('div');
-        avatarElement.className = `message-avatar ${role}-avatar`;
-        
-        // Avatar içeriği
-        if (role === 'user') {
-            avatarElement.textContent = 'K'; // Kullanıcı
-        } else if (role === 'assistant') {
-            avatarElement.textContent = 'B'; // Byte
-        } else if (role === 'error') {
-            avatarElement.textContent = '!'; // Hata
-        }
-        
-        // Rol adı
-        const roleNameElement = document.createElement('span');
-        if (role === 'user') {
-            roleNameElement.textContent = 'Siz';
-        } else if (role === 'assistant') {
-            roleNameElement.textContent = 'Asistan';
-        } else if (role === 'error') {
-            roleNameElement.textContent = 'Hata';
-        }
-        
-        messageHeader.appendChild(avatarElement);
-        messageHeader.appendChild(roleNameElement);
-        messageElement.appendChild(messageHeader);
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}-message`;
         
         // Mesaj içeriği
-        const contentElement = document.createElement('div');
-        contentElement.className = 'message-content';
+        const messageContent = document.createElement('div');
+        messageContent.className = 'message-content';
         
-        // Markdown formatı
-        if (role === 'assistant' || role === 'error') {
-            contentElement.innerHTML = formatMarkdown(text);
-        } else {
-            // Kullanıcı mesajını sadece metin olarak göster
-            contentElement.textContent = text;
-        }
+        // Markdown formatında metni işle
+        const formattedContent = formatMarkdown(text);
+        messageContent.innerHTML = formattedContent;
         
-        messageElement.appendChild(contentElement);
-        return messageElement;
+        // Mesaj divina ekle
+        messageDiv.appendChild(messageContent);
+        
+        return messageDiv;
     }
     
     // Markdown formatını işle

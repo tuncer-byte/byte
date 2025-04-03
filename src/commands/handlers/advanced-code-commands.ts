@@ -360,8 +360,8 @@ Return well-structured tests with explanatory comments.`;
         switch (languageId) {
             case 'javascript':
             case 'typescript':
-            case 'typescriptreact':
-            case 'javascriptreact':
+            case 'typescript':
+            case 'javascript':
                 return 'Jest';
             case 'python':
                 return 'Pytest';
