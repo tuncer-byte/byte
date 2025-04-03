@@ -105,6 +105,11 @@
         // Chill modu devre dışı olarak ayarla
         agentToggle.disabled = true;
         
+        // Eğer mesaj geçmişi boşsa welcome mesajını göster
+        if (!state.messages || state.messages.length === 0) {
+            showWelcomeMessage();
+        }
+        
         // Mevcut dosya bilgisini göster
         if (state.currentFile) {
             currentFileElement.textContent = state.currentFile;
@@ -462,7 +467,7 @@
                             copyButton.innerHTML = `
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1-2 2v1"></path>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1-2-2h9a2 2 0 0 1-2 2v1"></path>
                                 </svg>
                                 <span>Copy</span>
                             `;
@@ -623,6 +628,9 @@
         const message = userInput.value.trim();
         
         if (message) {
+            // Welcome mesajının varlığını kontrol et ve koru
+            const welcomeMessage = document.querySelector('#permanent-welcome');
+            
             // Kullanıcı mesajını ekle, slash komutuysa vurgula
             appendMessage('user', message, message.startsWith('/'));
             
@@ -646,6 +654,11 @@
             
             // State'i güncelle
             vscode.setState(state);
+            
+            // Welcome mesajının silinmesini önle - eğer silinmişse ve gerekiyorsa tekrar ekle
+            if (!welcomeMessage) {
+                showWelcomeMessage();
+            }
         }
     }
     
@@ -856,9 +869,38 @@
         // Mesajları temizle
         messagesContainer.innerHTML = '';
         
-        // Hoşgeldin mesajını göster
+        // Welcome mesajını ekle - bu fonksiyonu kullanarak welcome mesajını oluşturuyoruz
+        showWelcomeMessage();
+        
+        // State'i sıfırla - mesajları tamamen temizle
+        state.messages = [];
+        
+        // Input alanını temizle
+        userInput.value = '';
+        
+        // VS Code'a yeni sohbet başladığını ve mesaj geçmişini silmesini bildir
+        vscode.postMessage({ 
+            type: 'newChat',
+            clearHistory: true
+        });
+        
+        // LocalStorage'dan da tüm mesaj geçmişini temizle
+        localStorage.removeItem('chatHistory');
+    });
+
+    // Welcome mesajını gösteren fonksiyon
+    function showWelcomeMessage() {
+        // Eğer hali hazırda welcome-message varsa, onu silme
+        const existingWelcome = document.querySelector('.welcome-message');
+        if (existingWelcome) {
+            return; // Zaten welcome mesajı varsa, yenisini oluşturmaya gerek yok
+        }
+
         const welcomeMessage = document.createElement('div');
         welcomeMessage.className = 'welcome-message';
+        // welcome-message için özel bir ID ekleyelim ki daha sonra bunu kolayca bulabilelim
+        welcomeMessage.id = 'permanent-welcome';
+        
         welcomeMessage.innerHTML = `
          
                 <div class="assistant-message">
@@ -920,23 +962,10 @@
                 </div>
             
         `;
-        messagesContainer.appendChild(welcomeMessage);
         
-        // State'i sıfırla - mesajları tamamen temizle
-        state.messages = [];
-        
-        // Input alanını temizle
-        userInput.value = '';
-        
-        // VS Code'a yeni sohbet başladığını ve mesaj geçmişini silmesini bildir
-        vscode.postMessage({ 
-            type: 'newChat',
-            clearHistory: true
-        });
-        
-        // LocalStorage'dan da tüm mesaj geçmişini temizle
-        localStorage.removeItem('chatHistory');
-    });
+        // Welcome mesajını container'ın en üstüne ekleyelim
+        messagesContainer.insertBefore(welcomeMessage, messagesContainer.firstChild);
+    }
     
     // Current file checkbox'ını dinleyelim
     const includeCurrentFileCheckbox = document.getElementById('includeCurrentFile');
@@ -969,11 +998,16 @@
             currentFileElement.textContent = '';
             currentFileElement.title = '';
             
-            // Dosya bilgisini içeren div'i gizle
+            // Dosya bilgisini içeren div'i gizle - eğer dosya eklenmemişse
             const fileContextDiv = document.getElementById('fileContext');
             if (fileContextDiv) {
-                fileContextDiv.style.display = 'none';
-                fileContextDiv.classList.remove('active-file');
+                if (!state.selectedFiles || state.selectedFiles.length === 0) {
+                    fileContextDiv.style.display = 'none';
+                    fileContextDiv.classList.remove('active-file');
+                } else {
+                    // Eğer eklenen dosyalar varsa, hala görünür kalmalı
+                    fileContextDiv.style.display = 'flex';
+                }
             }
             
             // Dosya dahil etme seçeneğini de kapat
@@ -993,6 +1027,31 @@
     // VS Code'dan gelen mesajları dinle
     window.addEventListener('message', event => {
         const message = event.data;
+        
+        // Welcome mesajının varlığını her mesaj alındığında kontrol et ve koru
+        const preserveWelcome = () => {
+            setTimeout(() => {
+                // Welcome mesajını kontrol et
+                if (!document.querySelector('#permanent-welcome')) {
+                    console.log("Welcome mesajı kaybolmuş, tekrar ekleniyor...");
+                    showWelcomeMessage();
+                }
+                
+                // Current file bölümünü kontrol et ve gerekirse tekrar göster
+                if (state.currentFile && state.currentFilePath) {
+                    const fileContextDiv = document.getElementById('fileContext');
+                    if (fileContextDiv && fileContextDiv.style.display === 'none') {
+                        console.log("Current file bölümü görünmüyor, tekrar gösteriliyor...");
+                        fileContextDiv.style.display = 'flex';
+                        fileContextDiv.classList.add('active-file');
+                        
+                        // Current file içeriğini güncelle
+                        currentFileElement.textContent = state.currentFile;
+                        currentFileElement.title = state.currentFilePath;
+                    }
+                }
+            }, 100);
+        };
         
         switch (message.type) {
             case 'response':
@@ -1018,8 +1077,8 @@
                     }
                 }, 10);
                 
-                // Mesaj state'e kaydedildiyse, state'i güncelle
-                // (Mesaj state'e VS Code tarafından kaydediliyor, state güncellemesine gerek yok)
+                // Welcome mesajını koru
+                preserveWelcome();
                 
                 break;
                 
@@ -1030,24 +1089,40 @@
                 // Durumu güncelle
                 state.messages.push({ role: 'user', content: message.content });
                 vscode.setState(state);
+                
+                // Welcome mesajını koru
+                preserveWelcome();
+                
                 break;
                 
             case 'loadingStart':
                 // Yükleniyor göstergesini aç
                 loadingIndicator.style.display = 'block';
                 loadingIndicator.classList.add('active');
+                
+                // Welcome mesajını koru
+                preserveWelcome();
+                
                 break;
                 
             case 'loadingStop':
                 // Yükleniyor göstergesini kapat
                 loadingIndicator.style.display = 'none';
                 loadingIndicator.classList.remove('active');
+                
+                // Welcome mesajını koru
+                preserveWelcome();
+                
                 break;
                 
             case 'providerChanged':
                 // AI sağlayıcı değiştiğinde UI'yı güncelle
                 console.log('Provider changed to:', message.provider);
                 aiProviderSelect.value = message.provider;
+                
+                // Welcome mesajını koru
+                preserveWelcome();
+                
                 break;
                 
             case 'error':
@@ -1065,6 +1140,10 @@
                 
                 // Otomatik kaydır
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // Welcome mesajını koru
+                preserveWelcome();
+                
                 break;
                 
             case 'highlightCommand':
@@ -1114,6 +1193,10 @@
                         console.log('User message element not found');
                     }
                 }
+                
+                // Welcome mesajını koru
+                preserveWelcome();
+                
                 break;
                 
             case 'init':
@@ -1127,10 +1210,17 @@
                 }
                 
                 // Mesaj geçmişini yükle
-                if (message.messages) {
+                if (message.messages && message.messages.length > 0) {
                     state.messages = message.messages;
                     messagesContainer.innerHTML = '';
+                    
+                    // Önce welcome mesajını göster, sonra diğer mesajları yükle
+                    showWelcomeMessage();
                     loadMessages();
+                } else {
+                    // Mesaj geçmişi boşsa sadece welcome mesajını göster
+                    messagesContainer.innerHTML = '';
+                    showWelcomeMessage();
                 }
                 
                 // Agent durumunu ayarla
@@ -1162,171 +1252,12 @@
                 }
                 
                 vscode.setState(state);
+                
+                // Welcome mesajını koru
+                preserveWelcome();
+                
                 break;
                 
-            case 'currentFileChanged':
-                // Mevcut dosya değiştiğinde UI'yı güncelle
-                if (message.filePath) {
-                    const fileName = message.fileName || message.filePath.split(/[\\/]/).pop() || '';
-                    updateCurrentFile(fileName, message.filePath);
-                } else {
-                    updateCurrentFile(null, null);
-                }
-                break;
-                
-            case 'clearChat':
-                // Sohbeti temizle
-                state.messages = [];
-                vscode.setState(state);
-                messagesContainer.innerHTML = '';
-                
-                // Karşılama mesajını yeni tasarımla tekrar ekle 
-                const welcomeDiv = document.createElement('div');
-                welcomeDiv.classList.add('welcome-message');
-                welcomeDiv.innerHTML = `
-                    <div class="assistant-message">
-                        <div class="message-content">
-                            <h2>Welcome to Byte AI Assistant</h2>
-                            <ul class="welcome-list">
-                                <li>Configure AI providers (OpenAI, Gemini, Local models)</li>
-                                <li>Use right-click menu for code operations</li>
-                                <li>Explore advanced code analysis & generation</li>
-                            </ul>
-                            
-                            <div class="assistant-intro">
-                                <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
-                            </div>
-                            
-                            <div class="quick-commands">
-                                <h3>Quick commands</h3>
-                                <ul>
-                                    <li><span class="command">/code</span> to generate new feature or fix bug</li>
-                                    <li><span class="command">/explain</span> file or selected code</li>
-                                    <li><span class="command">/review</span> code to recommend improvements</li>
-                                    <li><span class="command">/unittests</span> to generate unit tests</li>
-                                    <li><span class="command">/docs</span> to create documentation</li>
-                                    <li><span class="command">/optimize</span> to improve code performance</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="right-click-features">
-                                <h3>Right-click menu features</h3>
-                                <p>Select any code and right-click to access:</p>
-                                <ul>
-                                    <li><strong>Generate Documentation</strong> - Create detailed docs from code</li>
-                                    <li><strong>Optimize Code</strong> - Improve performance and readability</li>
-                                    <li><strong>Add Comments</strong> - Add explanatory comments to code</li>
-                                    <li><strong>Generate Unit Tests</strong> - Create tests for your code</li>
-                                    <li><strong>Analyze Code Issues</strong> - Find and fix problems</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="coffee-mode">
-                                <h3>Chill mode</h3>
-                                <p>Enable to automatically apply changes and run safe commands</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                messagesContainer.appendChild(welcomeDiv);
-                break;
-                
-            case 'fileSelected':
-                // Yeni bir dosya seçildiğinde
-                if (message.filePath && message.fileName) {
-                    state.currentFile = message.fileName;
-                    state.currentFilePath = message.filePath;
-                    
-                    // Dosya adını güncelle
-                    currentFileElement.textContent = message.fileName;
-                    
-                    // Son dosyalar listesine ekle (eğer yoksa)
-                    if (!state.recentFiles.some(file => file.path === message.filePath)) {
-                        state.recentFiles.push({
-                            name: message.fileName,
-                            path: message.filePath
-                        });
-                        
-                        // Maksimum 5 dosya saklayalım
-                        if (state.recentFiles.length > 5) {
-                            state.recentFiles.shift();
-                        }
-                    }
-                    
-                    // Durumu kaydet
-                    vscode.setState(state);
-                }
-                break;
-                
-            case 'setWidth':
-                // Panel genişliğini ayarla
-                if (message.width) {
-                    // VSCode webview panelinin genişliğini ayarla
-                    document.documentElement.style.setProperty('--panel-width', `${message.width}px`);
-                    document.documentElement.style.setProperty('min-width', `${message.width}px`);
-                    document.body.style.minWidth = `${message.width}px`;
-                    // Container genişliğini ayarla
-                    document.querySelector('.chat-container').style.minWidth = `${message.width}px`;
-                }
-                break;
-                
-            case 'settingsSaved':
-                // Ayarlar başarıyla kaydedilmiş
-                if (message.success) {
-                    handleSettingsSaved();
-                }
-                break;
-                
-            case 'settingsError':
-                // Ayarlar kaydedilirken hata
-                handleSettingsError(message.error);
-                break;
-                
-            case 'settingsUpdated':
-                // Ayarlar güncellendiğinde state'i güncelle
-                if (message.settings) {
-                    // Ayarlar objesi içerisindeki undefined değerleri ile ilgilenmemek için
-                    // mevcut state ile birleştir (Object.assign veya spread operatör ile)
-                    state.settings = {...state.settings, ...message.settings};
-                    vscode.setState(state);
-                    
-                    // Provider modellerinin ayarlanmış olduğunu kontrol et
-                    if (!state.settings.openai) state.settings.openai = {apiKey: '', model: 'gpt-3.5-turbo'};
-                    if (!state.settings.gemini) state.settings.gemini = {apiKey: '', model: 'gemini-2.0-flash'};
-                    if (!state.settings.anthropic) state.settings.anthropic = {apiKey: '', model: 'claude-3-opus'};
-                    if (!state.settings.local) state.settings.local = {endpoint: 'http://localhost:11434/api/generate', model: 'llama3'};
-                    
-                    // UI'yı güncelle
-                    fillSettingsForm();
-                    aiProviderSelect.value = state.settings.provider;
-                    updateProviderDisplayText(state.settings.provider);
-                    
-                    // API anahtarı durumu güncelle
-                    updateProviderStatus('openai', !!state.settings.openai.apiKey);
-                    updateProviderStatus('gemini', !!state.settings.gemini.apiKey);
-                    if (document.querySelector('#anthropicSettings')) {
-                        updateProviderStatus('anthropic', !!state.settings.anthropic?.apiKey);
-                    }
-                }
-                break;
-                
-            case 'loadSettings':
-                loadSettings(message.settings);
-                break;
-                
-            case 'updateProvider':
-                aiProviderSelect.value = message.provider;
-                break;
-                
-            case 'settingsMessage':
-                // Ayarlar mesajı alındığında
-                if (message.status === 'success') {
-                    handleSettingsSaved();
-                } else if (message.status === 'error') {
-                    handleSettingsError(message.message);
-                }
-                break;
-
             case 'selectedFilesChanged':
                 // Çoklu dosya seçildiğinde, dosyaları current-file bölümünde göster
                 if (message.files && message.files.length > 0) {
@@ -1395,6 +1326,21 @@
                     // State'i güncelle
                     vscode.setState(state);
                 }
+                break;
+
+            case 'currentFileChanged':
+                // Aktif dosya değiştiğinde
+                if (message.filePath && message.filePath !== '') {
+                    updateCurrentFile(message.fileName, message.filePath);
+                } else {
+                    // Eğer filePath boş ise veya undefined ise, updateCurrentFile fonksiyonunu boş değerlerle çağır
+                    updateCurrentFile('', '');
+                }
+                break;
+
+            default:
+                // Default case için de welcome mesajını koru
+                preserveWelcome();
                 break;
         }
     });

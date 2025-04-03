@@ -271,6 +271,26 @@
             "preferredProvider": "most-accurate"
           },
           "description": "Auto-switch configuration metrics"
+        },
+        "byte.cache.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable API response caching to reduce token usage and improve response time"
+        },
+        "byte.cache.defaultTtl": {
+          "type": "string",
+          "default": "3600s",
+          "description": "Default time-to-live for cached content (in seconds, use format like '3600s')"
+        },
+        "byte.cache.maxCachedItems": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum number of cached items to store"
+        },
+        "byte.cache.automaticCaching": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically cache content for reuse with similar queries"
         }
       }
     }

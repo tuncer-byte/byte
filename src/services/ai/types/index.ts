@@ -55,6 +55,12 @@ export interface AISettings {
         preferredProvider: 'fastest' | 'cheapest' | 'most-accurate';
     };
     saveHistory: boolean;
+    cache?: {
+        enabled: boolean;
+        defaultTtl: string;
+        maxCachedItems: number;
+        automaticCaching: boolean;
+    };
 }
 
 // Model maliyetleri ve performans metrikleri
@@ -62,4 +68,7 @@ export interface ModelMetrics {
     costPer1kTokens: number;
     averageResponseTime: number;
     accuracyScore: number;
-} 
+}
+
+// Cache tiplerini export et
+export * from './cache'; 

@@ -42,7 +42,7 @@ export class ChatPanel implements ChatPanelProvider {
         if (vscode.window.activeTextEditor) {
             this.messageHandler.updateCurrentFile(vscode.window.activeTextEditor.document.uri.fsPath);
         } else {
-            this.messageHandler.updateCurrentFile(null);
+            this.messageHandler.updateCurrentFile('');
         }
         
         // Aktif editör değiştiğinde olayı dinle
@@ -52,7 +52,7 @@ export class ChatPanel implements ChatPanelProvider {
                 if (editor) {
                     this.messageHandler.updateCurrentFile(editor.document.uri.fsPath);
                 } else {
-                    this.messageHandler.updateCurrentFile(null);
+                    this.messageHandler.updateCurrentFile('');
                 }
             }),
             
@@ -124,6 +124,9 @@ export class ChatPanel implements ChatPanelProvider {
                         type: 'setWidth',
                         width: minWidth
                     });
+                    
+                    // Önbellek durum bilgisini gönder
+                    this.updateCacheStats();
                 }
             }, 100);
         });
@@ -132,7 +135,23 @@ export class ChatPanel implements ChatPanelProvider {
         webviewView.webview.onDidReceiveMessage(
             async (message) => {
                 // Mesajı MessageHandler sınıfına ilet
-                await this.messageHandler.handleMessage(message);
+                if (message.type === 'clearCache') {
+                    // Önbellek temizleme isteği
+                    const result = await this.aiService.clearAllCaches();
+                    webviewView.webview.postMessage({
+                        type: 'cacheCleared',
+                        success: result.success,
+                        message: result.message
+                    });
+                    this.updateCacheStats();
+                } else if (message.type === 'updateCacheSettings') {
+                    // Önbellek ayarlarını güncelleme isteği
+                    await this.aiService.updateCacheSettings(message.settings);
+                    this.updateCacheStats();
+                } else {
+                    // Diğer mesajları mevcut işleyiciye ilet
+                    await this.messageHandler.handleMessage(message);
+                }
             },
             this,
             []
@@ -144,6 +163,21 @@ export class ChatPanel implements ChatPanelProvider {
                 // MessageHandler üzerinden view güncellemesi yap
                 this.messageHandler.updateView();
             }
+        });
+    }
+    
+    /**
+     * Önbellek istatistiklerini gönderir
+     */
+    private async updateCacheStats(): Promise<void> {
+        if (!this.view || !this.view.visible) {
+            return;
+        }
+        
+        const stats = this.aiService.getCacheStats();
+        this.view.webview.postMessage({
+            type: 'cacheStats',
+            stats
         });
     }
     

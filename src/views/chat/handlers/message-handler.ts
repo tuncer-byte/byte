@@ -89,26 +89,6 @@ export class MessageHandler {
                     // Terminal komutunu çalıştır
                     await this.runCodeInTerminal(message.code);
                     break;
-                    
-                case 'newChat':
-                    // Yeni sohbet başlatıldığında
-                    // Eğer clearHistory flagı true ise, sohbet geçmişini temizle
-                    if (message.clearHistory) {
-                        // AI servisindeki mesaj geçmişini temizle
-                        this.aiService.clearMessages();
-                        
-                        // View'e boş mesaj geçmişini bildir
-                        if (this.view) {
-                            this.view.webview.postMessage({
-                                type: 'init',
-                                provider: this.aiService.getProvider(),
-                                messages: [], // Boş mesaj geçmişi
-                                agentEnabled: this.agentEnabled,
-                                currentFile: this.currentFile
-                            });
-                        }
-                    }
-                    break;
             }
         } catch (error: any) {
             // Hata durumunu WebView'e ilet
@@ -548,11 +528,12 @@ export class MessageHandler {
         } else {
             this.currentFile = '';
             
-            // WebView'e bildir
+            // WebView'e bildir - boş dosya durumunda boş string gönder
             if (this.view && this.view.visible) {
                 this.view.webview.postMessage({
                     type: 'currentFileChanged',
-                    filePath: null
+                    filePath: '',
+                    fileName: ''
                 });
             }
         }

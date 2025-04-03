@@ -36,5 +36,11 @@ export const DEFAULT_AI_SETTINGS = {
         maxCostPerDay: 1.0,
         preferredProvider: 'most-accurate' as 'fastest' | 'cheapest' | 'most-accurate'
     },
-    saveHistory: true
+    saveHistory: true,
+    cache: {
+        enabled: true,
+        defaultTtl: '3600s', // 1 saat
+        maxCachedItems: 50,
+        automaticCaching: true
+    }
 }; 

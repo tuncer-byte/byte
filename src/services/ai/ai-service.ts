@@ -3,7 +3,10 @@ import {
     AIProvider, 
     AISettings,
     AIServiceState, 
-    Message
+    Message,
+    CacheSettings,
+    CacheLookupResult,
+    CacheOperationResult
 } from './types';
 import { 
     OpenAIProvider, 
@@ -14,6 +17,7 @@ import {
 import { AILogger } from './utils/logger';
 import { ProviderSelector } from './utils/provider-selector';
 import { DEFAULT_AI_SETTINGS } from './utils/constants';
+import { CacheManager } from './utils/cache-manager';
 
 /**
  * Class that provides integration with AI Services
@@ -25,6 +29,7 @@ export class AIService {
     private logger: AILogger;
     private providerSelector: ProviderSelector;
     private _settings: AISettings = DEFAULT_AI_SETTINGS;
+    private cacheManager: CacheManager;
     
     // Provider classes
     private openAIProvider: OpenAIProvider;
@@ -37,11 +42,17 @@ export class AIService {
         this.logger = new AILogger();
         this.providerSelector = new ProviderSelector();
         
+        // Initialize cache manager
+        this.cacheManager = new CacheManager(context);
+        
         // Initialize providers
         this.openAIProvider = new OpenAIProvider(context);
         this.geminiProvider = new GeminiProvider(context);
         this.localProvider = new LocalProvider();
         this.anthropicProvider = new AnthropicProvider(context);
+        
+        // İlişkilendirmeleri ayarla
+        this.geminiProvider.setCacheManager(this.cacheManager);
         
         // Load saved configuration
         const config = vscode.workspace.getConfiguration('byte');
@@ -106,7 +117,7 @@ export class AIService {
     /**
      * Sends a request to the AI service
      */
-    public async sendMessage(userMessage: string): Promise<string> {
+    public async sendMessage(userMessage: string, cachedContentId?: string): Promise<string> {
         try {
             // Calculate message complexity (simple metric)
             const taskComplexity = userMessage.length / 100; // Value between 0-1
@@ -135,7 +146,8 @@ export class AIService {
                     response = await this.openAIProvider.callOpenAI(userMessage, this.messages);
                     break;
                 case AIProvider.Gemini:
-                    response = await this.geminiProvider.callGemini(userMessage, this.messages);
+                    // Gemini için önbellek desteğini kullan
+                    response = await this.geminiProvider.callGemini(userMessage, this.messages, cachedContentId);
                     break;
                 case AIProvider.Local:
                     response = await this.localProvider.callLocalModel(userMessage, this.messages);
@@ -165,6 +177,54 @@ export class AIService {
             this.logger.log(`Error: ${error.message}`, true);
             throw error;
         }
+    }
+
+    /**
+     * Dosya içeriğini önbelleğe alır
+     * @param fileContent Dosya içeriği
+     * @param fileName Dosya adı
+     * @param mimeType MIME tipi 
+     */
+    public async cacheFileContent(
+        fileContent: string, 
+        fileName: string, 
+        mimeType: string = "text/plain"
+    ): Promise<string | null> {
+        // Şu anda sadece Gemini önbellek özelliğini destekliyor
+        if (this.currentProvider === AIProvider.Gemini) {
+            return this.geminiProvider.cacheFileContent(fileContent, fileName, mimeType);
+        }
+        
+        // Diğer sağlayıcılar için null döndür
+        return null;
+    }
+    
+    /**
+     * Önbellek istatistiklerini getirir
+     */
+    public getCacheStats() {
+        return this.cacheManager.getCacheStats();
+    }
+    
+    /**
+     * Belirli bir önbelleği siler
+     */
+    public async deleteCache(cacheId: string): Promise<CacheOperationResult> {
+        return this.cacheManager.deleteCache(cacheId);
+    }
+    
+    /**
+     * Tüm önbellekleri temizler
+     */
+    public async clearAllCaches(): Promise<CacheOperationResult> {
+        return this.cacheManager.clearAllCaches();
+    }
+    
+    /**
+     * Önbellek ayarlarını günceller
+     */
+    public async updateCacheSettings(settings: Partial<CacheSettings>): Promise<void> {
+        return this.cacheManager.updateSettings(settings);
     }
 
     /**
@@ -243,13 +303,24 @@ export class AIService {
                 maxCostPerDay: config.get<number>('autoSwitch.maxCostPerDay') || 1.0,
                 preferredProvider: (config.get<string>('autoSwitch.preferredProvider') || 'most-accurate') as 'fastest' | 'cheapest' | 'most-accurate'
             },
-            saveHistory: config.get<boolean>('saveHistory') !== false
+            saveHistory: config.get<boolean>('saveHistory') !== false,
+            cache: {
+                enabled: config.get<boolean>('cache.enabled') ?? true,
+                defaultTtl: config.get<string>('cache.defaultTtl') ?? '3600s',
+                maxCachedItems: config.get<number>('cache.maxCachedItems') ?? 50,
+                automaticCaching: config.get<boolean>('cache.automaticCaching') ?? true
+            }
         };
     }
 
     // Update settings
     public async updateSettings(settings: AISettings): Promise<void> {
         this._settings = settings;
+        
+        // Önbellek ayarlarını güncelle
+        if (settings.cache) {
+            await this.updateCacheSettings(settings.cache);
+        }
     }
     
     // Helper methods for setting API keys

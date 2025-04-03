@@ -57,7 +57,9 @@
                         </div>
                         
                         <div class="assistant-intro">
-                           
+                            <div class="assistant-icon">
+                                <img src="icon.png" alt="Byte AI Assistant" class="assistant-logo">
+                            </div>
                             <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
                         </div>
                         
@@ -66,19 +68,22 @@
                             <div class="command-list">
                                 <div class="command-item">
                                     <span class="command">/code</span>
+                                    <span class="shortcut">Right Click > Generate Code</span>
                                     <span class="command-desc">generate new feature or fix bug</span>
                                 </div>
                                 <div class="command-item">
                                     <span class="command">/explain</span>
+                                    <span class="shortcut">Right Click > Explain</span>
                                     <span class="command-desc">explain file or selected code</span>
                                 </div>
                                 <div class="command-item">
                                     <span class="command">/review</span>
+                                    <span class="shortcut">Right Click > Review</span>
                                     <span class="command-desc">recommend code improvements</span>
                                 </div>
                                 <div class="command-item">
                                     <span class="command">/unittests</span>
-                                 
+                                    <span class="shortcut">Right Click > Generate Tests</span>
                                     <span class="command-desc">generate unit tests</span>
                                 </div>
                             </div>
@@ -91,7 +96,6 @@
                         
                     </div>
                 </div>
-            
             </div>
             <div class="loading-indicator" id="loadingIndicator">
                 <div class="ai-thinking">
@@ -114,6 +118,7 @@
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
                     </svg>
                 </button>
+                <div id="fileBadgesContainer" class="file-badges-container"></div>
                 <span class="context-separator">|</span>
                 <div class="file-context" id="fileContext" style="display: none;">
                     <div class="file-info">
@@ -128,7 +133,7 @@
                 <div class="context-controls">
                     <label class="agent-toggle">
                         <span>Chill</span>
-                        <input type="checkbox" id="agentToggle"  disabled>
+                        <input type="checkbox" id="agentToggle" checked disabled>
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
