@@ -4,7 +4,7 @@ import { AIService } from '../../services/ai';
 /**
  * Mesaj rolü tipi
  */
-export type MessageRole = 'system' | 'user' | 'assistant';
+export type MessageRole = 'system' | 'user' | 'assistant' | 'error';
 
 /**
  * Mesaj yapısı
@@ -12,6 +12,16 @@ export type MessageRole = 'system' | 'user' | 'assistant';
 export interface Message {
     role: MessageRole;
     content: string;
+}
+
+/**
+ * Kod içeriği ve bağlam bilgileri
+ */
+export interface CodeContext {
+    code: string;
+    fileName: string;
+    languageId: string;
+    lineCount: number;
 }
 
 /**
@@ -38,19 +48,24 @@ export interface InlineCodeChatState {
 /**
  * InlineCodeChat sağlayıcısı arabirimi
  */
-export interface InlineCodeChatProvider {
+export interface InlineCodeChatProvider extends vscode.Disposable {
     /**
      * Seçili kodu analiz eder
      */
     analyzeSelectedCode(): Promise<void>;
     
     /**
-     * Seçili kod hakkında soru sorma
+     * Seçili kod hakkında soru sorar
      */
     askQuestionAboutCode(): Promise<void>;
-    
+}
+
+/**
+ * InlineCodeChat mesaj işleyici arayüzü
+ */
+export interface InlineMessageHandlerProvider {
     /**
-     * Kaynakları temizler
+     * Mesaj işler
      */
-    dispose(): void;
+    handleMessage(text: string, codeContext: CodeContext): Promise<void>;
 } 

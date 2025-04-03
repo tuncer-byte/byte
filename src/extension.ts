@@ -4,6 +4,8 @@ import { AIService } from './services/ai';
 import { InlineCodeChat } from './views/inline-chat';
 import { CommandManager } from './commands';
 import { ChatPanel } from './views/chat';
+import { ByteAIClient } from './client';
+import { InlineChatPanel } from './inlineChat';
 
 // Global terminal değişkeni
 let byteTerminal: vscode.Terminal | undefined;
@@ -18,6 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
     
     // AI Servisi oluştur
     const aiService = new AIService(context);
+    
+    // Byte AI Client oluştur
+    const byteClient = new ByteAIClient();
     
     // Sohbet paneli oluştur
     const chatPanel = new ChatPanel(context.extensionUri, aiService);
@@ -77,6 +82,13 @@ export function activate(context: vscode.ExtensionContext) {
     
     // InlineCodeChat'i context'e ekle
     context.subscriptions.push(inlineCodeChat);
+    
+    // Yeni InlineChatPanel'i açmak için komut
+    context.subscriptions.push(
+        vscode.commands.registerCommand('byte.openInlineChat', () => {
+            InlineChatPanel.createOrShow(context.extensionUri, byteClient);
+        })
+    );
     
     // İlk çalıştırmada kullanıcıya hoş geldin mesajı göster
     const hasShownWelcome = context.globalState.get<boolean>('hasShownWelcome');

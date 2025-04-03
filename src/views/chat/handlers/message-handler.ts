@@ -429,17 +429,16 @@ export class MessageHandler {
             // Kodu temizle - AI'nin yorum satırlarını temizle ve kod bloğu belirteçlerini kaldır
             const cleanCode = cleanCodeForApply(code);
             
-            // Editörde değişiklik yap
+            // Editörde değişiklik yap - tüm içeriği yeni kodla değiştir
             editor.edit(editBuilder => {
-                if (!editor.selection.isEmpty) {
-                    // Eğer seçili alan varsa, onu değiştir
-                    editBuilder.replace(editor.selection, cleanCode);
-                } else {
-                    // Seçili alan yoksa, tam kod bloğunu ekle - imlecin olduğu satırın başına
-                    const position = editor.selection.active;
-                    const lineStart = position.with(position.line, 0);
-                    editBuilder.insert(lineStart, cleanCode + '\n');
-                }
+                // Dosyanın tamamını kapsayan bir seçim oluştur
+                const fullDocumentRange = new vscode.Range(
+                    new vscode.Position(0, 0),
+                    new vscode.Position(editor.document.lineCount - 1, editor.document.lineAt(editor.document.lineCount - 1).text.length)
+                );
+                
+                // Tüm içeriği temizle ve yeni kodu yaz
+                editBuilder.replace(fullDocumentRange, cleanCode);
             }).then(success => {
                 if (success) {
                     vscode.window.showInformationMessage(`Kod başarıyla uygulandı.`);

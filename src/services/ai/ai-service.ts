@@ -23,49 +23,50 @@ import { CacheManager } from './utils/cache-manager';
  * Class that provides integration with AI Services
  */
 export class AIService {
-    private currentProvider: AIProvider;
-    private context: vscode.ExtensionContext;
-    private messages: Message[] = [];
-    private logger: AILogger;
-    private providerSelector: ProviderSelector;
-    private _settings: AISettings = DEFAULT_AI_SETTINGS;
-    private cacheManager: CacheManager;
-    
-    // Provider classes
     private openAIProvider: OpenAIProvider;
     private geminiProvider: GeminiProvider;
     private localProvider: LocalProvider;
     private anthropicProvider: AnthropicProvider;
+    private providerSelector: ProviderSelector;
+    private logger: AILogger;
+    private messages: Message[] = [];
+    private currentProvider: AIProvider;
+    private _settings: AISettings = DEFAULT_AI_SETTINGS;
 
-    constructor(context: vscode.ExtensionContext) {
-        this.context = context;
+    constructor(private context: vscode.ExtensionContext) {
         this.logger = new AILogger();
-        this.providerSelector = new ProviderSelector();
         
-        // Initialize cache manager
-        this.cacheManager = new CacheManager(context);
-        
-        // Initialize providers
+        // Initialize all providers
         this.openAIProvider = new OpenAIProvider(context);
         this.geminiProvider = new GeminiProvider(context);
         this.localProvider = new LocalProvider();
         this.anthropicProvider = new AnthropicProvider(context);
         
-        // İlişkilendirmeleri ayarla
-        this.geminiProvider.setCacheManager(this.cacheManager);
+        // Initialize provider selector for smart routing
+        this.providerSelector = new ProviderSelector();
         
-        // Load saved configuration
+        // Set default provider from configuration
         const config = vscode.workspace.getConfiguration('byte');
-        this.currentProvider = config.get<AIProvider>('provider') || AIProvider.OpenAI;
+        const defaultProvider = config.get<string>('ai.defaultProvider') || 'openai';
         
-        // Load all saved messages (optional)
-        const savedState = context.workspaceState.get<AIServiceState>('aiServiceState');
+        // Convert string to enum
+        this.currentProvider = AIProvider[defaultProvider as keyof typeof AIProvider] || AIProvider.OpenAI;
+        
+        // Load message history from state
+        this.loadState();
+        
+        this.logger.log(`AI Service initialized with provider: ${this.currentProvider}`);
+    }
+
+    /**
+     * Mevcut durumu yükler
+     */
+    private loadState(): void {
+        const savedState = this.context.workspaceState.get<AIServiceState>('aiServiceState');
         if (savedState) {
             this.currentProvider = savedState.provider;
             this.messages = savedState.messages;
         }
-        
-        this.logger.log(`AI Service started. Active provider: ${this.currentProvider}`);
     }
 
     /**
@@ -117,7 +118,7 @@ export class AIService {
     /**
      * Sends a request to the AI service
      */
-    public async sendMessage(userMessage: string, cachedContentId?: string): Promise<string> {
+    public async sendMessage(userMessage: string): Promise<string> {
         try {
             // Calculate message complexity (simple metric)
             const taskComplexity = userMessage.length / 100; // Value between 0-1
@@ -146,8 +147,8 @@ export class AIService {
                     response = await this.openAIProvider.callOpenAI(userMessage, this.messages);
                     break;
                 case AIProvider.Gemini:
-                    // Gemini için önbellek desteğini kullan
-                    response = await this.geminiProvider.callGemini(userMessage, this.messages, cachedContentId);
+                    // Gemini içim cacheleme özelliğini kullanma
+                    response = await this.geminiProvider.callGemini(userMessage, this.messages);
                     break;
                 case AIProvider.Local:
                     response = await this.localProvider.callLocalModel(userMessage, this.messages);
@@ -180,51 +181,32 @@ export class AIService {
     }
 
     /**
-     * Dosya içeriğini önbelleğe alır
-     * @param fileContent Dosya içeriği
-     * @param fileName Dosya adı
-     * @param mimeType MIME tipi 
+     * Dosya içeriğini Byte AI için önbelleğe alır - Artık kullanılmıyor
      */
-    public async cacheFileContent(
-        fileContent: string, 
-        fileName: string, 
-        mimeType: string = "text/plain"
-    ): Promise<string | null> {
-        // Şu anda sadece Gemini önbellek özelliğini destekliyor
-        if (this.currentProvider === AIProvider.Gemini) {
-            return this.geminiProvider.cacheFileContent(fileContent, fileName, mimeType);
-        }
-        
-        // Diğer sağlayıcılar için null döndür
+    public async cacheFileContent(fileContent: string, fileName: string): Promise<string | null> {
+        // Bu özellik artık desteklenmiyor
         return null;
     }
     
     /**
-     * Önbellek istatistiklerini getirir
+     * Önbellek ayarlarını günceller - Artık kullanılmıyor
      */
-    public getCacheStats() {
-        return this.cacheManager.getCacheStats();
+    public updateCacheSettings(enabled: boolean): void {
+        // Bu özellik artık desteklenmiyor
     }
     
     /**
-     * Belirli bir önbelleği siler
+     * Tüm önbelleği temizler - Artık kullanılmıyor
      */
-    public async deleteCache(cacheId: string): Promise<CacheOperationResult> {
-        return this.cacheManager.deleteCache(cacheId);
+    public clearAllCache(): void {
+        // Bu özellik artık desteklenmiyor
     }
     
     /**
-     * Tüm önbellekleri temizler
+     * Önbelleği yeniler - Artık kullanılmıyor 
      */
-    public async clearAllCaches(): Promise<CacheOperationResult> {
-        return this.cacheManager.clearAllCaches();
-    }
-    
-    /**
-     * Önbellek ayarlarını günceller
-     */
-    public async updateCacheSettings(settings: Partial<CacheSettings>): Promise<void> {
-        return this.cacheManager.updateSettings(settings);
+    public refreshCache(): void {
+        // Bu özellik artık desteklenmiyor
     }
 
     /**
@@ -313,14 +295,45 @@ export class AIService {
         };
     }
 
-    // Update settings
-    public async updateSettings(settings: AISettings): Promise<void> {
-        this._settings = settings;
-        
-        // Önbellek ayarlarını güncelle
-        if (settings.cache) {
-            await this.updateCacheSettings(settings.cache);
+    /**
+     * Ayarları günceller
+     */
+    public async updateSettings(settings: Partial<AISettings>): Promise<void> {
+        // Varsayılan sağlayıcıyı güncelle
+        if (settings.defaultProvider) {
+            // String değerini enum tipine dönüştür
+            const provider = AIProvider[settings.defaultProvider as keyof typeof AIProvider];
+            if (provider) {
+                this.setProvider(provider);
+            }
         }
+
+        // Model ayarlarını güncelle (OpenAI için)
+        if (settings.openai) {
+            if (settings.openai.apiKey) {
+                await this.openAIProvider.setApiKey(settings.openai.apiKey);
+            }
+        }
+        
+        // Gemini ayarlarını güncelle
+        if (settings.gemini) {
+            if (settings.gemini.apiKey) {
+                await this.geminiProvider.setApiKey(settings.gemini.apiKey);
+            }
+        }
+        
+        // Anthropic ayarlarını güncelle
+        if (settings.anthropic) {
+            if (settings.anthropic.apiKey) {
+                await this.anthropicProvider.setApiKey(settings.anthropic.apiKey);
+            }
+        }
+        
+        // Mevcut ayarları güncelle
+        this._settings = { ...this._settings, ...settings };
+        
+        // Ayarları kaydet
+        this.saveState();
     }
     
     // Helper methods for setting API keys

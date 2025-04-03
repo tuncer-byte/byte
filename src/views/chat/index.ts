@@ -137,16 +137,16 @@ export class ChatPanel implements ChatPanelProvider {
                 // Mesajı MessageHandler sınıfına ilet
                 if (message.type === 'clearCache') {
                     // Önbellek temizleme isteği
-                    const result = await this.aiService.clearAllCaches();
+                    this.aiService.clearAllCache();
                     webviewView.webview.postMessage({
                         type: 'cacheCleared',
-                        success: result.success,
-                        message: result.message
+                        success: true,
+                        message: "Önbellek başarıyla temizlendi."
                     });
                     this.updateCacheStats();
                 } else if (message.type === 'updateCacheSettings') {
                     // Önbellek ayarlarını güncelleme isteği
-                    await this.aiService.updateCacheSettings(message.settings);
+                    await this.aiService.updateCacheSettings(message.settings.enabled);
                     this.updateCacheStats();
                 } else {
                     // Diğer mesajları mevcut işleyiciye ilet
@@ -174,7 +174,14 @@ export class ChatPanel implements ChatPanelProvider {
             return;
         }
         
-        const stats = this.aiService.getCacheStats();
+        // Cacheleme devre dışı olduğu için boş istatistik gönder
+        const stats = {
+            totalCached: 0,
+            totalTokensSaved: 0,
+            enabled: false,
+            lastUpdated: new Date().toISOString()
+        };
+        
         this.view.webview.postMessage({
             type: 'cacheStats',
             stats

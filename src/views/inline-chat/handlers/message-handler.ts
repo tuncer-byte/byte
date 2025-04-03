@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AIService } from '../../../services/ai';
-import { Message } from '../types';
+import { Message, CodeContext } from '../types';
 
 /**
  * InlineCodeChat mesaj işleyicisi
@@ -52,12 +52,7 @@ export class InlineChatMessageHandler {
     /**
      * Kullanıcı mesajını işler
      */
-    public async handleMessage(text: string, codeContext: {
-        code: string,
-        fileName: string,
-        languageId: string,
-        lineCount: number
-    }): Promise<void> {
+    public async handleMessage(text: string, codeContext: CodeContext): Promise<void> {
         if (!this.panel || this.isProcessing || !text.trim()) {
             return;
         }
@@ -69,26 +64,16 @@ export class InlineChatMessageHandler {
             role: 'user'
         });
 
-        // Yükleniyor durumunu başlat (loadingIndicator.active sınıfı artık WebView JS tarafında yönetiliyor)
+        // Yükleniyor durumunu başlat
         this.isProcessing = true;
+        this.panel.webview.postMessage({
+            command: 'setLoading',
+            isLoading: true
+        });
 
         try {
-            // Satır bilgisini hesapla
-            const lineInfo = `${codeContext.lineCount} satır`;
-            
-            // Her mesajda kod bilgisini ve bağlamı dahil et
-            const systemPrompt = `You are a code analysis assistant. You will analyze the provided code and help the user. 
-                                Code: ${codeContext.code}
-                                File name: ${codeContext.fileName}
-                                Language: ${codeContext.languageId}
-                                Lines: ${lineInfo}
-                                
-                                Important instructions:
-                                1. DO NOT include the original code in your responses
-                                2. DO NOT wrap your responses in code blocks containing the original code
-                                3. Analyze the code internally and provide insights, suggestions, and explanations
-                                4. If you need to reference specific parts of the code, refer to them by line numbers
-                                5. If you need to suggest changes, describe them clearly or show only the specific lines that need to be changed`;
+            // Sistem mesajını oluştur
+            const systemPrompt = this.createSystemPrompt(codeContext);
             
             // Mesaj geçmişinde ilk mesajı güncelle veya yoksa ekle
             if (this.messageHistory.length > 0 && this.messageHistory[0].role === 'system') {
@@ -99,9 +84,10 @@ export class InlineChatMessageHandler {
             
             // Kullanıcı mesajını ekle
             this.messageHistory.push({ role: 'user', content: text });
-
-            // AI yanıtını al
-            const response = await this.aiService.getResponse(this.messageHistory);
+            
+            // AI yanıtını al - Cacheleme kullanmadan direk mesaj gönder
+            const promptText = `${systemPrompt}\n\nKod:\n\`\`\`${codeContext.languageId}\n${codeContext.code}\n\`\`\`\n\nKullanıcı Sorusu: ${text}`;
+            const response = await this.aiService.sendMessage(promptText);
             
             // Mesaj geçmişine AI yanıtını ekle
             this.messageHistory.push({ role: 'assistant', content: response });
@@ -118,15 +104,58 @@ export class InlineChatMessageHandler {
             if (this.panel) {
                 console.error('AI response error:', error);
                 const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+                
+                // Hata tipine göre farklı mesajlar
+                let userFriendlyMessage = `Yanıt alınırken bir hata oluştu: ${errorMessage}. Lütfen tekrar deneyin.`;
+                
+                if (errorMessage.includes('API key')) {
+                    userFriendlyMessage = 'API anahtarı bulunamadı veya geçersiz. Lütfen ayarlar bölümünden API anahtarınızı kontrol edin.';
+                } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+                    userFriendlyMessage = 'Bağlantı hatası oluştu. İnternet bağlantınızı kontrol edip tekrar deneyin.';
+                } else if (errorMessage.includes('rate limit') || errorMessage.includes('quota')) {
+                    userFriendlyMessage = 'API kota sınırına ulaşıldı. Lütfen daha sonra tekrar deneyin veya farklı bir AI servisi seçin.';
+                } else if (errorMessage.includes('CachedContent') || errorMessage.includes('PERMISSION_DENIED')) {
+                    userFriendlyMessage = 'Önbellek hatası oluştu. Sistem yöneticisiyle iletişime geçin.';
+                }
+                
                 this.panel.webview.postMessage({
                     command: 'addMessage',
-                    text: `Yanıt alınırken bir hata oluştu: ${errorMessage}. Lütfen tekrar deneyin.`,
-                    role: 'assistant'
+                    text: userFriendlyMessage,
+                    role: 'error'
                 });
             }
         } finally {
             this.isProcessing = false;
+            if (this.panel) {
+                this.panel.webview.postMessage({
+                    command: 'setLoading',
+                    isLoading: false
+                });
+            }
         }
+    }
+    
+    /**
+     * Kod analizi için sistem promptu oluşturur
+     */
+    private createSystemPrompt(codeContext: CodeContext): string {
+        const { fileName, languageId, lineCount } = codeContext;
+        
+        return `Sen bir kod analiz asistanısın. Verilen kodu analiz edip kullanıcıya yardımcı olacaksın.
+        
+        Kod bilgileri:
+        - Dosya adı: ${fileName}
+        - Programlama dili: ${languageId}
+        - Satır sayısı: ${lineCount} satır
+        
+        Önemli talimatlar:
+        1. Yanıtlarında orijinal kodun tamamını TEKRAR ETMEMELİSİN
+        2. Yanıtlarını orijinal kodu içeren kod bloklarına sarmaMALISIN
+        3. Kodu içsel olarak analiz edip içgörüler, öneriler ve açıklamalar sunmalısın
+        4. Kodun belirli kısımlarına referans verirken satır numaralarını kullanabilirsin
+        5. Değişiklik önerirken, bunları açıkça açıklamalı veya yalnızca değiştirilmesi gereken belirli satırları göstermelisin
+        6. Önerilen değişikliklerini mümkün olduğunca kod örnekleriyle desteklemelisin
+        7. Mantıklı açıklamalar ve gelişmiş öneriler sunmalısın`;
     }
     
     /**
@@ -144,6 +173,14 @@ export class InlineChatMessageHandler {
             fileName,
             language: languageId,
             lineInfo
+        });
+        
+        // Mesaj geçmişini temizle - yeni bir kod analizi için
+        this.clearMessageHistory();
+        
+        // Mesajları temizle
+        this.panel.webview.postMessage({
+            command: 'clearMessages'
         });
     }
 } 

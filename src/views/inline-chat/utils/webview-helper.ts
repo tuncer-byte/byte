@@ -3,6 +3,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
+ * InlineChat paneli başlığını oluşturur
+ */
+export function createAnalysisPanelTitle(fileName: string, languageId: string, lineCount: number): string {
+    return `Kod Analizi: ${fileName || 'Kod Parçası'} (${languageId || 'text'}) - ${lineCount} satır`;
+}
+
+/**
  * WebView HTML içeriğini oluşturur
  */
 export function getInlineChatWebviewContent(
@@ -22,8 +29,24 @@ export function getInlineChatWebviewContent(
         vscode.Uri.joinPath(extensionUri, 'media', 'inline-chat', 'inline-chat.css')
     );
     
+    // Syntax highlighting için Prism.js ekle
+    const prismCssUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(extensionUri, 'media', 'inline-chat', 'prism.css')
+    );
+    
+    const prismJsUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(extensionUri, 'media', 'inline-chat', 'prism.js')
+    );
+    
     // Kod satır sayısını hesapla
     const lineInfo = `${lineCount} satır`;
+    
+    // Kod güvenliği için HTML kaçış
+    const escapedCode = code.replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     
     // HTML şablonunu oku
     const htmlPath = vscode.Uri.joinPath(extensionUri, 'media', 'inline-chat', 'inline-chat.html');
@@ -37,54 +60,38 @@ export function getInlineChatWebviewContent(
         // Content-Security-Policy meta etiketini güncellemek için regex
         htmlContent = htmlContent.replace(
             /<meta http-equiv="Content-Security-Policy"[^>]*>/,
-            `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; img-src ${webview.cspSource} https:;">`
+            `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https:;">`
         );
         
-        // Stil ve script etiketlerini güncellemek için regex
+        // Stil ve script bağlantılarını ekle
         htmlContent = htmlContent.replace(
-            /<link rel="stylesheet" href="inline-chat.css">/,
-            `<link rel="stylesheet" href="${styleUri}">`
+            '</head>',
+            `<link rel="stylesheet" href="${styleUri}">
+             <link rel="stylesheet" href="${prismCssUri}">
+             <script src="${prismJsUri}"></script>
+             <script src="${scriptUri}"></script>
+             </head>`
         );
         
-        htmlContent = htmlContent.replace(
-            /<script src="inline-chat.js"><\/script>/,
-            `<script src="${scriptUri}"></script>`
-        );
+        // Eksik içeriği ekle
+        const placeholders = {
+            'code': escapedCode,
+            'fileName': fileName || 'Kod Parçası',
+            'languageId': languageId || 'text',
+            'lineInfo': lineInfo,
+            // Diğer placeholder'lar
+            'codeHighlightClass': languageId ? `language-${languageId}` : 'language-plaintext'
+        };
         
-        // Kod ve diğer bilgileri ekle
-        if (code) {
-            const escapedCode = code.replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-                
-            const codeBlockElement = htmlContent.match(/<pre id="codeBlock".*?>([\s\S]*?)<\/pre>/);
-            if (codeBlockElement) {
-                htmlContent = htmlContent.replace(
-                    /<pre id="codeBlock".*?>([\s\S]*?)<\/pre>/,
-                    `<pre id="codeBlock" class="code-block"><code>${escapedCode}</code></pre>`
-                );
-            }
+        // Tüm placeholderları yerleştir
+        for (const [key, value] of Object.entries(placeholders)) {
+            const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+            htmlContent = htmlContent.replace(regex, value);
         }
-        
-        // Dosya adı, dil ID'si ve satır bilgisini ekle
-        if (languageId) {
-            htmlContent = htmlContent.replace(
-                /<div id="languageBadge" class="code-language"><\/div>/,
-                `<div id="languageBadge" class="code-language">${languageId}</div>`
-            );
-        }
-        
-        // Alternatif placeholder değiştirme yöntemi
-        htmlContent = htmlContent
-            .replace(/\{\{scriptUri\}\}/g, scriptUri.toString())
-            .replace(/\{\{styleUri\}\}/g, styleUri.toString())
-            .replace(/\{\{fileName\}\}/g, fileName || '')
-            .replace(/\{\{languageId\}\}/g, languageId || '')
-            .replace(/\{\{lineInfo\}\}/g, lineInfo || '');
             
     } catch (error) {
+        console.error('HTML şablonu yüklenirken hata:', error);
+        
         // Hata durumunda basit bir HTML oluştur
         htmlContent = `
         <!DOCTYPE html>
@@ -92,264 +99,136 @@ export function getInlineChatWebviewContent(
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Code Chat</title>
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-                    padding: 0;
-                    margin: 0;
-                    color: var(--vscode-editor-foreground);
-                    background-color: var(--vscode-editor-background);
-                }
-                
-                .code-header {
-                    background-color: var(--vscode-editor-lineHighlightBackground);
-                    padding: 8px 16px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border-bottom: 1px solid var(--vscode-panel-border);
-                }
-                
-                .file-info {
-                    display: flex;
-                    align-items: center;
-                    font-size: 13px;
-                }
-                
-                .file-name {
-                    font-weight: bold;
-                    margin-right: 8px;
-                }
-                
-                .language-id {
-                    color: var(--vscode-descriptionForeground);
-                    margin-right: 8px;
-                }
-                
-                .line-info {
-                    color: var(--vscode-descriptionForeground);
-                    font-size: 12px;
-                }
-                
-                .message-container {
-                    padding: 16px;
-                    max-height: calc(100vh - 140px);
-                    overflow-y: auto;
-                }
-                
-                .message {
-                    margin-bottom: 16px;
-                    padding: 12px;
-                    border-radius: 6px;
-                }
-                
-                .user-message {
-                    background-color: var(--vscode-inputValidation-infoBorder);
-                    color: var(--vscode-editor-foreground);
-                }
-                
-                .assistant-message {
-                    background-color: var(--vscode-editor-lineHighlightBackground);
-                }
-                
-                .input-container {
-                    position: fixed;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    padding: 16px;
-                    background-color: var(--vscode-editor-background);
-                    border-top: 1px solid var(--vscode-panel-border);
-                }
-                
-                .input-box {
-                    display: flex;
-                }
-                
-                #messageInput {
-                    flex: 1;
-                    padding: 8px 12px;
-                    border: 1px solid var(--vscode-input-border);
-                    background-color: var(--vscode-input-background);
-                    color: var(--vscode-input-foreground);
-                    border-radius: 4px;
-                    font-family: inherit;
-                    resize: none;
-                    min-height: 40px;
-                }
-                
-                #sendButton {
-                    margin-left: 8px;
-                    padding: 8px 16px;
-                    background-color: var(--vscode-button-background);
-                    color: var(--vscode-button-foreground);
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                }
-                
-                #sendButton:hover {
-                    background-color: var(--vscode-button-hoverBackground);
-                }
-                
-                .loading-indicator {
-                    display: none;
-                    justify-content: center;
-                    margin-top: 8px;
-                }
-                
-                .loading-indicator.active {
-                    display: flex;
-                }
-                
-                .loading-spinner {
-                    border: 3px solid rgba(0, 0, 0, 0.1);
-                    border-top-color: var(--vscode-progressBar-background);
-                    border-radius: 50%;
-                    width: 16px;
-                    height: 16px;
-                    animation: spin 1s linear infinite;
-                }
-                
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-                
-                pre {
-                    background-color: var(--vscode-textCodeBlock-background);
-                    padding: 8px;
-                    border-radius: 4px;
-                    overflow-x: auto;
-                }
-                
-                code {
-                    font-family: Menlo, Monaco, 'Courier New', monospace;
-                    font-size: 0.9em;
-                }
-            </style>
+            <title>Kod Analizi</title>
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} https:;">
             <link rel="stylesheet" href="${styleUri}">
+            <link rel="stylesheet" href="${prismCssUri}">
+            <script src="${prismJsUri}"></script>
         </head>
         <body>
-            <div class="code-header">
-                <div class="file-info">
-                    <div class="file-name">${fileName}</div>
-                    <div class="language-id">${languageId}</div>
-                    <div class="line-info">${lineInfo}</div>
+            <div class="chat-container">
+                <div class="code-section">
+                    <div class="code-header">
+                        <div class="code-title">
+                            <span class="file-name">${fileName || 'Kod Parçası'}</span>
+                            <span class="language-badge">${languageId || 'text'}</span>
+                            <span class="line-info">${lineInfo}</span>
+                        </div>
+                        <div class="code-actions">
+                            <button id="fixCodeBtn" class="action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                </svg>
+                                <span>Düzelt</span>
+                            </button>
+                            <button id="optimizeCodeBtn" class="action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 20V10"></path>
+                                    <path d="M12 20V4"></path>
+                                    <path d="M6 20v-6"></path>
+                                </svg>
+                                <span>Optimize Et</span>
+                            </button>
+                            <button id="testCodeBtn" class="action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Test Et</span>
+                            </button>
+                            <button id="explainCodeBtn" class="action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                <span>Açıkla</span>
+                            </button>
+                            <button id="copyCodeBtn" class="action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span>Kopyala</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="codeContent">
+                        <div class="code-language">${languageId || 'text'}</div>
+                        <pre class="line-numbers"><code class="language-${languageId || 'plaintext'}">${escapedCode}</code></pre>
+                    </div>
+                </div>
+                <div class="chat-section">
+                    <div id="messagesContainer" class="messages-container">
+                        <!-- Mesajlar burada görünecek -->
+                    </div>
+                    <div class="input-container">
+                        <textarea id="userInput" placeholder="Kod hakkında bir soru sorun..." rows="1"></textarea>
+                        <button id="sendButton" class="send-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="message-container" id="messageContainer">
-                <!-- Mesajlar burada görünecek -->
-            </div>
-            
-            <div class="input-container">
-                <div class="input-box">
-                    <textarea id="messageInput" placeholder="AI'ya soru sorun veya talimatta bulunun..." rows="1"></textarea>
-                    <button id="sendButton">Gönder</button>
-                </div>
-                <div class="loading-indicator" id="loadingIndicator">
-                    <div class="loading-spinner"></div>
-                </div>
-            </div>
-
             <script>
-                // VS Code API'yi al
-                const vscode = acquireVsCodeApi();
-                
-                // HTML elementleri
-                const messageContainer = document.getElementById('messageContainer');
-                const messageInput = document.getElementById('messageInput');
-                const sendButton = document.getElementById('sendButton');
-                const loadingIndicator = document.getElementById('loadingIndicator');
-                
-                // Mesaj gönderme işlevi
-                function sendMessage() {
-                    const text = messageInput.value.trim();
-                    if (!text) return;
-                    
-                    // Mesajı VS Code'a gönder
-                    vscode.postMessage({
-                        command: 'sendMessage',
-                        text
-                    });
-                    
-                    // Kullanıcı mesajını ekle
-                    addMessage(text, 'user');
-                    
-                    // Input temizle
-                    messageInput.value = '';
-                    
-                    // Yükleniyor göstergesi göster
-                    loadingIndicator.classList.add('active');
-                }
-                
-                // Basit markdown dönüşümü
-                function simpleMarkdown(text) {
-                    return text
-                        .replace(/\`\`\`([\\s\\S]*?)\`\`\`/g, '<pre><code>$1</code></pre>')
-                        .replace(/\`([^\`]+)\`/g, '<code>$1</code>')
-                        .replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*([^\*]+)\*/g, '<em>$1</em>')
-                        .replace(/\\n/g, '<br>');
-                }
-                
-                // Mesaj ekleme işlevi
-                function addMessage(text, type) {
-                    const messageElement = document.createElement('div');
-                    messageElement.className = 'message ' + type + '-message';
-                    
-                    // Markdown for assistant messages
-                    if (type === 'assistant') {
-                        const formattedText = simpleMarkdown(text);
-                        messageElement.innerHTML = formattedText;
-                    } else {
-                        messageElement.textContent = text;
+                // Initialization code
+                document.addEventListener('DOMContentLoaded', () => {
+                    // Highlight code
+                    if (window.Prism) {
+                        Prism.highlightAll();
                     }
                     
-                    messageContainer.appendChild(messageElement);
+                    // Setup event listeners
+                    const sendButton = document.getElementById('sendButton');
+                    const userInput = document.getElementById('userInput');
+                    const messagesContainer = document.getElementById('messagesContainer');
                     
-                    // Otomatik scroll
-                    messageContainer.scrollTop = messageContainer.scrollHeight;
-                }
-                
-                // Enter tuşu ile mesaj gönderme
-                messageInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                    }
-                });
-                
-                // Gönder butonu ile mesaj gönderme
-                sendButton.addEventListener('click', sendMessage);
-                
-                // VS Code'dan gelen mesajları işle
-                window.addEventListener('message', event => {
-                    const message = event.data;
-                    
-                    switch (message.command) {
-                        case 'addMessage':
-                            // Asistan mesajı ekle
-                            addMessage(message.text, message.role || 'assistant');
-                            
-                            // Yükleniyor göstergesini gizle
-                            loadingIndicator.classList.remove('active');
-                            break;
-                            
-                        case 'setCode':
-                            // Dosya bilgilerini güncelle
-                            if (message.fileName && message.languageId && message.lineInfo) {
-                                document.querySelector('.file-name').textContent = message.fileName;
-                                document.querySelector('.language-id').textContent = message.languageId;
-                                document.querySelector('.line-info').textContent = message.lineInfo;
+                    if (sendButton && userInput) {
+                        sendButton.addEventListener('click', () => {
+                            const text = userInput.value.trim();
+                            if (text) {
+                                // Send message to extension
+                                const vscode = acquireVsCodeApi();
+                                vscode.postMessage({
+                                    command: 'sendMessage',
+                                    text: text
+                                });
+                                
+                                // Clear input
+                                userInput.value = '';
                             }
-                            break;
+                        });
+                        
+                        userInput.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                sendButton.click();
+                            }
+                        });
                     }
+                    
+                    // Setup action buttons
+                    const actionButtons = {
+                        'fixCodeBtn': 'fixCode',
+                        'optimizeCodeBtn': 'optimizeCode',
+                        'testCodeBtn': 'testCode',
+                        'explainCodeBtn': 'explainCode',
+                        'copyCodeBtn': 'copyCode'
+                    };
+                    
+                    const vscode = acquireVsCodeApi();
+                    Object.entries(actionButtons).forEach(([id, command]) => {
+                        const button = document.getElementById(id);
+                        if (button) {
+                            button.addEventListener('click', () => {
+                                vscode.postMessage({ command });
+                            });
+                        }
+                    });
                 });
-                
-                // VS Code'a hazır olduğunu bildir
-                vscode.postMessage({ command: 'ready' });
             </script>
         </body>
         </html>
@@ -357,11 +236,4 @@ export function getInlineChatWebviewContent(
     }
     
     return htmlContent;
-}
-
-/**
- * Analiz paneli için başlık oluşturur
- */
-export function createAnalysisPanelTitle(fileName: string, languageId: string, lineCount: number): string {
-    return `${fileName} (${languageId}) - ${lineCount} satır`;
 } 

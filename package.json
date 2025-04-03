@@ -16,7 +16,6 @@
   "engines": {
     "vscode": "^1.98.0"
   },
-  
   "categories": [
     "Other",
     "Programming Languages",
@@ -92,6 +91,11 @@
         "command": "byte.askQuestionAboutCode",
         "title": "Byte: Ask Question About Code",
         "icon": "$(question)"
+      },
+      {
+        "command": "byte.openInlineChat",
+        "title": "Byte: Open Inline Chat Window",
+        "icon": "$(comment-discussion)"
       }
     ],
     "keybindings": [
@@ -106,6 +110,11 @@
         "key": "ctrl+alt+q",
         "mac": "cmd+alt+q",
         "when": "editorHasSelection"
+      },
+      {
+        "command": "byte.openInlineChat",
+        "key": "ctrl+alt+c",
+        "mac": "cmd+alt+c"
       }
     ],
     "menus": {
@@ -126,32 +135,36 @@
           "group": "z_byte@2"
         },
         {
-          "command": "byte.explainCode",
+          "command": "byte.openInlineChat",
           "group": "z_byte@3"
         },
         {
-          "command": "byte.refactorCode",
+          "command": "byte.explainCode",
           "group": "z_byte@4"
         },
         {
-          "command": "byte.generateDocs",
+          "command": "byte.refactorCode",
           "group": "z_byte@5"
         },
         {
-          "command": "byte.optimizeCode",
+          "command": "byte.generateDocs",
           "group": "z_byte@6"
         },
         {
-          "command": "byte.generateTests",
+          "command": "byte.optimizeCode",
           "group": "z_byte@7"
         },
         {
-          "command": "byte.addComments",
+          "command": "byte.generateTests",
           "group": "z_byte@8"
         },
         {
-          "command": "byte.findIssues",
+          "command": "byte.addComments",
           "group": "z_byte@9"
+        },
+        {
+          "command": "byte.findIssues",
+          "group": "z_byte@10"
         }
       ]
     },
@@ -242,6 +255,16 @@
           "default": "claude-3-sonnet",
           "description": "Anthropic Claude model to use"
         },
+        "byteAI.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Byte AI API anahtarı"
+        },
+        "byteAI.apiEndpoint": {
+          "type": "string",
+          "default": "https://api.byteai.app/v1",
+          "description": "Byte AI API endpoint URL"
+        },
         "byte.autoSwitch": {
           "type": "boolean",
           "default": false,
@@ -304,6 +327,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/node-fetch": "^2.6.12",
@@ -316,6 +340,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "axios": "^1.8.4",
     "node-fetch": "^2.6.7"
   }
 }

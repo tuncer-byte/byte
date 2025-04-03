@@ -1,0 +1,183 @@
+/**
+ * VS Code teması ile uyumlu Prism.js CSS
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+    color: var(--vscode-editor-foreground);
+    background: none;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9em;
+    text-align: left;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: normal;
+    line-height: 1.5;
+    
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
+    tab-size: 4;
+    
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
+}
+
+pre[class*="language-"] {
+    padding: 1em;
+    margin: 0.5em 0;
+    overflow: auto;
+    border-radius: 0.3em;
+    background-color: var(--vscode-editor-background, #1e1e1e);
+}
+
+:not(pre) > code[class*="language-"] {
+    padding: 0.1em 0.3em;
+    border-radius: 0.3em;
+    white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: var(--vscode-editorLineNumber-foreground, #6a9955);
+}
+
+.token.punctuation {
+    color: var(--vscode-editor-foreground, #d4d4d4);
+}
+
+.namespace {
+    opacity: 0.7;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+    color: var(--vscode-debugTokenExpression-number, #b5cea8);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+    color: var(--vscode-debugTokenExpression-string, #ce9178);
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+    color: var(--vscode-symbolIcon-operatorForeground, #d4d4d4);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+    color: var(--vscode-symbolIcon-keywordForeground, #569cd6);
+}
+
+.token.function,
+.token.class-name {
+    color: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+    color: var(--vscode-symbolIcon-variableForeground, #9cdcfe);
+}
+
+.token.important,
+.token.bold {
+    font-weight: bold;
+}
+
+.token.italic {
+    font-style: italic;
+}
+
+.token.entity {
+    cursor: help;
+}
+
+/* Line Numbers */
+pre.line-numbers {
+    position: relative;
+    padding-left: 3.8em;
+    counter-reset: linenumber;
+}
+
+pre.line-numbers > code {
+    position: relative;
+    white-space: inherit;
+}
+
+.line-numbers .line-numbers-rows {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    font-size: 100%;
+    left: -3.8em;
+    width: 3em; /* works for line-numbers below 1000 lines */
+    letter-spacing: -1px;
+    border-right: 1px solid var(--vscode-editorLineNumber-foreground, #858585);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    opacity: 0.5;
+}
+
+.line-numbers-rows > span {
+    display: block;
+    counter-increment: linenumber;
+}
+
+.line-numbers-rows > span:before {
+    content: counter(linenumber);
+    color: var(--vscode-editorLineNumber-foreground, #858585);
+    display: block;
+    padding-right: 0.8em;
+    text-align: right;
+}
+
+/* Match Brackets */
+.token.punctuation.brace-hover,
+.token.punctuation.brace-selected {
+    outline: solid 1px var(--vscode-editor-selectionBackground, #264f78);
+}
+
+.rainbow-braces .token.punctuation.brace-level-1,
+.rainbow-braces .token.punctuation.brace-level-5,
+.rainbow-braces .token.punctuation.brace-level-9 {
+    color: var(--vscode-debugTokenExpression-string, #ce9178);
+}
+
+.rainbow-braces .token.punctuation.brace-level-2,
+.rainbow-braces .token.punctuation.brace-level-6,
+.rainbow-braces .token.punctuation.brace-level-10 {
+    color: var(--vscode-debugTokenExpression-number, #b5cea8);
+}
+
+.rainbow-braces .token.punctuation.brace-level-3,
+.rainbow-braces .token.punctuation.brace-level-7,
+.rainbow-braces .token.punctuation.brace-level-11 {
+    color: var(--vscode-symbolIcon-keywordForeground, #569cd6);
+}
+
+.rainbow-braces .token.punctuation.brace-level-4,
+.rainbow-braces .token.punctuation.brace-level-8,
+.rainbow-braces .token.punctuation.brace-level-12 {
+    color: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+} 
