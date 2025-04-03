@@ -57,6 +57,11 @@ export class MessageHandler {
                     await this.openFileSelector();
                     break;
 
+                case 'openFilePicker':
+                    // Dosya seçici diyaloğunu aç ve seçilen dosyayı sohbete ekle
+                    await this.handleFilePicker();
+                    break;
+
                 case 'getSettings':
                     // WebView'e mevcut ayarları gönder
                     await this.settingsManager.sendSettingsToWebView();
@@ -83,6 +88,26 @@ export class MessageHandler {
                 case 'runCode':
                     // Terminal komutunu çalıştır
                     await this.runCodeInTerminal(message.code);
+                    break;
+                    
+                case 'newChat':
+                    // Yeni sohbet başlatıldığında
+                    // Eğer clearHistory flagı true ise, sohbet geçmişini temizle
+                    if (message.clearHistory) {
+                        // AI servisindeki mesaj geçmişini temizle
+                        this.aiService.clearMessages();
+                        
+                        // View'e boş mesaj geçmişini bildir
+                        if (this.view) {
+                            this.view.webview.postMessage({
+                                type: 'init',
+                                provider: this.aiService.getProvider(),
+                                messages: [], // Boş mesaj geçmişi
+                                agentEnabled: this.agentEnabled,
+                                currentFile: this.currentFile
+                            });
+                        }
+                    }
                     break;
             }
         } catch (error: any) {
@@ -264,6 +289,154 @@ export class MessageHandler {
     }
     
     /**
+     * Dosya seçiciden seçilen dosyayı sohbete ekler
+     */
+    private async handleFilePicker(): Promise<void> {
+        try {
+            // VS Code'un kendi yerleşik dosya seçicisini kullanarak workspace içindeki dosyaları göster
+            const items = await vscode.window.showQuickPick(
+                this.getWorkspaceFiles(),
+                {
+                    placeHolder: 'Sohbete eklemek için bir dosya seçin (maksimum 3 dosya eklenebilir)',
+                    canPickMany: true // Birden fazla dosya seçimine izin ver
+                }
+            );
+            
+            // Kullanıcı dosya(lar) seçtiyse
+            if (items && items.length > 0) {
+                // Maksimum 3 dosya ile sınırla
+                const selectedItems = items.slice(0, 3);
+                const selectedFiles: Array<{fileName: string, filePath: string, fileContent: string}> = [];
+                
+                // Tüm seçilen dosyaları oku
+                for (const item of selectedItems) {
+                    const filePath = item.uri.fsPath;
+                    const fileName = item.label;
+                    
+                    // Dosyayı oku
+                    const document = await vscode.workspace.openTextDocument(item.uri);
+                    const fileContent = document.getText();
+                    
+                    selectedFiles.push({
+                        fileName,
+                        filePath,
+                        fileContent
+                    });
+                }
+                
+                // Dosya bilgilerini WebView'e gönder
+                if (this.view) {
+                    // Seçilen dosyaları current-file bölümünde göstermek için WebView'e bildir
+                    this.view.webview.postMessage({
+                        type: 'selectedFilesChanged',
+                        files: selectedFiles.map(file => ({
+                            fileName: file.fileName,
+                            filePath: file.filePath
+                        }))
+                    });
+                    
+                
+                    
+                    // AI'ya dosyaları ilet (arka planda)
+                    // Dosyaları markdown olarak formatla
+                    let aiMessage = `Kullanıcı şu dosyaları paylaştı:\n\n`;
+                    
+                    for (const file of selectedFiles) {
+                        const fileExtension = file.fileName.split('.').pop() || '';
+                        const language = this.getLanguageFromExtension(fileExtension);
+                        
+                        // Her dosyayı ayrı kod bloğu içinde ekle
+                        aiMessage += `**${file.fileName}:**\n\`\`\`${language}\n${file.fileContent}\n\`\`\`\n\n`;
+                    }
+                    
+                    // Dosya içeriklerini AI'ya gönder - UI'da gösterme
+                    // Mesajı AI geçmişine ekle
+                    await this.aiService.sendMessage(aiMessage);
+                    
+                    // Dosya içeriklerini göstermeden AI yanıtını bekle
+                    this.view.webview.postMessage({
+                        type: 'loadingStart'
+                    });
+                }
+            }
+        } catch (error: any) {
+            // Hata durumunda WebView'e bildir
+            this.sendErrorToWebView(`Dosya seçilirken hata oluştu: ${error.message}`);
+        }
+    }
+    
+    /**
+     * Dosya uzantısına göre dil belirler
+     */
+    private getLanguageFromExtension(fileExtension: string): string {
+        switch (fileExtension.toLowerCase()) {
+            case 'js': return 'javascript';
+            case 'ts': return 'typescript';
+            case 'tsx': return 'typescript';
+            case 'jsx': case 'tsx': return 'tsx';
+            case 'py': return 'python';
+            case 'java': return 'java';
+            case 'c': case 'cpp': case 'h': return 'cpp';
+            case 'cs': return 'csharp';
+            case 'go': return 'go';
+            case 'rs': return 'rust';
+            case 'rb': return 'ruby';
+            case 'php': return 'php';
+            case 'html': return 'html';
+            case 'css': return 'css';
+            case 'json': return 'json';
+            case 'md': return 'markdown';
+            default: return '';
+        }
+    }
+    
+    /**
+     * Workspace içindeki tüm dosyaları getirir
+     */
+    private async getWorkspaceFiles(): Promise<Array<{label: string; description: string; uri: vscode.Uri}>> {
+        console.log("getWorkspaceFiles metodu çağrıldı");
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            console.log("Workspace klasörleri bulunamadı");
+            return [];
+        }
+        
+        const files: Array<{label: string; description: string; uri: vscode.Uri}> = [];
+        
+        for (const folder of workspaceFolders) {
+            console.log(`Klasör işleniyor: ${folder.name}`);
+            try {
+                // VS Code API ile dosyaları bul - sadece kod dosyalarını göster
+                const fileUris = await vscode.workspace.findFiles(
+                    '{**/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.py,**/*.java,**/*.c,**/*.cpp,**/*.h,**/*.cs,**/*.go,**/*.rs,**/*.rb,**/*.php,**/*.html,**/*.css,**/*.json,**/*.md}',
+                    '**/node_modules/**'
+                );
+                
+                console.log(`Bulunan dosya sayısı: ${fileUris.length}`);
+                
+                for (const uri of fileUris) {
+                    // Dosya adını al
+                    const fileName = uri.path.split('/').pop() || '';
+                    // Workspace klasörüne göre göreceli yolu al
+                    const relativePath = vscode.workspace.asRelativePath(uri);
+                    
+                    files.push({
+                        label: fileName,
+                        description: relativePath,
+                        uri: uri
+                    });
+                }
+            } catch (error) {
+                console.error(`Dosya arama hatası: ${error}`);
+            }
+        }
+        
+        console.log(`Toplam eklenen dosya sayısı: ${files.length}`);
+        
+        return Promise.resolve(files);
+    }
+    
+    /**
      * Kodu aktif editöre uygular
      */
     private async applyCodeToEditor(code: string): Promise<void> {
@@ -384,4 +557,4 @@ export class MessageHandler {
             }
         }
     }
-} 
+}

@@ -369,14 +369,41 @@ body, html {
     margin: 0 8px;
 }
 
+.file-context {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    max-width: 60%;
+    scrollbar-width: thin;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    background-color: rgba(30, 38, 49, 0.8);
+    border-radius: 4px;
+    padding: 3px 8px;
+    margin-right: 4px;
+    white-space: nowrap;
+    border: 1px solid rgba(48, 54, 61, 0.8);
+    transition: all 0.2s ease;
+}
+
+.file-item:hover {
+    background-color: rgba(255, 123, 35, 0.15);
+    border: 1px solid rgba(255, 123, 35, 0.3);
+}
+
 .current-file {
     font-family: 'Courier New', monospace;
     color: var(--foreground);
-    background-color: rgba(30, 38, 49, 0.8);
-    padding: 3px 8px;
-    border-radius: 4px;
     font-size: 11px;
-    border: 1px solid rgba(48, 54, 61, 0.8);
+}
+
+.file-item.active {
+    background-color: rgba(255, 123, 35, 0.15);
+    border: 1px solid rgba(255, 123, 35, 0.3);
 }
 
 .context-controls {
@@ -2034,4 +2061,31 @@ pre code {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Dosya Ekle Butonu Stilleri */
+.add-file-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: var(--foreground);
+    opacity: 0.8;
+    transition: all 0.2s ease;
+    margin-left: 5px;
+}
+
+.add-file-button:hover {
+    color: var(--primary-color);
+    background-color: rgba(255, 123, 35, 0.1);
+    opacity: 1;
+}
+
+.add-file-button svg {
+    fill: currentColor;
 }

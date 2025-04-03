@@ -13,6 +13,8 @@
     const fileContextElement = document.getElementById('fileContext');
     const agentToggle = document.getElementById('agentToggle');
     const newChatButton = document.querySelector('.new-chat');
+    const addFileButton = document.getElementById('addFileButton');
+    const fileBadgesContainer = document.getElementById('fileBadgesContainer');
     
     // Ayarlar Modalı Elementleri
     const settingsModal = document.getElementById('settingsModal');
@@ -55,6 +57,8 @@
         currentFilePath: '',
         agentEnabled: false,
         includeCurrentFile: false,
+        selectedFiles: [], // Seçilen dosyaların listesini sakla
+        recentFiles: [], // Son eklenen dosyaların listesi
         settings: {
             provider: 'gemini',
             defaultProvider: 'gemini',
@@ -437,7 +441,7 @@
             copyButton.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1-2 2v1"></path>
                 </svg>
                 <span>Copy</span>
             `;
@@ -458,7 +462,7 @@
                             copyButton.innerHTML = `
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1-2 2v1"></path>
                                 </svg>
                                 <span>Copy</span>
                             `;
@@ -856,72 +860,82 @@
         const welcomeMessage = document.createElement('div');
         welcomeMessage.className = 'welcome-message';
         welcomeMessage.innerHTML = `
-            <div class="assistant-message">
-                <div class="message-content">
-                    <div class="welcome-header">
-                        <h2>Welcome to Byte</h2>
-                        <div class="welcome-subtitle">Your intelligent coding assistant</div>
-                    </div>
-                    
-                    <div class="welcome-features">
-                        <div class="feature-card">
-                            <div class="feature-icon">⚙️</div>
-                            <div class="feature-text">Configure plugin settings</div>
+         
+                <div class="assistant-message">
+                    <div class="message-content">
+                        <div class="welcome-header">
+                            <h2>Welcome to Byte</h2>
+                            <div class="welcome-subtitle">Your intelligent coding assistant</div>
                         </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">⌨️</div>
-                            <div class="feature-text">Explore shortcuts</div>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">💬</div>
-                            <div class="feature-text">Provide instructions for AI</div>
-                        </div>
-                    </div>
-                    
-                    <div class="assistant-intro">
-                        <div class="assistant-icon">B</div>
-                        <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
-                    </div>
-                    
-                    <div class="quick-commands">
-                        <h3>Quick commands</h3>
-                        <div class="command-list">
-                            <div class="command-item">
-                                <span class="command">/code</span>
-                                <span class="command-desc">to generate new feature or fix bug</span>
+                        
+                        <div class="welcome-features">
+                            <div class="feature-card">
+                                <div class="feature-icon">•</div>
+                                <div class="feature-text">Configure plugin settings</div>
                             </div>
-                            <div class="command-item">
-                                <span class="command">/explain</span>
-                                <span class="command-desc">file or selected code</span>
+                            <div class="feature-card">
+                                <div class="feature-icon">•</div>
+                                <div class="feature-text">Explore shortcuts</div>
                             </div>
-                            <div class="command-item">
-                                <span class="command">/review</span>
-                                <span class="command-desc">code to recommend improvements</span>
-                            </div>
-                            <div class="command-item">
-                                <span class="command">/unittests</span>
-                                <span class="command-desc">to generate unit tests</span>
+                            <div class="feature-card">
+                                <div class="feature-icon">•</div>
+                                <div class="feature-text">Provide instructions for AI</div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="chill-mode">
-                        <h3>Chill mode</h3>
-                        <p>Enable to automatically apply changes and run safe commands</p>
+                        
+                        <div class="assistant-intro">
+                           
+                            <p>Ask Byte anything to help you with your coding tasks or to learn something new.</p>
+                        </div>
+                        
+                        <div class="quick-commands">
+                            <h3>Quick Commands</h3>
+                            <div class="command-list">
+                                <div class="command-item">
+                                    <span class="command">/code</span>
+                                    <span class="command-desc">generate new feature or fix bug</span>
+                                </div>
+                                <div class="command-item">
+                                    <span class="command">/explain</span>
+                                    <span class="command-desc">explain file or selected code</span>
+                                </div>
+                                <div class="command-item">
+                                    <span class="command">/review</span>
+                                    <span class="command-desc">recommend code improvements</span>
+                                </div>
+                                <div class="command-item">
+                                    <span class="command">/unittests</span>
+                                 
+                                    <span class="command-desc">generate unit tests</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chill-mode">
+                            <h3>Chill mode</h3>
+                            <p>Enable to automatically apply changes and run safe commands</p>
+                        </div>
+                        
                     </div>
                 </div>
-            </div>
+            
         `;
         messagesContainer.appendChild(welcomeMessage);
         
-        // State'i sıfırla
+        // State'i sıfırla - mesajları tamamen temizle
         state.messages = [];
         
         // Input alanını temizle
         userInput.value = '';
         
-        // VS Code'a yeni sohbet başladığını bildir
-        vscode.postMessage({ type: 'newChat' });
+        // VS Code'a yeni sohbet başladığını ve mesaj geçmişini silmesini bildir
+        vscode.postMessage({ 
+            type: 'newChat',
+            clearHistory: true
+        });
+        
+        // LocalStorage'dan da tüm mesaj geçmişini temizle
+        localStorage.removeItem('chatHistory');
     });
     
     // Current file checkbox'ını dinleyelim
@@ -1312,6 +1326,76 @@
                     handleSettingsError(message.message);
                 }
                 break;
+
+            case 'selectedFilesChanged':
+                // Çoklu dosya seçildiğinde, dosyaları current-file bölümünde göster
+                if (message.files && message.files.length > 0) {
+                    // Seçilen dosyaları state'e kaydet
+                    state.selectedFiles = message.files;
+                    
+                    // Seçilen dosyaları görüntüle
+                    const selectedFilesContainer = document.getElementById('selectedFiles');
+                    if (selectedFilesContainer) {
+                        selectedFilesContainer.innerHTML = ''; // Önceki içeriği temizle
+                        
+                        // Dosya içeriğini göster
+                        message.files.forEach(file => {
+                            const fileItem = document.createElement('div');
+                            fileItem.classList.add('file-item');
+                            fileItem.title = file.filePath;
+                            fileItem.innerHTML = `
+                                <span class="current-file">${file.fileName}</span>
+                            `;
+                            selectedFilesContainer.appendChild(fileItem);
+                        });
+                        
+                        // fileContext div'ini görünür yap
+                        const fileContextElement = document.getElementById('fileContext');
+                        if (fileContextElement) {
+                            fileContextElement.style.display = 'flex';
+                        }
+                    }
+                    
+                    // State'i kaydet
+                    vscode.setState(state);
+                }
+                break;
+
+            case 'filesAdded':
+                // Dosyalar eklendiğinde badge'leri oluştur
+                if (message.files && message.files.length > 0) {
+                    console.log('Files added:', message.files);
+                    
+                    // Seçilen dosyaları state'e ekle
+                    message.files.forEach(file => {
+                        // Eğer dosya zaten ekli değilse ekle
+                        if (!state.selectedFiles.some(f => f.filePath === file.filePath)) {
+                            state.selectedFiles.push(file);
+                        }
+                    });
+                    
+                    // Badge'leri güncelle
+                    updateFileBadges(state.selectedFiles);
+                    
+                    // State'i güncelle
+                    vscode.setState(state);
+                }
+                break;
+                
+            case 'filePickerResult':
+                // Dosya seçici sonucu
+                if (message.files && message.files.length > 0) {
+                    console.log('File picker result:', message.files);
+                    
+                    // Her dosyayı ekle
+                    message.files.forEach(file => {
+                        addFileBadge(file.fileName, file.filePath);
+                    });
+                    
+                    // State'i güncelle
+                    vscode.setState(state);
+                }
+                break;
         }
     });
     
@@ -1437,4 +1521,118 @@
             formatCommandInInput(command);
         }
     });
+
+    // Dosya Ekleme Butonu Tıklama Olayı
+    addFileButton.addEventListener('click', () => {
+        console.log("Dosya ekleme butonuna tıklandı!");
+        // VS Code'a dosya seçme isteği gönder
+        vscode.postMessage({
+            type: 'openFilePicker'
+        });
+        console.log("openFilePicker mesajı gönderildi");
+    });
+
+    // Dosya badge'i oluşturma fonksiyonu
+    function createFileBadge(fileName, filePath) {
+        const badge = document.createElement('div');
+        badge.className = 'file-badge';
+        badge.title = filePath;
+        badge.dataset.filePath = filePath;
+        
+        // Dosya uzantısını belirle ve simgeyi ayarla
+        const fileExtension = fileName.split('.').pop().toLowerCase();
+        let fileIcon = '📄';
+        
+        // Dosya türüne göre simge ata
+        if (['js', 'ts', 'jsx', 'tsx'].includes(fileExtension)) {
+            fileIcon = '📝';
+        } else if (['json', 'xml', 'yaml', 'yml'].includes(fileExtension)) {
+            fileIcon = '⚙️';
+        } else if (['html', 'css', 'scss', 'less'].includes(fileExtension)) {
+            fileIcon = '🎨';
+        } else if (['md', 'txt', 'doc'].includes(fileExtension)) {
+            fileIcon = '📄';
+        } else if (['py', 'rb', 'php', 'java'].includes(fileExtension)) {
+            fileIcon = '🔧';
+        }
+        
+        badge.innerHTML = `
+            <span class="file-badge-icon">${fileIcon}</span>
+            <span class="file-badge-name">${fileName}</span>
+            <button class="file-badge-remove" title="Dosyayı Kaldır">×</button>
+        `;
+        
+        // Badge'i kaldırma işlemi
+        const removeButton = badge.querySelector('.file-badge-remove');
+        removeButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            // Dosyayı state'den kaldır
+            state.selectedFiles = state.selectedFiles.filter(file => file.filePath !== filePath);
+            // Badge'i DOM'dan kaldır
+            badge.remove();
+            // State'i güncelle
+            vscode.setState(state);
+            // VS Code'a bildir
+            vscode.postMessage({
+                type: 'removeFile',
+                filePath: filePath
+            });
+            // Eğer hiç dosya kalmadıysa, dosya alanını gizle
+            updateFileArea();
+        });
+        
+        return badge;
+    }
+    
+    // Dosya badge'lerini güncelle
+    function updateFileBadges(files) {
+        if (!fileBadgesContainer) return;
+        
+        // Mevcut badge'leri temizle
+        fileBadgesContainer.innerHTML = '';
+        
+        // Yeni badge'leri ekle
+        if (files && files.length > 0) {
+            // Her dosya için badge oluştur ve ekle
+            files.forEach(file => {
+                const badge = createFileBadge(file.fileName, file.filePath);
+                fileBadgesContainer.appendChild(badge);
+            });
+        }
+        
+        // Dosya alanını güncelle
+        updateFileArea();
+    }
+    
+    // Dosya alanını güncelle (göster/gizle)
+    function updateFileArea() {
+        // Eğer state.selectedFiles yoksa veya boşsa, dosya alanını gizle
+        if (!state.selectedFiles || state.selectedFiles.length === 0) {
+            fileBadgesContainer.style.display = 'none';
+        } else {
+            fileBadgesContainer.style.display = 'flex';
+        }
+    }
+    
+    // Dosya eklendiğinde badge oluştur ve ekle
+    function addFileBadge(fileName, filePath) {
+        // Dosya zaten ekli mi kontrol et
+        const isFileAlreadyAdded = state.selectedFiles.some(f => f.filePath === filePath);
+        
+        if (!isFileAlreadyAdded) {
+            // State'e yeni dosyayı ekle
+            const fileInfo = { fileName, filePath };
+            state.selectedFiles.push(fileInfo);
+            
+            // Badge oluştur ve DOM'a ekle
+            const badge = createFileBadge(fileName, filePath);
+            fileBadgesContainer.appendChild(badge);
+            
+            // Dosya alanını göster
+            fileBadgesContainer.style.display = 'flex';
+            
+            // State'i güncelle
+            vscode.setState(state);
+        }
+    }
 })();
