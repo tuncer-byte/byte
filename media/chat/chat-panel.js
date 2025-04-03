@@ -7,6 +7,7 @@
     const userInput = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
     const loadingIndicator = document.getElementById('loadingIndicator');
+    const typingIndicator = document.getElementById('typingIndicator');
     const aiProviderSelect = document.getElementById('aiProvider');
     const configureButton = document.getElementById('configureButton');
     const currentFileElement = document.getElementById('currentFile');
@@ -92,6 +93,39 @@
     const autoSwitchSettings = document.getElementById('autoSwitchSettings');
     const maxCostPerDay = document.getElementById('maxCostPerDay');
     const preferredProvider = document.getElementById('preferredProvider');
+    
+    // Yükleniyor durumunu göster/gizle
+    function toggleLoading(isLoading) {
+        if (isLoading) {
+            showLoadingIndicator();
+        } else {
+            hideLoadingIndicator();
+        }
+    }
+    
+    // Yükleniyor göstergesini göster
+    function showLoadingIndicator() {
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'block';
+            
+            // Yeni 3 noktalı göstergeyi de göster
+            if (typingIndicator) {
+                typingIndicator.style.display = 'flex';
+            }
+        }
+    }
+    
+    // Yükleniyor göstergesini gizle
+    function hideLoadingIndicator() {
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+            
+            // Yeni 3 noktalı göstergeyi de gizle
+            if (typingIndicator) {
+                typingIndicator.style.display = 'none';
+            }
+        }
+    }
     
     // Sayfa yüklendiğinde VS Code'a hazır olduğumuzu bildir
     window.addEventListener('load', () => {

@@ -61,7 +61,8 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    max-width: 100%;
+    min-width: 300px;
+    width: 100%;
     padding: 0;
     overflow: hidden;
 }
@@ -398,11 +399,13 @@ body {
     gap: 8px;
     align-items: flex-end;
     background-color: var(--sidebar-background);
+    max-width: 100%;
 }
 
 .textarea-wrapper {
     flex: 1;
     position: relative;
+    max-width: calc(100% - 48px); /* Gönder butonu için yer bırak */
 }
 
 #userInput {
@@ -419,6 +422,8 @@ body {
     max-height: 150px;
     overflow-y: auto;
     transition: border-color 0.2s;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 #userInput:focus {
@@ -439,6 +444,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 40px;
+    max-width: 40px;
+    flex-shrink: 0;
 }
 
 #sendButton:disabled {
@@ -477,6 +485,36 @@ body {
     color: var(--primary-color);
 }
 
+/* Yükleniyor göstergesi için ek stiller */
+.code-panel .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    margin-top: 8px;
+}
+
+.code-panel .typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: inline-block;
+    animation: typing 1.4s infinite ease-in-out both;
+}
+
+.code-panel .typing-indicator span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.code-panel .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.code-panel .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
 /* Responsive Tasarım */
 @media (max-width: 800px) {
     .chat-container {
@@ -502,5 +540,20 @@ body {
     
     .action-button {
         white-space: nowrap;
+    }
+    
+    .textarea-wrapper {
+        max-width: calc(100% - 48px);
+    }
+    
+    .input-panel {
+        flex-wrap: nowrap;
+        padding: 8px;
+    }
+    
+    .quick-actions {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
     }
 } 

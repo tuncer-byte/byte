@@ -8,12 +8,13 @@
         currentLanguage: '',
         currentFileName: '',
         isLoading: false,
+        codeLoading: false,
         codeLineCount: 0
     };
 
     // DOM elementleri
     let messagesContainer, userInput, sendButton, 
-        codeBlock, copyCodeBtn, loadingMessage;
+        codeBlock, copyCodeBtn, loadingMessage, codeLoadingIndicator;
     
     // Buton eylemi islemleri
     const buttonActions = {
@@ -58,6 +59,9 @@
         
         // Yükleniyor mesajı oluştur ama henüz ekleme
         loadingMessage = createLoadingMessageElement();
+        
+        // Kod yükleniyor göstergesi
+        codeLoadingIndicator = document.getElementById('codeLoadingIndicator');
     }
     
     // Olay dinleyicilerini ayarla
@@ -164,8 +168,15 @@
                 break;
                 
             case 'setCode':
+                // Kod yükleniyor göstergesini kaldır
+                toggleCodeLoading(false);
                 // Kod içeriğini ayarla
                 setCode(message.code, message.language, message.fileName, message.lineInfo);
+                break;
+                
+            case 'loadingCode':
+                // Kod yükleniyor göstergesini göster/gizle
+                toggleCodeLoading(message.isLoading);
                 break;
                 
             case 'clearMessages':
@@ -433,5 +444,18 @@
                 console.error('Kopyalama hatası:', err);
                 showError('Kod kopyalanırken bir hata oluştu.');
             });
+    }
+    
+    // Kod yükleniyor göstergesini göster/gizle
+    function toggleCodeLoading(isLoading) {
+        if (!codeLoadingIndicator) return;
+        
+        if (isLoading) {
+            codeLoadingIndicator.style.display = 'flex';
+            state.codeLoading = true;
+        } else {
+            codeLoadingIndicator.style.display = 'none';
+            state.codeLoading = false;
+        }
     }
 })(); 
