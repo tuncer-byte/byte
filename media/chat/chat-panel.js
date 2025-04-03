@@ -107,6 +107,7 @@
     function showLoadingIndicator() {
         if (loadingIndicator) {
             loadingIndicator.style.display = 'block';
+            loadingIndicator.classList.add('active');
             
             // Yeni 3 noktalı göstergeyi de göster
             if (typingIndicator) {
@@ -119,6 +120,7 @@
     function hideLoadingIndicator() {
         if (loadingIndicator) {
             loadingIndicator.style.display = 'none';
+            loadingIndicator.classList.remove('active');
             
             // Yeni 3 noktalı göstergeyi de gizle
             if (typingIndicator) {
@@ -672,7 +674,7 @@
             state.messages.push({ role: 'user', content: message });
             
             // Yükleniyor göstergesini aç
-            loadingIndicator.classList.add('active');
+            showLoadingIndicator();
             
             // VS Code'a gönder
             vscode.postMessage({
@@ -1093,7 +1095,7 @@
                 console.log('AI response received');
                 
                 // Yükleniyor göstergesini gizle
-                loadingIndicator.classList.remove('active');
+                hideLoadingIndicator();
                 
                 // Mesajı görüntüle
                 appendMessage('assistant', message.content);
@@ -1131,8 +1133,7 @@
                 
             case 'loadingStart':
                 // Yükleniyor göstergesini aç
-                loadingIndicator.style.display = 'block';
-                loadingIndicator.classList.add('active');
+                showLoadingIndicator();
                 
                 // Welcome mesajını koru
                 preserveWelcome();
@@ -1141,8 +1142,7 @@
                 
             case 'loadingStop':
                 // Yükleniyor göstergesini kapat
-                loadingIndicator.style.display = 'none';
-                loadingIndicator.classList.remove('active');
+                hideLoadingIndicator();
                 
                 // Welcome mesajını koru
                 preserveWelcome();
@@ -1164,7 +1164,7 @@
                 console.error('Error from extension:', message.content);
                 
                 // Yükleniyor göstergesini gizle
-                loadingIndicator.classList.remove('active');
+                hideLoadingIndicator();
                 
                 // Hata mesajını görüntüle
                 const errorDiv = document.createElement('div');

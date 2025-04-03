@@ -71,13 +71,7 @@ export class InlineCodeChat implements InlineCodeChatProvider {
             lineInfo
         );
         
-        // Kullanıcıdan soru girmesini iste - otomatik analiz yapmadan bekle
-        this.panel?.webview.postMessage({
-            command: 'focusInput',
-            placeholder: 'Seçili kod hakkında bir soru sorun...',
-        });
-        
-        vscode.window.showInformationMessage('Sormak istediğiniz soruyu doğrudan sohbet paneline yazabilirsiniz.');
+       
     }
     
     /**

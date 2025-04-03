@@ -243,6 +243,9 @@ export class InlineChatPanel {
         const styleMainUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'media', 'inline-chat', 'prism.css')
         );
+        const inlineChatCssUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'media', 'inline-chat', 'inline-chat.css')
+        );
         const prismScriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'media', 'inline-chat', 'prism.js')
         );
@@ -265,6 +268,8 @@ export class InlineChatPanel {
             htmlContent = htmlContent
                 .replace('<link rel="stylesheet" href="./prism.css">', 
                          `<link rel="stylesheet" href="${styleMainUri}" nonce="${nonce}">`)
+                .replace('<link rel="stylesheet" href="./inline-chat.css">', 
+                         `<link rel="stylesheet" href="${inlineChatCssUri}" nonce="${nonce}">`)
                 .replace('<script src="./prism.js"></script>', 
                          `<script src="${prismScriptUri}" nonce="${nonce}"></script>`)
                 .replace('<script src="./inline-chat.js"></script>', 
@@ -287,6 +292,7 @@ export class InlineChatPanel {
                     <title>Byte AI Inline Chat</title>
                     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}';">
                     <link href="${styleMainUri}" rel="stylesheet" nonce="${nonce}">
+                    <link href="${inlineChatCssUri}" rel="stylesheet" nonce="${nonce}">
                 </head>
                 <body>
                     <div class="container">

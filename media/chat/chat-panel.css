@@ -583,13 +583,14 @@ body, html {
 /* Yükleniyor göstergesi */
 .loading-indicator {
     display: none;
-    padding: 10px 20px;
-    margin-top: 10px;
-    animation: fadeIn 0.3s ease;
+    margin: 16px auto;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 }
 
 .loading-indicator.active {
     display: block;
+    opacity: 1;
 }
 
 .ai-thinking {
@@ -2093,11 +2094,16 @@ pre code {
 
 /* Typing Indicator - Üç nokta animasyonu */
 .typing-indicator {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 4px;
     padding: 8px 12px;
     margin: 0 auto;
+    background-color: var(--message-ai-background, #1A1F27);
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #30363D);
+    max-width: max-content;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .typing-indicator span {
