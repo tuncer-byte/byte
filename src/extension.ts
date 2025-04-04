@@ -4,7 +4,7 @@ import { AIService } from './services/ai';
 import { InlineCodeChat } from './views/inline-chat';
 import { CommandManager } from './commands';
 import { ChatPanel } from './views/chat';
-import { ByteAIClient } from './panelClient';
+import { ByteAIClient } from './client';
 import { InlineChatPanel } from './inlineChat';
 
 // Genişlik sabitleri

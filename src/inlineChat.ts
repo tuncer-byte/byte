@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getNonce, extractCodeBlocks, getLanguageFromFileName } from './utils';
-import { ByteAIClient } from './panelClient';
+import { ByteAIClient } from './client';
 import { 
     CODE_EXPLANATION_PROMPT, 
     CODE_REFACTORING_PROMPT, 
