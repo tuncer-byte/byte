@@ -189,6 +189,11 @@
                 toggleLoading(message.isLoading);
                 break;
                 
+            case 'setWidth':
+                // Panel genişliğini ayarla
+                setPanelWidth(message.width);
+                break;
+                
             case 'focusInput':
                 // Input alanına odaklan
                 focusInput(message.placeholder);
@@ -458,4 +463,24 @@
             state.codeLoading = false;
         }
     }
-})(); 
+    
+    // Panel genişliğini ayarla
+    function setPanelWidth(width) {
+        if (!width || typeof width !== 'number') return;
+        
+        // Minimum genişliği koruma
+        const minWidth = 400;
+        const finalWidth = Math.max(width, minWidth);
+        
+        // CSS değişkenini güncelle
+        document.documentElement.style.setProperty('--default-width', `${finalWidth}px`);
+        
+        // Container elemanını bul ve genişliğini ayarla (yedek yöntem)
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.minWidth = `${finalWidth}px`;
+        }
+        
+        console.log(`Panel genişliği ${finalWidth}px olarak ayarlandı`);
+    }
+})();

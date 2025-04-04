@@ -14,11 +14,14 @@ export class InlineCodeChat implements InlineCodeChatProvider {
     private lastFileName: string = '';
     private lastLanguageId: string = '';
     private lastLineCount: number = 0;
+    private panelWidth: number;
     
     constructor(
         private readonly extensionUri: vscode.Uri,
-        private aiService: AIService
+        private aiService: AIService,
+        width: number = 600
     ) {
+        this.panelWidth = width;
         this.messageHandler = new InlineChatMessageHandler(aiService, undefined);
     }
     
@@ -178,7 +181,11 @@ export class InlineCodeChat implements InlineCodeChatProvider {
             try {
                 switch (message.command) {
                     case 'ready':
-                        // WebView hazır olduğunda herhangi bir başlangıç durumu gönder
+                        // WebView hazır olduğunda genişlik ayarını gönder
+                        this.panel?.webview.postMessage({
+                            command: 'setWidth',
+                            width: this.panelWidth
+                        });
                         break;
                         
                     case 'sendMessage':
@@ -250,4 +257,4 @@ export class InlineCodeChat implements InlineCodeChatProvider {
             this.panel = undefined;
         }
     }
-} 
+}

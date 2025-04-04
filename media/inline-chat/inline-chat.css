@@ -17,6 +17,7 @@
     --message-user-background: #1E2631;
     --message-ai-background: #1A1F27;
     --command-color: #FF7B23; /* Komutlar için vurgu rengi */
+    --default-width: 600px; /* Varsayılan genişlik */
     
     /* VS Code tema değişkenlerini de koru */
     --vscode-background: var(--vscode-editor-background, var(--background));
@@ -61,7 +62,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    min-width: 500px;
+    min-width: var(--default-width);
     width: 100%;
     padding: 0;
     overflow: hidden;
@@ -395,68 +396,82 @@ body {
 .input-panel {
     padding: 12px;
     border-top: 1px solid var(--border-color);
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
     background-color: var(--sidebar-background);
     max-width: 100%;
 }
 
 .textarea-wrapper {
-    flex: 1;
     position: relative;
-    max-width: calc(100% - 48px); /* Gönder butonu için yer bırak */
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
 #userInput {
     width: 100%;
-    padding: 10px 12px;
-    border-radius: 6px;
+    padding: 10px 16px;
+    padding-right: 40px; /* Gönder butonu için yer bırak */
+    border-radius: 20px;
     border: 1px solid var(--border-color);
-    background-color: var(--input-background);
+    background-color: rgba(46, 52, 64, 0.6); /* Daha koyu input arka plan */
     color: var(--foreground);
     font-family: inherit;
     font-size: 14px;
+    line-height: 20px;
     resize: none;
-    min-height: 40px;
-    max-height: 150px;
+    min-height: 38px;
+    max-height: 80px;
     overflow-y: auto;
-    transition: border-color 0.2s;
-    max-width: 100%;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
 }
 
 #userInput:focus {
     outline: none;
     border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 #sendButton {
-    background-color: var(--button-background);
-    color: var(--button-foreground);
+    position: absolute;
+    right: 8px;
+    top: 18px; /* Daha yukarıda */
+    background-color: var(--primary-color);
+    color: white;
     border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    height: 40px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 40px;
-    max-width: 40px;
-    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    z-index: 2;
 }
 
 #sendButton:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background-color: var(--border-color);
 }
 
 #sendButton:not(:disabled):hover {
     background-color: var(--button-hover-background);
-    transform: translateY(-1px);
+    transform: scale(1.05);
+}
+
+#sendButton svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Yeni düzen için input container */
+.input-container {
+    position: relative;
+    width: 100%;
 }
 
 .quick-actions {
@@ -465,14 +480,15 @@ body {
     margin-top: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
+    flex-wrap: wrap;
 }
 
 .quick-action-btn {
     background-color: transparent;
     color: var(--foreground);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 4px 10px;
+    border-radius: 16px;
+    padding: 5px 10px;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
@@ -483,6 +499,7 @@ body {
     background-color: rgba(255, 123, 35, 0.15);
     border-color: var(--primary-color);
     color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 /* Yükleniyor göstergesi için ek stiller */
@@ -556,4 +573,4 @@ body {
         overflow-x: auto;
         padding-bottom: 2px;
     }
-} 
+}

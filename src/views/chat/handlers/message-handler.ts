@@ -70,6 +70,14 @@ export class MessageHandler {
                 case 'saveSettings':
                     // Ayarları kaydet ve güncelle
                     await this.settingsManager.saveSettings(message.settings);
+                    
+                    // Ayarların başarıyla kaydedildiğini WebView'e bildir
+                    if (this.view) {
+                        this.view.webview.postMessage({
+                            type: 'settingsSaved',
+                            success: true
+                        });
+                    }
                     break;
                     
                 case 'runTerminalCommand':

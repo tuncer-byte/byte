@@ -1,8 +1,10 @@
 # Byte AI Assistant
 
-A powerful AI assistant for Visual Studio Code that helps you write, understand, and improve your code.
+A powerful AI-powered coding assistant for VS Code.
 
-![Byte AI Assistant](media/icon.png)
+<div align="center">
+  <img src="media/icons/icon.png" alt="Byte AI Assistant" width="128">
+</div>
 
 ## Features
 
@@ -16,12 +18,12 @@ A powerful AI assistant for Visual Studio Code that helps you write, understand,
 
 ## AI Providers
 
-Byte supports multiple AI providers:
+Byte supports the following AI providers:
 
-- OpenAI (GPT models)
-- Google Gemini
-- Anthropic Claude
-- Local models via Ollama
+- **OpenAI** (GPT models)
+- **Google Gemini**
+- **Anthropic Claude**
+- **Local models** (via Ollama)
 
 ## Getting Started
 
@@ -45,7 +47,7 @@ Byte supports multiple AI providers:
 
 ## Code Analysis
 
-Select any code in your editor and use the "Analyze Selected Code" command or right-click menu to get an instant analysis of your code, including:
+Select any code in your editor and use the "Analyze Selected Code" command or right-click menu to get an instant analysis of your code:
 
 - Explanation of how it works
 - Potential issues and improvement suggestions
@@ -59,7 +61,7 @@ For development details, see [ARCHITECTURE.md](src/ARCHITECTURE.md) for informat
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/byte.git
+git clone https://github.com/tuncer-byte/byte.git
 
 # Install dependencies
 npm install

@@ -97,7 +97,7 @@ export function getWebviewContent(extensionUri: vscode.Uri, webview: vscode.Webv
                         <div class="context-controls">
                             <label class="agent-toggle">
                                 <span>Chill</span>
-                                <input type="checkbox" id="agentToggle" checked disabled>
+                                <input type="checkbox" id="agentToggle"  disabled>
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>

@@ -10,6 +10,7 @@ import { ByteAIClient } from './client';
 export class InlineChatPanel {
     public static readonly viewType = 'byteAIInlineChat';
     private static instance: InlineChatPanel | undefined;
+    private static panelWidth: number = 600; // Varsayılan genişlik değeri
 
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
@@ -23,7 +24,10 @@ export class InlineChatPanel {
     /**
      * InlineChatPanel sınıfını döndürür, yoksa oluşturur
      */
-    public static createOrShow(extensionUri: vscode.Uri, client: ByteAIClient): InlineChatPanel {
+    public static createOrShow(extensionUri: vscode.Uri, client: ByteAIClient, width: number = 600): InlineChatPanel {
+        // Genişlik değerini kaydet
+        InlineChatPanel.panelWidth = width;
+        
         const column = vscode.window.activeTextEditor 
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
@@ -137,6 +141,12 @@ export class InlineChatPanel {
                 
             case 'ready':
                 this._isReady = true;
+                // Panel genişliğini ayarla
+                this._panel.webview.postMessage({
+                    command: 'setWidth',
+                    width: InlineChatPanel.panelWidth
+                });
+                // Editör içeriğini güncelle
                 if (vscode.window.activeTextEditor) {
                     this._updateCodeFromEditor(vscode.window.activeTextEditor);
                 }
@@ -337,4 +347,4 @@ function getWebviewOptions(extensionUri: vscode.Uri): vscode.WebviewOptions {
             vscode.Uri.joinPath(extensionUri, 'media')
         ]
     };
-} 
+}

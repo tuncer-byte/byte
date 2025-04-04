@@ -171,12 +171,20 @@
             const inputId = button.getAttribute('data-for');
             const inputElement = document.getElementById(inputId);
             
-            if (inputElement.type === 'password') {
-                inputElement.type = 'text';
-                button.classList.add('show');
-            } else {
-                inputElement.type = 'password';
-                button.classList.remove('show');
+            if (inputElement) {
+                // Şifre görünürlüğünü değiştir
+                if (inputElement.type === 'password') {
+                    // Şifreyi göster
+                    inputElement.type = 'text';
+                    button.classList.add('show');
+                } else {
+                    // Şifreyi gizle
+                    inputElement.type = 'password';
+                    button.classList.remove('show');
+                }
+                
+                // Input alanına odaklan
+                inputElement.focus();
             }
         });
     });
@@ -326,6 +334,13 @@
     
     // Ayarları kaydet
     function saveSettings() {
+        // Kaydetme butonu durumunu güncelle
+        const saveButton = document.getElementById('saveSettingsBtn');
+        const originalText = saveButton.textContent;
+        saveButton.textContent = 'Kaydediliyor...';
+        saveButton.disabled = true;
+        saveButton.classList.add('saving');
+        
         const settings = {
             provider: aiProviderSelect.value,
             defaultProvider: defaultProviderSelect.value,
@@ -372,24 +387,51 @@
         // UI seçimini güncelle
         aiProviderSelect.value = settings.provider;
         updateProviderDisplayText(settings.provider);
+        
+        // 10 saniye sonra hala cevap alınamazsa timeout
+        setTimeout(() => {
+            if (saveButton.disabled) {
+                saveButton.disabled = false;
+                saveButton.textContent = originalText;
+                saveButton.classList.remove('saving');
+                settingsStatus.textContent = 'Ayarlar kaydedilemedi - zaman aşımı.';
+                settingsStatus.classList.remove('success');
+                settingsStatus.classList.add('error');
+            }
+        }, 10000);
     }
     
     // Ayarlar başarıyla kaydedildiğinde
     function handleSettingsSaved() {
+        // Buton durumunu normal haline getir
+        const saveButton = document.getElementById('saveSettingsBtn');
+        saveButton.disabled = false;
+        saveButton.textContent = 'Kaydet';
+        saveButton.classList.remove('saving');
+        
         // Başarılı mesajı göster
         settingsStatus.textContent = 'Ayarlar başarıyla kaydedildi!';
         settingsStatus.classList.remove('error');
         settingsStatus.classList.add('success');
         settingsStatus.classList.add('show');
         
-        // UI'yı güncelle
-        updateProviderDisplayText(state.settings.provider);
+        // UI'yı güncelle - dropdown için aktif provider değerini ayarla
+        const currentProvider = state.settings.provider;
+        aiProviderSelect.value = currentProvider;
         
-        // 2 saniye sonra modalı kapat
+        // Başlıktaki provider gösterimini güncelle
+        updateProviderDisplayText(currentProvider);
+        
+        // 1.5 saniye sonra modalı kapat
         setTimeout(() => {
             closeSettingsModal();
-            settingsStatus.classList.remove('show');
-        }, 2000);
+            // Ek olarak 500ms sonra mesajı gizle
+            setTimeout(() => {
+                settingsStatus.classList.remove('show');
+                // Modal kapandıktan sonra tekrar provider gösterimini güncelle
+                updateProviderDisplayText(currentProvider);
+            }, 500);
+        }, 1500);
     }
     
     // Ayarlar kaydedilirken hata oluştuğunda
@@ -839,6 +881,12 @@
     // Sağlayıcı bilgisini dropdown üzerinde güncelle
     function updateProviderDisplayText(provider) {
         try {
+            // state.settings nesnesini kontrol et ve güncelle
+            if (!state.settings) {
+                console.log('State settings henüz yüklenmemiş');
+                return;
+            }
+            
             const modelName = getModelName(provider);
             const providerName = getProviderDisplayName(provider);
             
@@ -868,6 +916,7 @@
     // Sağlayıcı için aktif model adını getir
     function getModelName(provider) {
         if (!state.settings || !state.settings[provider]) {
+            console.log(`Provider için ayarlar bulunamadı: ${provider}`);
             return '';
         }
         
@@ -878,18 +927,23 @@
             return '';
         }
         
+        console.log(`Aktif model bilgisi: ${provider} - ${model}`);
+        
         // Daha kullanıcı dostu ve kısa model isimleri
         switch(model) {
             case 'gpt-3.5-turbo': return 'GPT-3.5';
             case 'gpt-4': return 'GPT-4';
             case 'gpt-4-turbo': return 'GPT-4T';
-            case 'gemini-2.0-flash': return 'Gem-2.0F';
+            case 'gemini-1.5-flash': return 'Gem-1.5F';
             case 'gemini-1.5-pro': return 'Gem-1.5P';
+            case 'gemini-2.0-flash': return 'Gem-2.0F';
             case 'gemini-2.0-pro': return 'Gem-2.0P';
             case 'claude-3-opus': return 'Claude-3O';
             case 'claude-3-sonnet': return 'Claude-3S';
+            case 'claude-3-haiku': return 'Claude-3H';
             // Yerel modeller için
             case 'llama3': return 'Llama-3';
+            case 'llama2': return 'Llama-2';
             case 'codellama': return 'Code-Llama';
             case 'mistral': return 'Mistral';
             case 'phi': return 'Phi';
@@ -1118,6 +1172,21 @@
                 
                 break;
                 
+            case 'setWidth':
+                // Panel genişliğini ayarla
+                if (message.width && typeof message.width === 'number') {
+                    console.log(`Panel genişliği ayarlanıyor: ${message.width}px`);
+                    // CSS değişkenini güncelle
+                    document.documentElement.style.setProperty('--default-width', `${message.width}px`);
+                    
+                    // Chat container'ın minimum genişliğini ayarla
+                    const chatContainer = document.querySelector('.chat-container');
+                    if (chatContainer) {
+                        chatContainer.style.minWidth = `${message.width}px`;
+                    }
+                }
+                break;
+                
             case 'userMessage':
                 // Kullanıcı mesajını ekle (Slash komut işlemi için)
                 appendMessage('user', message.content, message.isCommand);
@@ -1277,12 +1346,14 @@
                     
                     // Provider modellerinin varsayılan olarak ayarlanmasını sağla
                     if (!state.settings.openai) state.settings.openai = {apiKey: '', model: 'gpt-3.5-turbo'};
-                    if (!state.settings.gemini) state.settings.gemini = {apiKey: '', model: 'gemini-2.0-flash'};
+                    if (!state.settings.gemini) state.settings.gemini = {apiKey: '', model: 'gemini-1.5-pro'};
                     if (!state.settings.anthropic) state.settings.anthropic = {apiKey: '', model: 'claude-3-opus'};
                     if (!state.settings.local) state.settings.local = {endpoint: 'http://localhost:11434/api/generate', model: 'llama3'};
                     
-                    // Provider display text'i güncelle
-                    updateProviderDisplayText(message.provider);
+                    // Başlıktaki provider gösterimini güncelle - doğru model bilgisini göstermek için
+                    setTimeout(() => {
+                        updateProviderDisplayText(message.provider);
+                    }, 100);
                 }
                 
                 vscode.setState(state);
@@ -1370,6 +1441,18 @@
                     // Eğer filePath boş ise veya undefined ise, updateCurrentFile fonksiyonunu boş değerlerle çağır
                     updateCurrentFile('', '');
                 }
+                break;
+
+            case 'settingsError':
+                // Ayarlar kaydedilirken hata oluştu
+                if (message.error) {
+                    handleSettingsError(message.error);
+                }
+                break;
+                
+            case 'settingsSaved':
+                // Ayarlar başarıyla kaydedildi
+                handleSettingsSaved();
                 break;
 
             default:

@@ -7,6 +7,10 @@ import { ChatPanel } from './views/chat';
 import { ByteAIClient } from './client';
 import { InlineChatPanel } from './inlineChat';
 
+// Genişlik sabitleri
+const CHAT_PANEL_MIN_WIDTH = 400; // Pixel olarak ChatPanel genişliği
+const INLINE_CHAT_MIN_WIDTH = 600; // Pixel olarak InlineChat genişliği
+
 // Global terminal değişkeni
 let byteTerminal: vscode.Terminal | undefined;
 
@@ -24,11 +28,11 @@ export function activate(context: vscode.ExtensionContext) {
     // Byte AI Client oluştur
     const byteClient = new ByteAIClient();
     
-    // Sohbet paneli oluştur
-    const chatPanel = new ChatPanel(context.extensionUri, aiService);
+    // Sohbet paneli oluştur ve genişlik değeriyle başlat
+    const chatPanel = new ChatPanel(context.extensionUri, aiService, CHAT_PANEL_MIN_WIDTH);
     
-    // Inline Kod Analizi oluştur
-    const inlineCodeChat = new InlineCodeChat(context.extensionUri, aiService);
+    // Inline Kod Analizi oluştur ve genişlik değeriyle başlat
+    const inlineCodeChat = new InlineCodeChat(context.extensionUri, aiService, INLINE_CHAT_MIN_WIDTH);
     
     // WebView paneliyle kaydol
     context.subscriptions.push(
@@ -86,7 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Yeni InlineChatPanel'i açmak için komut
     context.subscriptions.push(
         vscode.commands.registerCommand('byte.openInlineChat', () => {
-            InlineChatPanel.createOrShow(context.extensionUri, byteClient);
+            InlineChatPanel.createOrShow(context.extensionUri, byteClient, INLINE_CHAT_MIN_WIDTH);
         })
     );
     

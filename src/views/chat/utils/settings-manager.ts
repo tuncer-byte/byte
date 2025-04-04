@@ -68,12 +68,22 @@ export class SettingsManager {
                 
                 // Mesaj göster
                 this.sendSettingsMessage('success', 'Ayarlar başarıyla kaydedildi!');
+                
+                // Başarılı kayıt bilgisini ayrıca gönder
+                if (this.view) {
+                    this.view.webview.postMessage({
+                        type: 'settingsSaved',
+                        success: true
+                    });
+                }
             } catch (error: any) {
                 this.sendSettingsError(`Ayarlar kaydedilirken hata oluştu: ${error.message}`);
+                return;
             }
         } catch (error: any) {
             console.error('Ayarlar kaydedilirken genel hata oluştu:', error);
             this.sendSettingsError(`Ayarlar kaydedilirken hata oluştu: ${error.message}`);
+            return;
         }
     }
 

@@ -15,11 +15,16 @@ export class ChatPanel implements ChatPanelProvider {
     private view?: vscode.WebviewView;
     private messageHandler: MessageHandler;
     private activeEditorDisposable?: vscode.Disposable;
+    private panelWidth: number;
     
     constructor(
         private readonly extensionUri: vscode.Uri,
-        private aiService: AIService
+        private aiService: AIService,
+        width: number = 400
     ) {
+        // Panel genişliğini ayarla
+        this.panelWidth = width;
+        
         // MessageHandler sınıfını oluştur
         this.messageHandler = new MessageHandler(undefined, aiService, undefined, true, '');
         
@@ -111,18 +116,17 @@ export class ChatPanel implements ChatPanelProvider {
             ]
         };
         
-        // Panel genişliğini ayarla - minimum genişlik 400px
+        // Panel genişliğini ayarla
         webviewView.webview.html = getWebviewContent(this.extensionUri, webviewView.webview);
         
         // CSS ile içeriğin genişliğini artır
         this.view.onDidChangeVisibility(() => {
             setTimeout(() => {
                 if (this.view && this.view.visible) {
-                    const minWidth = 400; // Minimum genişlik 400px
-                    // Extension'ın genişliğini ayarla
+                    // Tanımlanan genişlik değerini kullan
                     this.view.webview.postMessage({
                         type: 'setWidth',
-                        width: minWidth
+                        width: this.panelWidth
                     });
                     
                     // Önbellek durum bilgisini gönder
@@ -203,4 +207,4 @@ export class ChatPanel implements ChatPanelProvider {
             this.activeEditorDisposable.dispose();
         }
     }
-} 
+}
