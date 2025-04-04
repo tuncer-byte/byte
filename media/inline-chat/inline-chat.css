@@ -1,6 +1,6 @@
-/* Modern ve responsive tasarımlı Inline Chat CSS */
+/* Modern ve minimal tasarımlı Inline Chat CSS */
 :root {
-    /* Chat panel renklerini kullan */
+    /* Mevcut renk şemasını koru */
     --primary-color: #FF7B23; /* Turuncu renk */
     --primary-light: #FF9A52;
     --primary-dark: #E35F00;
@@ -18,8 +18,10 @@
     --message-ai-background: #1A1F27;
     --command-color: #FF7B23; /* Komutlar için vurgu rengi */
     --default-width: 600px; /* Varsayılan genişlik */
+    --success-color: #4CAF50;
+    --error-color: #F44336;
     
-    /* VS Code tema değişkenlerini de koru */
+    /* VS Code tema değişkenlerini koru */
     --vscode-background: var(--vscode-editor-background, var(--background));
     --vscode-foreground: var(--vscode-editor-foreground, var(--foreground));
     --vscode-border: var(--vscode-panel-border, var(--border-color));
@@ -29,15 +31,14 @@
     --button-secondary-background: var(--vscode-button-secondaryBackground, #2D333B);
     --button-secondary-foreground: var(--vscode-button-secondaryForeground, #E6E6E6);
     --button-secondary-hover: var(--vscode-button-secondaryHoverBackground, #444C56);
-    --spacing-xxs: 2px;
+    
+    /* Boşluk değerleri */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 12px;
     --spacing-lg: 16px;
     --spacing-xl: 24px;
     --border-radius: 6px;
-    --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --animation-speed: 0.3s;
 }
 
 * {
@@ -62,39 +63,40 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    min-width: var(--default-width);
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: 0;
     overflow: hidden;
 }
 
-/* Header stili */
+/* Basitleştirilmiş Header stili */
 .chat-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
+    padding: var(--spacing-sm) var(--spacing-md);
     background-color: var(--sidebar-background);
     border-bottom: 1px solid var(--border-color);
-    height: 48px;
-    overflow: hidden;
+    height: 42px;
 }
 
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacing-sm);
+    overflow: hidden;
 }
 
 .chat-header h1 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
-    letter-spacing: 0.5px;
     margin: 0;
     background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    white-space: nowrap;
 }
 
 .chat-title {
@@ -107,24 +109,20 @@ body {
     margin-left: 2px;
 }
 
-.byte-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .version-tag {
-    font-size: 11px;
+    font-size: 10px;
     background-color: rgba(255, 123, 35, 0.15);
     color: var(--primary-color);
-    padding: 2px 6px;
+    padding: 1px 6px;
     border-radius: 10px;
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-/* Kod paneli */
+/* Daha kompakt kod paneli */
 .code-panel {
-    padding: 12px;
+    padding: var(--spacing-sm);
     border-bottom: 1px solid var(--border-color);
     background-color: var(--sidebar-background);
     position: relative;
@@ -134,16 +132,20 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
-    font-size: 12px;
-    color: var(--foreground);
-    opacity: 0.9;
+    margin-bottom: 4px;
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
 }
 
 .code-info {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    flex-wrap: wrap;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
 }
 
 .file-name {
@@ -151,21 +153,25 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+    max-width: 160px;
 }
 
 .code-language, .line-info {
     background-color: rgba(255, 123, 35, 0.15);
     color: var(--primary-color);
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 11px;
+    padding: 0px 4px;
+    border-radius: 8px;
+    font-size: 9px;
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
+/* Daha sade kod işlem butonları */
 .code-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
 }
 
 .action-button {
@@ -173,83 +179,72 @@ body {
     color: var(--button-secondary-foreground);
     border: none;
     border-radius: 4px;
-    padding: 4px 8px;
+    padding: 3px 8px;
     font-size: 12px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 4px;
-    transition: all 0.2s;
+    transition: background-color 0.2s;
+    min-width: 32px;
+    justify-content: center;
 }
 
 .action-button:hover {
     background-color: var(--button-secondary-hover);
-    transform: translateY(-1px);
 }
 
 .action-button svg {
     width: 12px;
     height: 12px;
+    flex-shrink: 0;
 }
 
+.action-button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Kopyala butonu */
 .copy-button {
-    position: absolute;
-    top: 40px;
-    right: 20px;
-    background-color: rgba(0,0,0,0.3);
-    color: rgba(255,255,255,0.8);
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    z-index: 10;
-    opacity: 0;
-    transition: opacity 0.2s;
+    display: none; /* Kopyala butonunu gizle */
 }
 
 .code-block-wrapper {
     position: relative;
-}
-
-.code-block-wrapper:hover .copy-button {
-    opacity: 1;
-}
-
-.copy-button.copied {
-    background-color: rgba(45, 157, 92, 0.6);
+    width: 100%;
 }
 
 .code-block {
     position: relative;
-    border-radius: 6px;
+    border-radius: var(--border-radius);
     overflow: auto;
-    max-height: 300px;
+    max-height: 180px; /* Daha kompakt yükseklik */
+    width: 100%;
+    font-size: 13px;
 }
 
-/* Mesaj paneli */
+/* Daha temiz mesaj paneli */
 .messages-panel {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: var(--spacing-md);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--spacing-md);
     background-color: var(--background);
+    min-height: 0;
 }
 
 .message {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px;
-    border-radius: 8px;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
     max-width: 100%;
-    animation: fadeIn 0.3s ease-in-out;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    animation: fadeIn 0.2s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    width: 100%;
 }
 
 .user-message {
@@ -268,22 +263,12 @@ body {
 }
 
 .error-message {
-    background-color: rgba(244, 67, 54, 0.2);
+    background-color: rgba(244, 67, 54, 0.15);
     color: var(--error-foreground);
     border: 1px solid var(--error-foreground);
     align-self: flex-start;
     border-bottom-left-radius: 2px;
-    opacity: 0.95;
     margin-right: 40px;
-}
-
-/* Mesaj header'ı ve avatar'ı gizle */
-.message-header {
-    display: none;
-}
-
-.message-avatar {
-    display: none;
 }
 
 .message-content {
@@ -291,56 +276,61 @@ body {
     line-height: 1.5;
     overflow-wrap: break-word;
     word-break: break-word;
-    transition: max-height 0.3s ease-out;
+    width: 100%;
 }
 
 .message-content p {
-    margin-bottom: 8px;
+    margin-bottom: var(--spacing-sm);
 }
 
 .message-content p:last-child {
     margin-bottom: 0;
 }
 
+/* Kod blok stilleri */
 .message-content pre {
-    margin: 8px 0;
-    border-radius: 6px;
+    margin: var(--spacing-sm) 0;
+    border-radius: var(--border-radius);
     overflow: auto;
     background-color: #161B22;
     border: 1px solid var(--border-color);
+    width: 100%;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
 .message-content code {
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-    font-size: 13px;
-    border-radius: 4px;
-    padding: 0.2em 0.4em;
+    font-size: 12px;
+    border-radius: 3px;
+    padding: 0.1em 0.3em;
     background-color: rgba(255, 255, 255, 0.1);
 }
 
 .message-content pre code {
     display: block;
-    padding: 12px;
+    padding: var(--spacing-sm);
     background-color: transparent;
     overflow-x: auto;
+    width: 100%;
+    line-height: 1.4;
 }
 
 .message-content ul, .message-content ol {
-    margin: 8px 0;
+    margin: var(--spacing-sm) 0;
     padding-left: 24px;
 }
 
+/* Daha minimal yükleniyor göstergesi */
 .loading-message {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
-    border-radius: 8px;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
     background-color: var(--message-ai-background);
     border: 1px solid var(--border-color);
     align-self: flex-start;
     border-bottom-left-radius: 2px;
-    margin-bottom: 8px;
     margin-right: 40px;
 }
 
@@ -351,8 +341,8 @@ body {
 }
 
 .typing-indicator span {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background-color: var(--primary-color);
     display: inline-block;
@@ -385,7 +375,7 @@ body {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(5px);
     }
     to {
         opacity: 1;
@@ -393,64 +383,58 @@ body {
     }
 }
 
-/* Input paneli */
+/* Temiz input paneli */
 .input-panel {
-    padding: 12px;
+    padding: var(--spacing-md);
     border-top: 1px solid var(--border-color);
     background-color: var(--sidebar-background);
-    max-width: 100%;
+    width: 100%;
 }
 
 .textarea-wrapper {
     position: relative;
     width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
 }
 
 #userInput {
     width: 100%;
-    padding: 10px 16px;
-    padding-right: 40px; /* Gönder butonu için yer bırak */
-    border-radius: 20px;
+    padding: 10px 40px 10px 14px;
+    border-radius: 16px;
     border: 1px solid var(--border-color);
-    background-color: rgba(46, 52, 64, 0.6); /* Daha koyu input arka plan */
+    background-color: var(--input-background);
     color: var(--foreground);
     font-family: inherit;
     font-size: 14px;
     line-height: 20px;
     resize: none;
     min-height: 38px;
-    max-height: 80px;
+    max-height: 100px;
     overflow-y: auto;
-    transition: all 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    box-sizing: border-box;
+    transition: border-color 0.2s;
 }
 
 #userInput:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 #sendButton {
     position: absolute;
     right: 8px;
-    top: 18px; /* Daha yukarıda */
+    top: 50%;
+    transform: translateY(-50%);
     background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background-color 0.2s;
     padding: 0;
-    z-index: 2;
 }
 
 #sendButton:disabled {
@@ -461,136 +445,471 @@ body {
 
 #sendButton:not(:disabled):hover {
     background-color: var(--button-hover-background);
-    transform: scale(1.05);
 }
 
 #sendButton svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
-/* Yeni düzen için input container */
-.input-container {
-    position: relative;
-    width: 100%;
-}
-
+/* Daha kompakt ve düzenli hızlı eylemler */
 .quick-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
+    gap: var(--spacing-xs);
+    margin-top: var(--spacing-sm);
     flex-wrap: wrap;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: var(--spacing-xs);
+    scrollbar-width: none; /* Firefox için scrollbar'ı gizle */
+    -ms-overflow-style: none; /* IE ve Edge için scrollbar'ı gizle */
+}
+
+.quick-actions::-webkit-scrollbar {
+    display: none; /* Chrome, Safari ve Opera için scrollbar'ı gizle */
 }
 
 .quick-action-btn {
     background-color: transparent;
     color: var(--foreground);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 5px 10px;
-    font-size: 12px;
+    border-radius: 12px;
+    padding: 4px 8px;
+    font-size: 11px;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s;
+    flex-shrink: 0;
 }
 
 .quick-action-btn:hover {
     background-color: rgba(255, 123, 35, 0.15);
     border-color: var(--primary-color);
     color: var(--primary-color);
-    transform: translateY(-1px);
 }
 
-/* Yükleniyor göstergesi için ek stiller */
-.code-panel .typing-indicator {
+/* Kod bloğu container stil */
+.code-block-container {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin: 8px 0;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    font-size: 12px;
+}
+
+.code-block-header {
+    background-color: var(--sidebar-background);
+    border-bottom: 1px solid var(--border-color);
+    padding: 3px 6px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
     gap: 4px;
-    padding: 8px;
-    margin-top: 8px;
+    font-size: 11px;
 }
 
-.code-panel .typing-indicator span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+.code-filename {
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 11px;
+    color: var(--foreground);
+    opacity: 0.9;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.apply-code-btn {
     background-color: var(--primary-color);
-    display: inline-block;
-    animation: typing 1.4s infinite ease-in-out both;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.code-panel .typing-indicator span:nth-child(1) {
-    animation-delay: 0s;
+.apply-code-btn:hover {
+    background-color: var(--primary-dark);
 }
 
-.code-panel .typing-indicator span:nth-child(2) {
-    animation-delay: 0.2s;
+.apply-code-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
-.code-panel .typing-indicator span:nth-child(3) {
-    animation-delay: 0.4s;
+.code-block-container pre {
+    margin: 0;
+    padding: 6px 8px;
+    border-radius: 0;
+    max-height: 200px;
+    overflow: auto;
+    width: 100%;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
-/* Responsive Tasarım */
-@media (max-width: 800px) {
-    .chat-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1.2fr) minmax(0, 2fr);
-    }
-    
-    .code-section {
-        border-right: none;
-        border-bottom: 1px solid var(--border-color);
-    }
-    
-    .file-name {
-        max-width: 150px;
-    }
-    
-    .code-actions {
-        display: flex;
-        overflow-x: auto;
-        padding-bottom: var(--spacing-xs);
-        margin-top: var(--spacing-xs);
-    }
-    
-    .action-button {
-        white-space: nowrap;
-    }
-    
-    .textarea-wrapper {
-        max-width: calc(100% - 48px);
-    }
-    
-    .input-panel {
-        flex-wrap: nowrap;
-        padding: 8px;
-    }
-    
-    .quick-actions {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding-bottom: 2px;
-    }
+/* Temiz bildirim stilleri */
+.notification {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    max-width: 280px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
+    border-left: 3px solid;
 }
 
-/* Devamını Göster butonu stilleri */
+.success-notification {
+    background-color: rgba(76, 175, 80, 0.15);
+    color: var(--success-color);
+    border-left-color: var(--success-color);
+}
+
+.error-notification {
+    background-color: rgba(244, 67, 54, 0.15);
+    color: var(--error-color);
+    border-left-color: var(--error-color);
+}
+
+.info-notification {
+    background-color: rgba(33, 150, 243, 0.15);
+    color: #2196F3;
+    border-left-color: #2196F3;
+}
+
+.notification-close-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    margin-left: 8px;
+    opacity: 0.7;
+}
+
+.notification-close-btn:hover {
+    opacity: 1;
+}
+
+.notification.hide {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+/* Devamını göster butonu */
 .show-more-btn {
     background-color: transparent;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    color: var(--vscode-button-foreground);
+    color: var(--foreground);
     cursor: pointer;
-    font-size: 12px;
-    margin-top: 10px;
-    padding: 5px 10px;
-    display: block;
+    font-size: 11px;
+    margin-top: 8px;
+    padding: 3px 8px;
     width: fit-content;
     transition: background-color 0.2s;
 }
 
 .show-more-btn:hover {
-    background-color: var(--vscode-button-hoverBackground);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Butonlar için animasyon ve geri bildirim */
+.action-button.active,
+.quick-action-btn.active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
+
+.action-button:active,
+.quick-action-btn:active {
+    transform: scale(0.95);
+}
+
+.apply-code-btn.applying {
+    background-color: var(--primary-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.apply-code-btn.applying::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: loading-shimmer 1.5s infinite;
+}
+
+.apply-code-btn.success {
+    background-color: var(--success-color);
+}
+
+@keyframes loading-shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Daha temiz mesaj görünümü */
+.messages-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-panel::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+}
+
+.messages-panel::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+/* Daha sade mesaj düzeni */
+.message.user-message {
+    background-color: var(--message-user-background);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-left: 20%;
+    position: relative;
+}
+
+.message.assistant-message,
+.message.error-message {
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-right: 20%;
+    position: relative;
+}
+
+/* Kod blokları için daha iyi stil */
+pre code {
+    padding: 8px !important;
+    border-radius: 0 !important;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+}
+
+/* Yükleniyor göstergesi için daha az yer kaplar */
+.loading-message {
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+/* Responsive tasarım kuralları */
+@media (max-width: 768px) {
+    .container {
+        min-width: 0;
+    }
+    
+    .chat-header h1 {
+        font-size: 14px;
+    }
+    
+    .chat-title {
+        font-size: 12px;
+    }
+    
+    .version-tag {
+        padding: 1px 4px;
+        font-size: 9px;
+    }
+    
+    .message.user-message {
+        margin-left: 10%;
+    }
+    
+    .message.assistant-message,
+    .message.error-message,
+    .loading-message {
+        margin-right: 10%;
+    }
+    
+    .code-panel {
+        padding: 8px;
+    }
+    
+    .file-name {
+        max-width: 120px;
+    }
+    
+    .code-block {
+        max-height: 160px;
+    }
+    
+    .code-block-container pre {
+        max-height: 200px;
+    }
+}
+
+@media (max-width: 600px) {
+    /* Butonlarda sadece simgeleri göster */
+    .action-button span {
+        display: none;
+    }
+    
+    .action-button {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        justify-content: center;
+    }
+    
+    .message {
+        padding: 8px;
+    }
+    
+    .user-message {
+        margin-left: 0;
+    }
+    
+    .assistant-message,
+    .error-message,
+    .loading-message {
+        margin-right: 0;
+    }
+    
+    .apply-code-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+    
+    .code-filename {
+        max-width: 150px;
+    }
+    
+    .input-panel {
+        padding: 8px;
+    }
+    
+    .notification {
+        max-width: 90%;
+        right: 5%;
+        left: 5%;
+        font-size: 12px;
+    }
+    
+    .code-block {
+        max-height: 140px;
+        font-size: 12px;
+    }
+    
+    .code-panel {
+        padding: 6px;
+    }
+    
+    .code-block-container pre {
+        padding: 6px;
+        max-height: 180px;
+    }
+    
+    .code-block-header {
+        padding: 3px 6px;
+    }
+}
+
+@media (max-width: 400px) {
+    .code-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+    
+    .code-language, .line-info {
+        font-size: 9px;
+    }
+    
+    .file-name {
+        max-width: 100%;
+    }
+    
+    #userInput {
+        padding: 8px 30px 8px 10px;
+    }
+    
+    #sendButton {
+        width: 20px;
+        height: 20px;
+    }
+    
+    #sendButton svg {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .chat-header {
+        padding: 4px 8px;
+        height: 36px;
+    }
+    
+    .code-block {
+        max-height: 120px;
+    }
+    
+    .code-block-container pre {
+        max-height: 160px;
+        padding: 4px;
+    }
+    
+    pre code {
+        padding: 4px !important;
+        font-size: 11px !important;
+    }
+}
+
+/* Tooltips için stiller */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    margin-bottom: 4px;
+}
+
+/* Küçük ekranlarda tooltip her zaman görünür */
+@media (max-width: 600px) {
+    [data-tooltip]:hover::after {
+        display: block;
+    }
 }

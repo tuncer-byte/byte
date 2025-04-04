@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getNonce } from './utils';
-import { ByteAIClient } from './client';
+import { getNonce, extractCodeBlocks, getLanguageFromFileName } from './utils';
+import { ByteAIClient } from './panelClient';
 import { 
     CODE_EXPLANATION_PROMPT, 
     CODE_REFACTORING_PROMPT, 
@@ -145,6 +145,10 @@ export class InlineChatPanel {
                 await this._processUserMessage(CODE_EXPLANATION_PROMPT);
                 break;
                 
+            case 'applyCode':
+                await this._applyCode(message.fileName, message.code);
+                break;
+                
             case 'ready':
                 this._isReady = true;
                 // Panel genişliğini ayarla
@@ -179,10 +183,13 @@ export class InlineChatPanel {
                 query: text
             });
 
+            // Yanıttaki kod bloklarını işle
+            const processedText = this._processCodeBlocksInResponse(response.text);
+
             // AI yanıtını WebView'a gönder
             this._panel.webview.postMessage({
                 command: 'addMessage',
-                text: response.text,
+                text: processedText,
                 role: 'assistant'
             });
         } catch (error) {
@@ -203,6 +210,87 @@ export class InlineChatPanel {
                 isLoading: false
             });
         }
+    }
+
+    /**
+     * AI yanıtındaki kod bloklarını işleyip dosya adlarıyla birlikte formatlar
+     * @param text AI yanıtı
+     * @returns İşlenmiş yanıt
+     */
+    private _processCodeBlocksInResponse(text: string): string {
+        const codeBlocks = extractCodeBlocks(text);
+        
+        if (codeBlocks.length === 0) {
+            return text; // Kod bloğu yoksa yanıtı olduğu gibi döndür
+        }
+        
+        let processedText = text;
+        
+        // Her kod bloğunu işle
+        for (let i = 0; i < codeBlocks.length; i++) {
+            const { code, fileName } = codeBlocks[i];
+            
+            if (!fileName) {
+                continue; // Dosya adı yoksa işleme
+            }
+            
+            // Orijinal kod bloğunu bul
+            const language = getLanguageFromFileName(fileName);
+            const codeBlockRegex = new RegExp('```[\\w-]+(?::' + this._escapeRegExp(fileName) + ')?\\n[\\s\\S]*?```', 'g');
+            
+            // Yeni formatlanmış kod bloğunu oluştur
+            const formattedBlock = this._createFormattedCodeBlock(code, fileName, language);
+            
+            // İlk eşleşmeyi değiştir
+            const match = codeBlockRegex.exec(processedText);
+            if (match) {
+                processedText = processedText.replace(match[0], formattedBlock);
+            }
+        }
+        
+        return processedText;
+    }
+    
+    /**
+     * Formatlanmış kod bloğu oluşturur (dosya adı ve uygulama butonu ile)
+     */
+    private _createFormattedCodeBlock(code: string, fileName: string, language: string): string {
+        const uniqueId = this._generateId();
+        
+        // Kod bloğunu oluştur
+        return `<div class="code-block-container">
+    <div class="code-block-header">
+        <span class="code-filename">${fileName}</span>
+        <button class="apply-code-btn" data-code="${this._escapeHtml(code)}" data-filename="${this._escapeHtml(fileName)}" id="apply-${uniqueId}">Apply Code</button>
+    </div>
+    <pre><code class="language-${language}">${this._escapeHtml(code)}</code></pre>
+</div>`;
+    }
+    
+    /**
+     * Regex için özel karakterleri escape eder
+     */
+    private _escapeRegExp(string: string): string {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    
+    /**
+     * HTML için özel karakterleri escape eder
+     */
+    private _escapeHtml(text: string): string {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+    
+    /**
+     * Benzersiz ID oluşturur
+     */
+    private _generateId(): string {
+        return Math.random().toString(36).substring(2, 11);
     }
 
     /**
@@ -320,6 +408,33 @@ export class InlineChatPanel {
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
                 </html>`;
+        }
+    }
+
+    /**
+     * Kodu belirtilen dosyaya uygular
+     */
+    private async _applyCode(fileName: string, code: string): Promise<void> {
+        try {
+            // byte.applyCode komutunu çağır
+            await vscode.commands.executeCommand('byte.applyCode', fileName, code);
+            
+            // Başarılı sonucu WebView'a bildir
+            this._panel.webview.postMessage({
+                command: 'applyCodeResult',
+                success: true,
+                fileName: fileName
+            });
+        } catch (error) {
+            console.error('Kod uygulama hatası:', error);
+            
+            // Hata durumunu WebView'a bildir
+            this._panel.webview.postMessage({
+                command: 'applyCodeResult',
+                success: false,
+                fileName: fileName,
+                error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+            });
         }
     }
 

@@ -1673,7 +1673,7 @@ pre code {
     padding: 10px 12px;
     border: 1px solid var(--vscode-input-border);
     background-color: var(--vscode-input-background);
-    color: var(--vscode-input-foreground);
+    color: var (--vscode-input-foreground);
     border-radius: 4px;
     font-size: 14px;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -2165,4 +2165,224 @@ pre code {
 
 .hljs-title {
     color: #4EC9B0 !important; /* Başlıklar için turkuaz ton */
+}
+
+/* Responsive Tasarım için Media Queries */
+@media (max-width: 768px) {
+    .chat-header {
+        padding: 6px 10px;
+    }
+    
+    .logo-area {
+        gap: 4px;
+    }
+    
+    .chat-header h1 {
+        font-size: 14px;
+    }
+    
+    .version-tag {
+        font-size: 9px;
+        padding: 1px 3px;
+    }
+    
+    .select-wrapper {
+        width: 140px;
+    }
+    
+    .selected-provider .model-name {
+        max-width: 80px;
+        font-size: 0.7rem;
+    }
+    
+    .messages-container {
+        padding: 15px 10px;
+    }
+    
+    .message-content {
+        padding: 10px 12px;
+    }
+    
+    .input-wrapper {
+        margin: 10px 10px 6px;
+    }
+    
+    #userInput {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+    
+    .send-button {
+        padding: 8px;
+        width: 38px;
+        height: 38px;
+    }
+    
+    .command-modal {
+        width: 90%;
+        max-width: 350px;
+        bottom: 70px;
+    }
+    
+    .settings-content {
+        width: 95%;
+        max-height: 80vh;
+    }
+    
+    .settings-body {
+        padding: 15px;
+    }
+    
+    .provider-icon {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .provider-info h4 {
+        font-size: 14px;
+    }
+    
+    .provider-status {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        padding-bottom: 10px;
+    }
+    
+    .provider-selector {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .context-info {
+        flex-wrap: wrap;
+        padding: 6px 10px;
+        gap: 6px;
+    }
+    
+    .file-context {
+        max-width: 100%;
+        margin-top: 5px;
+    }
+    
+    .current-file {
+        max-width: 120px;
+    }
+    
+    .settings-section h3 {
+        font-size: 15px;
+    }
+    
+    .settings-field label {
+        font-size: 13px;
+    }
+    
+    .settings-field input,
+    .settings-field select {
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+    
+    .primary-button, 
+    .secondary-button {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+    
+    .settings-group-body {
+        padding: 12px;
+    }
+    
+    .command-modal {
+        bottom: 60px;
+    }
+    
+    .command-modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .command-input {
+        padding: 8px 10px;
+        min-height: 36px;
+    }
+    
+    .command-suggestion-item {
+        padding: 6px 8px;
+    }
+    
+    .command-suggestion-name {
+        font-size: 13px;
+    }
+    
+    .command-suggestion-desc {
+        font-size: 12px;
+    }
+}
+
+/* Daha küçük ekranlar için ek optimizasyonlar */
+@media (max-width: 360px) {
+    .chat-header h1 {
+        font-size: 13px;
+    }
+    
+    .select-wrapper {
+        width: 120px;
+    }
+    
+    .selected-provider {
+        font-size: 0.8rem;
+    }
+    
+    .selected-provider .model-name {
+        max-width: 60px;
+        padding: 1px 6px;
+    }
+    
+    .input-wrapper {
+        margin: 8px 8px 4px;
+    }
+    
+    #userInput {
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+    
+    .agent-toggle span {
+        font-size: 11px;
+    }
+    
+    .toggle-slider {
+        width: 32px;
+        height: 16px;
+    }
+    
+    .toggle-slider:before {
+        height: 12px;
+        width: 12px;
+    }
+    
+    .agent-toggle input:checked + .toggle-slider:before {
+        transform: translateX(16px);
+    }
+    
+    .settings-content {
+        max-height: 85vh;
+    }
+    
+    .settings-header h2 {
+        font-size: 16px;
+    }
+    
+    .context-controls {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 5px;
+    }
 }

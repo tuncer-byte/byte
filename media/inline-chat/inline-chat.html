@@ -9,68 +9,62 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header bölümü -->
+        <!-- Basitleştirilmiş başlık -->
         <div class="chat-header">
             <div class="logo-area">
                 <div class="byte-logo">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#FF7B23" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" fill="#FF7B23"/>
                     </svg>
                 </div>
                 <h1>Byte<span class="chat-title">Inline Chat</span></h1>
-                <span class="version-tag">Beta</span>
             </div>
+            <span class="version-tag">Beta</span>
         </div>
         
-        <!-- Kod paneli -->
+        <!-- Daha kompakt kod paneli -->
         <div class="code-panel">
             <div class="code-header">
                 <div class="code-info">
-                    <span class="file-name">Kod Parçası</span>
+                    <span class="file-name" title="Kod Parçası">Kod Parçası</span>
                     <span class="code-language">text</span>
                     <span class="line-info">0 satır</span>
                 </div>
                 <div class="code-actions">
-                    <button id="fixCodeBtn" class="action-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 20h9"></path>
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                        </svg>
-                        <span>Düzelt</span>
-                    </button>
-                    <button id="optimizeCodeBtn" class="action-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 6L6 18"></path>
-                            <path d="M6 6l12 12"></path>
-                        </svg>
-                        <span>Optimize Et</span>
-                    </button>
-                    <button id="testCodeBtn" class="action-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                        <span>Test</span>
-                    </button>
-                    <button id="explainCodeBtn" class="action-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button id="explainCodeBtn" class="action-button" title="Kodu açıkla" data-tooltip="Kodu açıkla">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
                         <span>Açıkla</span>
                     </button>
+                    <button id="fixCodeBtn" class="action-button" title="Kodu düzelt ve iyileştir" data-tooltip="Kodu düzelt">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                        <span>Düzelt</span>
+                    </button>
+                    <button id="optimizeCodeBtn" class="action-button" title="Kodu optimize et" data-tooltip="Optimize et">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6L6 18"></path>
+                            <path d="M6 6l12 12"></path>
+                        </svg>
+                        <span>Optimize</span>
+                    </button>
+                    <button id="testCodeBtn" class="action-button" title="Bu kod için unit testler oluştur" data-tooltip="Test oluştur">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <span>Test</span>
+                    </button>
                 </div>
             </div>
             <div class="code-block-wrapper">
-                <button id="copyCodeBtn" class="copy-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    <span>Kopyala</span>
-                </button>
+                <!-- Kopyala butonu kaldırıldı -->
                 <pre class="code-block"><code class="language-plaintext"></code></pre>
                 <!-- Kod yükleniyor göstergesi -->
                 <div id="codeLoadingIndicator" class="typing-indicator" style="display: none;">
@@ -91,21 +85,21 @@
             </div>
         </div>
         
-        <!-- Input paneli -->
+        <!-- Daha yalın input paneli -->
         <div class="input-panel">
             <div class="textarea-wrapper">
-                <textarea id="userInput" placeholder="Bir soru veya istek yazın..."></textarea>
-                <button id="sendButton" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <textarea id="userInput" placeholder="Bir soru sorun veya istek yazın..."></textarea>
+                <button id="sendButton" disabled title="Gönder" data-tooltip="Gönder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"></path>
                     </svg>
                 </button>
-                <div class="quick-actions">
-                    <button class="quick-action-btn">Bu kodda sorun nedir?</button>
-                    <button class="quick-action-btn">Kodu daha okunabilir yap</button>
-                    <button class="quick-action-btn">Bu algoritmanın karmaşıklığı nedir?</button>
-                    <button class="quick-action-btn">Değişken isimlerini daha anlamlı yap</button>
-                </div>
+            </div>
+            <div class="quick-actions">
+                <button class="quick-action-btn">Bu kodda sorun nedir?</button>
+                <button class="quick-action-btn">Kodu daha okunabilir yap</button>
+                <button class="quick-action-btn">Performansı iyileştir</button>
+                <button class="quick-action-btn">Daha açıklayıcı yap</button>
             </div>
         </div>
     </div>

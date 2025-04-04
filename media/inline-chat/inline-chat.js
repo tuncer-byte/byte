@@ -9,14 +9,15 @@
         currentFileName: '',
         isLoading: false,
         codeLoading: false,
-        codeLineCount: 0
+        codeLineCount: 0,
+        isMobileView: false // Mobil görünüm durumu
     };
 
     // DOM elementleri
     let messagesContainer, userInput, sendButton, 
-        codeBlock, copyCodeBtn, loadingMessage, codeLoadingIndicator;
+        codeBlock, loadingMessage, codeLoadingIndicator;
     
-    // Buton eylemi islemleri
+    // Buton eylemi işlemleri
     const buttonActions = {
         'fixCode': 'Kodu düzelt ve iyileştir',
         'optimizeCode': 'Kodu optimize et',
@@ -26,19 +27,20 @@
     
     // DOM yükleme ve başlatma
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('DOM content loaded, initializing UI');
         initializeDOM();
         setupEventListeners();
         setupAutoResizeTextarea();
+        checkResponsiveLayout(); // İlk yüklemede responsive durumu kontrol et
         notifyReady();
         
         // Prism.js ile mevcut kod bloklarını vurgula
-        setTimeout(() => {
-            if (window.Prism) {
-                Prism.highlightAll();
-            }
-        }, 100);
+        if (window.Prism) {
+            Prism.highlightAll();
+        }
     });
+    
+    // Pencere boyutu değiştiğinde responsive durumu kontrol et
+    window.addEventListener('resize', debounce(checkResponsiveLayout, 250));
     
     // DOM elementlerini tanımlama
     function initializeDOM() {
@@ -47,27 +49,72 @@
         sendButton = document.getElementById('sendButton');
         
         // Kod bloğunu bul
-        const codeElement = document.querySelector('code');
-        if (codeElement) {
-            codeBlock = codeElement;
-        } else {
-            console.error('Code element not found');
-        }
+        codeBlock = document.querySelector('code');
         
-        // Diğer butonları tanımla
-        copyCodeBtn = document.getElementById('copyCodeBtn');
-        
-        // Yükleniyor mesajı oluştur ama henüz ekleme
+        // Yükleniyor mesajı oluştur
         loadingMessage = createLoadingMessageElement();
         
         // Kod yükleniyor göstergesi
         codeLoadingIndicator = document.getElementById('codeLoadingIndicator');
     }
     
+    // Debounce fonksiyonu - kısa sürede çok fazla çağrılması durumunda optimize eder
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+    
+    // Responsive durumu kontrol et ve UI'ı güncelle
+    function checkResponsiveLayout() {
+        // Mobil görünüm için breakpoint kontrolü
+        const isMobile = window.innerWidth <= 600;
+        
+        // Durum değişmişse UI'ı güncelle
+        if (state.isMobileView !== isMobile) {
+            state.isMobileView = isMobile;
+            updateResponsiveUI();
+        }
+    }
+    
+    // Responsive UI güncellemesi
+    function updateResponsiveUI() {
+        const actionButtons = document.querySelectorAll('.action-button');
+        const applyCodeButtons = document.querySelectorAll('.apply-code-btn');
+        
+        if (state.isMobileView) {
+            // Mobil görünüm için UI değişiklikleri
+            actionButtons.forEach(btn => {
+                btn.setAttribute('aria-label', btn.querySelector('span').textContent);
+            });
+            
+            applyCodeButtons.forEach(btn => {
+                // Apply Code yerine sadece "Uygula" göster
+                if (btn.textContent === 'Apply Code') {
+                    btn.textContent = 'Uygula';
+                }
+            });
+        } else {
+            // Masaüstü görünüm için UI değişiklikleri
+            actionButtons.forEach(btn => {
+                btn.removeAttribute('aria-label');
+            });
+            
+            applyCodeButtons.forEach(btn => {
+                // "Uygula" yerine tekrar "Apply Code" göster
+                if (btn.textContent === 'Uygula') {
+                    btn.textContent = 'Apply Code';
+                }
+            });
+        }
+    }
+    
     // Olay dinleyicilerini ayarla
     function setupEventListeners() {
         if (!userInput || !sendButton) {
-            console.error('Required DOM elements not found');
+            console.error('Gerekli DOM elementleri bulunamadı');
             return;
         }
         
@@ -82,11 +129,6 @@
         // Hızlı aksiyon butonları
         setupQuickActionButtons();
         
-        // Kopyalama butonu
-        if (copyCodeBtn && codeBlock) {
-            copyCodeBtn.addEventListener('click', copyCodeToClipboard);
-        }
-        
         // VS Code'dan gelen mesajları dinle
         window.addEventListener('message', handleVSCodeMessages);
     }
@@ -98,7 +140,12 @@
             if (button) {
                 button.addEventListener('click', () => {
                     vscode.postMessage({ command: action });
-                    // Kullanıcı mesajı VS Code tarafından eklenecek, burada ekleme yapmıyoruz
+                    
+                    // Buton tıklandığında görsel geri bildirim
+                    button.classList.add('active');
+                    setTimeout(() => {
+                        button.classList.remove('active');
+                    }, 200);
                 });
             }
         });
@@ -121,6 +168,12 @@
                 
                 // Odağı input alanına ver
                 userInput.focus();
+                
+                // Buton tıklandığında görsel geri bildirim
+                btn.classList.add('active');
+                setTimeout(() => {
+                    btn.classList.remove('active');
+                }, 200);
             });
         });
     }
@@ -199,6 +252,11 @@
                 focusInput(message.placeholder);
                 break;
                 
+            case 'applyCodeResult':
+                // Kod uygulama sonucunu işle
+                handleApplyCodeResult(message.success, message.fileName, message.error);
+                break;
+                
             case 'error':
                 // Hata mesajı göster
                 showError(message.message);
@@ -210,6 +268,9 @@
     function sendMessage() {
         const text = userInput.value.trim();
         if (!text) return;
+        
+        // Mesaj ekle
+        addMessage(text, 'user');
         
         // VS Code'a mesajı gönder
         vscode.postMessage({
@@ -287,56 +348,87 @@
         // Mesaj divina ekle
         messageDiv.appendChild(messageContent);
         
+        // Kod blokları için Apply Code butonlarını aktif et
+        setupApplyCodeButtons(messageDiv);
+        
         return messageDiv;
+    }
+    
+    // Apply Code butonlarını aktif et
+    function setupApplyCodeButtons(container) {
+        const applyButtons = container.querySelectorAll('.apply-code-btn');
+        
+        applyButtons.forEach(button => {
+            // Eğer mobil görünümdeyse, buton metnini güncelle
+            if (state.isMobileView && button.textContent === 'Apply Code') {
+                button.textContent = 'Uygula';
+            }
+            
+            button.addEventListener('click', function() {
+                const code = this.getAttribute('data-code');
+                const fileName = this.getAttribute('data-filename');
+                
+                if (code && fileName) {
+                    // VS Code'a kod uygulama komutu gönder
+                    vscode.postMessage({
+                        command: 'applyCode',
+                        fileName: fileName,
+                        code: code
+                    });
+                    
+                    // Butonu devre dışı bırak ve durumunu güncelle
+                    this.disabled = true;
+                    this.textContent = 'Uygulanıyor...';
+                    
+                    // Buton animasyonu ekle
+                    this.classList.add('applying');
+                }
+            });
+        });
     }
     
     // Markdown formatını işle
     function formatMarkdown(text) {
-        // Uzun metni işlemek için performans optimizasyonu
-        if (text.length > 10000) {
-            // Çok uzun metinler için daha basit işleme
-            return `<p>${escapeHTML(text).replace(/\n/g, '<br>')}</p>`;
-        }
-        
         // Kod bloklarını işle (``` ile sarılmış)
-        text = text.replace(/```([a-z]*)([\s\S]*?)```/g, function(match, lang, code) {
-            // Kod bloğu içeriği çok uzunsa kısalt
-            const maxCodeLines = 100;
-            const codeLines = code.trim().split('\n');
-            let processedCode = code.trim();
+        let formattedText = text.replace(/```([a-z]*)(:[^\n]+)?\n([\s\S]*?)```/g, function(match, lang, fileName, code) {
+            // Dosya adı var mı kontrol et
+            let fileNameText = '';
             
-            if (codeLines.length > maxCodeLines) {
-                // İlk ve son kısımları göster, ortayı kısalt
-                const firstPart = codeLines.slice(0, Math.floor(maxCodeLines / 2)).join('\n');
-                const lastPart = codeLines.slice(codeLines.length - Math.floor(maxCodeLines / 2)).join('\n');
-                processedCode = firstPart + '\n\n// ... Kod kısaltıldı ... \n\n' + lastPart;
+            if (fileName) {
+                fileNameText = fileName.substring(1); // İlk ':' karakterini kaldır
             }
             
-            return `<pre><code class="language-${lang || 'plaintext'}">${escapeHTML(processedCode)}</code></pre>`;
+            // Özel işlenmiş kod bloğu var mı?
+            if (text.includes('<div class="code-block-container">')) {
+                return match; // Zaten işlenmiş, olduğu gibi bırak
+            }
+            
+            // Kod bloğunu oluştur
+            return `<pre><code class="language-${lang || 'plaintext'}">${escapeHTML(code.trim())}</code></pre>`;
         });
         
         // Diğer markdown öğeleri
-        text = text
+        formattedText = formattedText
             // Satır içi kod
             .replace(/`([^`]+)`/g, '<code>$1</code>')
             // Kalın
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
             // İtalik
             .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-            // Listeler - performans için regex optimizasyonu
-            .replace(/^- (.+)$/gm, '<li>$1</li>')
             // Paragraflar
             .replace(/\n\n/g, '</p><p>')
+            // Listeler
+            .replace(/^- (.+)$/gm, '<li>$1</li>')
             // Linkler
             .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
         
         // Son işlemler
-        text = '<p>' + text + '</p>';
-        text = text.replace(/<\/p><p>/g, '</p>\n<p>'); // Paragrafları düzelt
-        text = text.replace(/<li>(.+?)<\/li>/g, '<ul><li>$1</li></ul>'); // Liste öğelerini düzelt
-        text = text.replace(/<\/ul>\s*<ul>/g, ''); // Boş liste öğelerini temizle
+        formattedText = '<p>' + formattedText + '</p>';
+        formattedText = formattedText.replace(/<\/p><p>/g, '</p>\n<p>');
+        formattedText = formattedText.replace(/<li>(.+?)<\/li>/g, '<ul><li>$1</li></ul>');
+        formattedText = formattedText.replace(/<\/ul>\s*<ul>/g, '');
         
-        return text;
+        return formattedText;
     }
     
     // HTML escape
@@ -353,51 +445,44 @@
     function addMessage(text, role) {
         if (!messagesContainer) return;
         
-        // Performans için uzun mesajları bölümlere ayır
         const messageElement = createMessageElement(text, role);
         messagesContainer.appendChild(messageElement);
         
-        // Mesajlar konteynerini en alta kaydır (50ms gecikme ile, rendering için zaman tanı)
-        setTimeout(() => {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }, 50);
+        // Mesajlar konteynerini en alta kaydır
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
         
-        // Prism vurgulamasını verimli bir şekilde uygula
-        // requestAnimationFrame ile tarayıcı render döngüsüne senkronize et
-        requestAnimationFrame(() => {
-            if (window.Prism) {
-                // Sadece yeni eklenen mesajdaki kod bloklarını işle
-                const codeElements = messageElement.querySelectorAll('pre code');
-                if (codeElements.length > 0) {
-                    codeElements.forEach(el => {
-                        try {
-                            Prism.highlightElement(el);
-                        } catch (err) {
-                            console.error('Kod vurgulama hatası:', err);
-                        }
-                    });
-                }
+        // Prism vurgulamasını uygula
+        if (window.Prism) {
+            const codeElements = messageElement.querySelectorAll('pre code');
+            if (codeElements.length > 0) {
+                codeElements.forEach(el => {
+                    try {
+                        Prism.highlightElement(el);
+                    } catch (err) {
+                        console.error('Kod vurgulama hatası:', err);
+                    }
+                });
             }
-        });
+        }
         
-        // Uzun mesaj optimizasyonu - çok uzun içerik varsa daha fazla göster düğmesi ekle
+        // Çok uzun mesajlar için "Devamını göster" düğmesi
         const messageContent = messageElement.querySelector('.message-content');
-        if (messageContent && messageContent.offsetHeight > 500) {
+        if (messageContent && messageContent.offsetHeight > 400) {
             const showMoreButton = document.createElement('button');
             showMoreButton.className = 'show-more-btn';
             showMoreButton.textContent = 'Devamını Göster';
             
             // Başlangıçta içeriği kısalt
-            messageContent.style.maxHeight = '500px';
+            messageContent.style.maxHeight = '400px';
             messageContent.style.overflow = 'hidden';
             
             // Düğme olayını ayarla
             showMoreButton.addEventListener('click', () => {
-                if (messageContent.style.maxHeight === '500px') {
+                if (messageContent.style.maxHeight === '400px') {
                     messageContent.style.maxHeight = 'none';
                     showMoreButton.textContent = 'Daha Az Göster';
                 } else {
-                    messageContent.style.maxHeight = '500px';
+                    messageContent.style.maxHeight = '400px';
                     showMoreButton.textContent = 'Devamını Göster';
                     // Sayfayı mesajın başına kaydır
                     messageElement.scrollIntoView({ behavior: 'smooth' });
@@ -412,7 +497,6 @@
     // Tüm mesajları temizle
     function clearMessages() {
         if (messagesContainer) {
-            // Sadece hoşgeldin mesajını tut
             const welcomeMessage = messagesContainer.querySelector('.message');
             messagesContainer.innerHTML = '';
             
@@ -427,7 +511,6 @@
         const loadingElement = document.createElement('div');
         loadingElement.className = 'loading-message';
         loadingElement.innerHTML = `
-            <div class="message-avatar assistant-avatar">B</div>
             <div class="typing-indicator">
                 <span></span>
                 <span></span>
@@ -458,7 +541,7 @@
     
     // Hata mesajı göster
     function showError(message) {
-        addMessage(message, 'error');
+        addMessage(`Hata: ${message}`, 'error');
     }
     
     // Yükleniyor durumunu değiştir
@@ -480,34 +563,6 @@
         }
     }
     
-    // Kodu panoya kopyala
-    function copyCodeToClipboard() {
-        if (!codeBlock || !copyCodeBtn) return;
-        
-        const codeText = codeBlock.textContent;
-        navigator.clipboard.writeText(codeText)
-            .then(() => {
-                // Başarılı gösterim
-                const originalText = copyCodeBtn.innerHTML;
-                copyCodeBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span>Kopyalandı</span>
-                `;
-                copyCodeBtn.classList.add('copied');
-                
-                setTimeout(() => {
-                    copyCodeBtn.innerHTML = originalText;
-                    copyCodeBtn.classList.remove('copied');
-                }, 2000);
-            })
-            .catch(err => {
-                console.error('Kopyalama hatası:', err);
-                showError('Kod kopyalanırken bir hata oluştu.');
-            });
-    }
-    
     // Kod yükleniyor göstergesini göster/gizle
     function toggleCodeLoading(isLoading) {
         if (!codeLoadingIndicator) return;
@@ -526,18 +581,103 @@
         if (!width || typeof width !== 'number') return;
         
         // Minimum genişliği koruma
-        const minWidth = 400;
+        const minWidth = 300; // Daha küçük minimum genişlik
         const finalWidth = Math.max(width, minWidth);
         
         // CSS değişkenini güncelle
         document.documentElement.style.setProperty('--default-width', `${finalWidth}px`);
         
-        // Container elemanını bul ve genişliğini ayarla (yedek yöntem)
-        const container = document.querySelector('.container');
-        if (container) {
-            container.style.minWidth = `${finalWidth}px`;
+        // Responsive durumu tekrar kontrol et
+        checkResponsiveLayout();
+    }
+    
+    // Kod uygulama sonucunu işle
+    function handleApplyCodeResult(success, fileName, error) {
+        // Uygulama düğmelerini güncelle
+        const applyButtons = document.querySelectorAll('.apply-code-btn.applying');
+        
+        applyButtons.forEach(button => {
+            button.classList.remove('applying');
+            
+            // Dosya adı eşleşiyor mu kontrol et
+            if (button.getAttribute('data-filename') === fileName) {
+                button.disabled = false;
+                
+                if (success) {
+                    button.textContent = 'Uygulandı';
+                    button.classList.add('success');
+                    
+                    setTimeout(() => {
+                        // Responsive görünüme göre buton metnini güncelle
+                        if (state.isMobileView) {
+                            button.textContent = 'Uygula';
+                        } else {
+                            button.textContent = 'Apply Code';
+                        }
+                        button.classList.remove('success');
+                    }, 3000);
+                } else {
+                    // Responsive görünüme göre buton metnini güncelle
+                    if (state.isMobileView) {
+                        button.textContent = 'Uygula';
+                    } else {
+                        button.textContent = 'Apply Code';
+                    }
+                }
+            }
+        });
+        
+        if (success) {
+            // Başarılı uygulama
+            showNotification(`Kod başarıyla uygulandı: ${fileName}`, 'success');
+        } else {
+            // Hata durumu
+            showNotification(`Kod uygulanırken hata: ${error || 'Bilinmeyen hata'}`, 'error');
+        }
+    }
+    
+    // Bildirim göster
+    function showNotification(message, type = 'info') {
+        // Eski bildirimleri temizle
+        const oldNotifications = document.querySelectorAll('.notification');
+        oldNotifications.forEach(n => {
+            if (n.classList.contains('hide')) {
+                n.remove();
+            }
+        });
+        
+        // Mesajı kısalt (mobil görünümde daha kısa mesajlar)
+        let displayMessage = message;
+        if (state.isMobileView && message.length > 50) {
+            const fileName = message.match(/:\s([^:]+)$/);
+            if (fileName && fileName[1]) {
+                // Eğer dosya adı varsa, mesajı kısalt
+                displayMessage = message.substring(0, 30) + '...: ' + fileName[1];
+            } else {
+                displayMessage = message.substring(0, 40) + '...';
+            }
         }
         
-        console.log(`Panel genişliği ${finalWidth}px olarak ayarlandı`);
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}-notification`;
+        notification.textContent = displayMessage;
+        
+        // Bildirim kapat butonu
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'notification-close-btn';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.addEventListener('click', () => {
+            notification.classList.add('hide');
+            setTimeout(() => notification.remove(), 300);
+        });
+        
+        notification.appendChild(closeBtn);
+        document.body.appendChild(notification);
+        
+        // 4 saniye sonra otomatik kapat
+        setTimeout(() => {
+            notification.classList.add('hide');
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
     }
 })();

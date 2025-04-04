@@ -4,7 +4,7 @@ import { AIService } from './services/ai';
 import { InlineCodeChat } from './views/inline-chat';
 import { CommandManager } from './commands';
 import { ChatPanel } from './views/chat';
-import { ByteAIClient } from './client';
+import { ByteAIClient } from './panelClient';
 import { InlineChatPanel } from './inlineChat';
 
 // Genişlik sabitleri
@@ -91,6 +91,82 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('byte.openInlineChat', () => {
             InlineChatPanel.createOrShow(context.extensionUri, byteClient, INLINE_CHAT_MIN_WIDTH);
+        })
+    );
+    
+    // Yeni kod uygulama komutunu kaydet
+    context.subscriptions.push(
+        vscode.commands.registerCommand('byte.applyCode', async (fileName: string, code: string) => {
+            try {
+                // Dosya yolunu oluştur
+                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+                if (!workspaceFolder) {
+                    throw new Error('Çalışma alanı bulunamadı');
+                }
+                
+                const filePath = vscode.Uri.joinPath(workspaceFolder.uri, fileName);
+                
+                // Dosyanın var olup olmadığını kontrol et
+                try {
+                    await vscode.workspace.fs.stat(filePath);
+                    
+                    // Dosya varsa içeriğini al ve kodu ekle
+                    const document = await vscode.workspace.openTextDocument(filePath);
+                    const edit = new vscode.WorkspaceEdit();
+                    
+                    // Tüm metni değiştir
+                    const fullRange = new vscode.Range(
+                        document.positionAt(0),
+                        document.positionAt(document.getText().length)
+                    );
+                    
+                    edit.replace(filePath, fullRange, code);
+                    await vscode.workspace.applyEdit(edit);
+                    
+                    // Başarı mesajı göster
+                    vscode.window.showInformationMessage(`Kod başarıyla uygulandı: ${fileName}`);
+                    
+                    // Dosyayı aç ve göster
+                    const textDocument = await vscode.workspace.openTextDocument(filePath);
+                    await vscode.window.showTextDocument(textDocument);
+                    
+                } catch (fileError) {
+                    // Dosya yoksa, oluşturmak için onay iste
+                    const createOption = 'Dosyayı Oluştur';
+                    const selection = await vscode.window.showWarningMessage(
+                        `${fileName} dosyası mevcut değil. Oluşturmak ister misiniz?`,
+                        { modal: true },
+                        createOption
+                    );
+                    
+                    if (selection === createOption) {
+                        // Dosya yolundaki klasörleri oluştur
+                        const dirname = path.dirname(fileName);
+                        if (dirname && dirname !== '.') {
+                            const dirPath = vscode.Uri.joinPath(workspaceFolder.uri, dirname);
+                            try {
+                                await vscode.workspace.fs.stat(dirPath);
+                            } catch {
+                                // Klasör yoksa oluştur
+                                await vscode.workspace.fs.createDirectory(dirPath);
+                            }
+                        }
+                        
+                        // Yeni dosya oluştur ve içeriği yaz
+                        const encoder = new TextEncoder();
+                        await vscode.workspace.fs.writeFile(filePath, encoder.encode(code));
+                        
+                        // Başarı mesajı göster
+                        vscode.window.showInformationMessage(`Dosya oluşturuldu ve kod uygulandı: ${fileName}`);
+                        
+                        // Dosyayı aç ve göster
+                        const textDocument = await vscode.workspace.openTextDocument(filePath);
+                        await vscode.window.showTextDocument(textDocument);
+                    }
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(`Kod uygulanırken hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
+            }
         })
     );
     
