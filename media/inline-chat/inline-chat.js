@@ -292,9 +292,27 @@
     
     // Markdown formatını işle
     function formatMarkdown(text) {
+        // Uzun metni işlemek için performans optimizasyonu
+        if (text.length > 10000) {
+            // Çok uzun metinler için daha basit işleme
+            return `<p>${escapeHTML(text).replace(/\n/g, '<br>')}</p>`;
+        }
+        
         // Kod bloklarını işle (``` ile sarılmış)
         text = text.replace(/```([a-z]*)([\s\S]*?)```/g, function(match, lang, code) {
-            return `<pre><code class="language-${lang || 'plaintext'}">${escapeHTML(code.trim())}</code></pre>`;
+            // Kod bloğu içeriği çok uzunsa kısalt
+            const maxCodeLines = 100;
+            const codeLines = code.trim().split('\n');
+            let processedCode = code.trim();
+            
+            if (codeLines.length > maxCodeLines) {
+                // İlk ve son kısımları göster, ortayı kısalt
+                const firstPart = codeLines.slice(0, Math.floor(maxCodeLines / 2)).join('\n');
+                const lastPart = codeLines.slice(codeLines.length - Math.floor(maxCodeLines / 2)).join('\n');
+                processedCode = firstPart + '\n\n// ... Kod kısaltıldı ... \n\n' + lastPart;
+            }
+            
+            return `<pre><code class="language-${lang || 'plaintext'}">${escapeHTML(processedCode)}</code></pre>`;
         });
         
         // Diğer markdown öğeleri
@@ -305,8 +323,8 @@
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
             // İtalik
             .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-            // Listeler
-            .replace(/^- (.+)/gm, '<li>$1</li>')
+            // Listeler - performans için regex optimizasyonu
+            .replace(/^- (.+)$/gm, '<li>$1</li>')
             // Paragraflar
             .replace(/\n\n/g, '</p><p>')
             // Linkler
@@ -335,21 +353,60 @@
     function addMessage(text, role) {
         if (!messagesContainer) return;
         
+        // Performans için uzun mesajları bölümlere ayır
         const messageElement = createMessageElement(text, role);
         messagesContainer.appendChild(messageElement);
         
-        // Mesajlar alanını en alta kaydır
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Prism varsa yeni eklenen kod bloklarını renklendir
+        // Mesajlar konteynerini en alta kaydır (50ms gecikme ile, rendering için zaman tanı)
         setTimeout(() => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 50);
+        
+        // Prism vurgulamasını verimli bir şekilde uygula
+        // requestAnimationFrame ile tarayıcı render döngüsüne senkronize et
+        requestAnimationFrame(() => {
             if (window.Prism) {
+                // Sadece yeni eklenen mesajdaki kod bloklarını işle
                 const codeElements = messageElement.querySelectorAll('pre code');
-                codeElements.forEach(el => {
-                    Prism.highlightElement(el);
-                });
+                if (codeElements.length > 0) {
+                    codeElements.forEach(el => {
+                        try {
+                            Prism.highlightElement(el);
+                        } catch (err) {
+                            console.error('Kod vurgulama hatası:', err);
+                        }
+                    });
+                }
             }
-        }, 0);
+        });
+        
+        // Uzun mesaj optimizasyonu - çok uzun içerik varsa daha fazla göster düğmesi ekle
+        const messageContent = messageElement.querySelector('.message-content');
+        if (messageContent && messageContent.offsetHeight > 500) {
+            const showMoreButton = document.createElement('button');
+            showMoreButton.className = 'show-more-btn';
+            showMoreButton.textContent = 'Devamını Göster';
+            
+            // Başlangıçta içeriği kısalt
+            messageContent.style.maxHeight = '500px';
+            messageContent.style.overflow = 'hidden';
+            
+            // Düğme olayını ayarla
+            showMoreButton.addEventListener('click', () => {
+                if (messageContent.style.maxHeight === '500px') {
+                    messageContent.style.maxHeight = 'none';
+                    showMoreButton.textContent = 'Daha Az Göster';
+                } else {
+                    messageContent.style.maxHeight = '500px';
+                    showMoreButton.textContent = 'Devamını Göster';
+                    // Sayfayı mesajın başına kaydır
+                    messageElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            
+            // Düğmeyi mesaj elementinin sonuna ekle
+            messageElement.appendChild(showMoreButton);
+        }
     }
     
     // Tüm mesajları temizle

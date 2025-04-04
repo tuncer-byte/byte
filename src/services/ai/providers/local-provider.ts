@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import fetch from 'node-fetch';
 import { Message } from '../types';
 import { AILogger } from '../utils/logger';
+import { BASE_SYSTEM_PROMPT } from '../utils/base-prompts';
 
 /**
  * Provider class that communicates with local models (Ollama)
@@ -61,27 +62,7 @@ export class LocalProvider {
      */
     private formatMessages(messages: Message[]): string {
         // System instructions with enhanced prompt engineering
-        let result = `You are Byte, an expert programming assistant designed to help with coding questions and software development tasks. 
-
-CAPABILITIES:
-- Provide clear, accurate code examples in various programming languages
-- Debug and fix code issues with detailed explanations
-- Explain complex programming concepts in simple terms
-- Suggest best practices and optimization techniques
-- Help with algorithm design and implementation
-
-GUIDELINES:
-- Always respond in Turkish, following proper grammar and clarity
-- Provide code with appropriate comments when relevant
-- When explaining concepts, use concrete examples
-- If you're unsure about something, acknowledge it rather than guessing
-- Format code blocks properly for readability
-- Break down complex solutions into manageable steps
-
-CONTEXT:
-You are assisting a developer in a VS Code environment. Be concise but thorough in your explanations.
-
-`;
+        let result = BASE_SYSTEM_PROMPT + "\n\n";
         
         // Include last 8 messages (increased from 5 for better context)
         const recentMessages = messages.slice(-8);

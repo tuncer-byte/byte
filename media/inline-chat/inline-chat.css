@@ -291,6 +291,7 @@ body {
     line-height: 1.5;
     overflow-wrap: break-word;
     word-break: break-word;
+    transition: max-height 0.3s ease-out;
 }
 
 .message-content p {
@@ -573,4 +574,23 @@ body {
         overflow-x: auto;
         padding-bottom: 2px;
     }
+}
+
+/* Devamını Göster butonu stilleri */
+.show-more-btn {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--vscode-button-foreground);
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 10px;
+    padding: 5px 10px;
+    display: block;
+    width: fit-content;
+    transition: background-color 0.2s;
+}
+
+.show-more-btn:hover {
+    background-color: var(--vscode-button-hoverBackground);
 }

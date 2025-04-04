@@ -13,7 +13,8 @@
     --select-background: #161B22;
     --select-foreground: #E6E6E6;
     --message-user-background: #1E2631;
-    --message-ai-background: #1A1F27;
+    --message-ai-background: #181E28; /* AI mesaj arka planını biraz daha açık yaptım */
+    --code-background: #0D1117; /* Kod blokları için daha koyu arka plan */
     --command-color: #FF7B23; /* Komutlar için vurgu rengi */
     --default-width: 400px; /* Panel genişliği */
     --settings-bg: var(--message-ai-background);
@@ -193,9 +194,6 @@ body, html {
     background-color: transparent;
 }
 
-
-
-
 .welcome-header {
     margin-bottom: 20px;
     text-align: left;
@@ -272,7 +270,7 @@ body, html {
 
 .user-message {
     align-self: flex-end;
-    background-color: var(--message-user-background);
+    background-color: rgba(255, 123, 35, 0.15); /* Kullanıcı mesajlarına turuncu tonlu arka plan */
     border-radius: 12px 12px 0 12px;
     width: 100%; /* Kullanıcı mesajları tam genişlik */
 }
@@ -282,6 +280,12 @@ body, html {
     border-radius: 12px 12px 12px 0;
     width: 100%; /* AI mesajları tam genişlik */
     background-color: var(--message-ai-background);
+}
+
+.assistant-message .message-content {
+    color: #E6E6E6; /* Daha net görünüm için metni açık renk yap */
+    font-size: 14px;
+    line-height: 1.7; /* Metin satır yüksekliğini artırarak okunabilirliği artır */
 }
 
 /* Kopyalama butonu için yeni stil */
@@ -714,9 +718,44 @@ body, html {
 
 /* Mesaj içeriği için stiller */
 .message-content {
-    padding: 16px;
+    padding: 12px 16px; /* Mesaj içeriğinde padding azalt */
     word-wrap: break-word;
     overflow-wrap: break-word;
+}
+
+.message-content code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 13px;
+    color: #e6e6e6;
+    white-space: pre-wrap;
+}
+
+/* Kod blokları için geliştirilmiş stiller - taşma sorununu çözmek için */
+.message-content pre {
+    background-color: #0D1117;
+    border-radius: 6px;
+    margin: 15px 0;
+    position: relative;
+    border: 1px solid var(--border-color);
+    overflow-x: auto; /* Yatay scroll ekle */
+    max-width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.message-content pre code {
+    display: block;
+    padding: 16px;
+    background-color: transparent;
+    color: var(--foreground);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-wrap: normal;
+    tab-size: 2;
 }
 
 /* Quick commands için geliştirilmiş stiller */
@@ -820,54 +859,6 @@ body, html {
     margin: 0;
     font-size: 14px;
     line-height: 1.5;
-}
-
-.message-content code {
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-size: 13px;
-    color: #e6e6e6;
-}
-
-/* Kod blokları için geliştirilmiş stiller - taşma sorununu çözmek için */
-.message-content pre {
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 6px;
-    margin: 15px 0;
-    position: relative;
-    border: 1px solid var(--border-color);
-    overflow-x: auto; /* Yatay scroll ekle */
-    max-width: 100%;
-}
-
-.message-content pre code {
-    display: block;
-    padding: 12px 15px;
-    background-color: transparent;
-    color: var(--foreground);
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    white-space: pre;
-    overflow-wrap: normal;
-    tab-size: 2;
-}
-
-.code-language {
-    position: absolute;
-    top: 0;
-    left: 0; /* Sağdan sola aldık */
-    background-color: rgba(0, 0, 0, 0.5); /* Darker background for better contrast */
-    color: var(--foreground);
-    font-size: 10px;
-    padding: 3px 6px;
-    border-radius: 0 0 4px 0; /* Adjust border radius */
-    font-family: 'SFMono-Regular', Consolas, monospace;
-    font-weight: 500;
-    text-transform: uppercase;
-    z-index: 5; /* Ensure it's above the code block */
 }
 
 /* Markdown listeleri için stiller */
@@ -1599,6 +1590,21 @@ pre code {
     line-height: 1.5;
 }
 
+.code-language {
+    position: absolute;
+    top: 0;
+    left: 0; 
+    background-color: rgba(0, 0, 0, 0.5);
+    color: var(--foreground);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 0 0 4px 0;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-weight: 500;
+    text-transform: uppercase;
+    z-index: 5;
+}
+
 /* Ayarlar Modalı Modernleştirme */
 .settings-modal {
     background-color: var(--vscode-editor-background);
@@ -2116,4 +2122,47 @@ pre code {
         transform: scale(1.2);
         opacity: 1;
     }
+}
+
+/* Kod bloğu syntax highlighting iyileştirmeleri */
+.hljs {
+    background: #0D1117 !important; /* Kod arka planı düzeltme */
+    color: #e6e6e6 !important; /* Ana metin rengi */
+    border-radius: 5px;
+}
+
+.hljs-keyword, 
+.hljs-selector-tag {
+    color: #ff7b23 !important; /* Anahtar kelimeleri turuncu renkte göster */
+    font-weight: bold;
+}
+
+.hljs-string {
+    color: #7EC699 !important; /* String'ler için yeşil ton */
+}
+
+.hljs-comment {
+    color: #6A9955 !important; /* Yorumlar için yeşil ton */
+    font-style: italic;
+}
+
+.hljs-number,
+.hljs-literal {
+    color: #B5CEA8 !important; /* Sayılar için açık yeşil ton */
+}
+
+.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-function {
+    color: #DCDCAA !important; /* Fonksiyonlar için sarı ton */
+}
+
+.hljs-type,
+.hljs-class {
+    color: #4EC9B0 !important; /* Tipler ve sınıflar için turkuaz ton */
+}
+
+.hljs-title {
+    color: #4EC9B0 !important; /* Başlıklar için turkuaz ton */
 }

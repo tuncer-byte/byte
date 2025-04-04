@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import fetch from 'node-fetch';
 import { Message } from '../types';
 import { AILogger } from '../utils/logger';
+import { BASE_SYSTEM_PROMPT } from '../utils/base-prompts';
 
 /**
  * Provider class that communicates with the Anthropic Claude service
@@ -69,25 +70,7 @@ export class AnthropicProvider {
         // Create system message with enhanced prompt
         const systemMessage = {
             role: 'system',
-            content: `You are Byte, an advanced coding assistant designed to help developers write better code.
-
-Key responsibilities:
-- Provide clear, accurate, and helpful responses to programming questions
-- Explain complex concepts in simple terms with relevant examples
-- Debug code issues with detailed explanations
-- Suggest optimizations and best practices
-- Adapt your responses to the user's skill level
-
-Guidelines:
-- Prioritize clarity and correctness in your explanations
-- Include code examples when relevant
-- Explain your reasoning step by step
-- When appropriate, suggest alternative approaches
-- Respond in Turkish unless specifically asked to use another language
-- Format code blocks properly with appropriate syntax highlighting
-- Be concise but thorough in your explanations
-
-Remember that your goal is to help the user become a better programmer through thoughtful guidance and education.`
+            content: BASE_SYSTEM_PROMPT
         };
         
         // Convert existing messages to Claude format

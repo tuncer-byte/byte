@@ -18,6 +18,15 @@ import { AILogger } from './utils/logger';
 import { ProviderSelector } from './utils/provider-selector';
 import { DEFAULT_AI_SETTINGS } from './utils/constants';
 import { CacheManager } from './utils/cache-manager';
+import { 
+    BASE_SYSTEM_PROMPT,
+    CODE_EXPLANATION_PROMPT,
+    CODE_REFACTORING_PROMPT,
+    UNIT_TEST_PROMPT,
+    CODE_OPTIMIZATION_PROMPT,
+    DEBUGGING_PROMPT,
+    DOCUMENTATION_PROMPT
+} from './utils/base-prompts';
 
 /**
  * Class that provides integration with AI Services
@@ -213,7 +222,7 @@ export class AIService {
      * Special prompt for code explanation requests
      */
     public async explainCode(code: string): Promise<string> {
-        const prompt = `Explain the following code line by line and describe in detail what it does:\n\n\`\`\`\n${code}\n\`\`\``;
+        const prompt = `${CODE_EXPLANATION_PROMPT}\n\n\`\`\`\n${code}\n\`\`\``;
         return this.sendMessage(prompt);
     }
 
@@ -221,7 +230,44 @@ export class AIService {
      * Special prompt for code refactoring requests
      */
     public async refactorCode(code: string): Promise<string> {
-        const prompt = `Refactor the following code to make it more readable, efficient, and compliant with best practices. Add explanations and reasons for improvements:\n\n\`\`\`\n${code}\n\`\`\``;
+        const prompt = `${CODE_REFACTORING_PROMPT}\n\n\`\`\`\n${code}\n\`\`\``;
+        return this.sendMessage(prompt);
+    }
+
+    /**
+     * Special prompt for generating unit tests
+     */
+    public async generateTests(code: string): Promise<string> {
+        const prompt = `${UNIT_TEST_PROMPT}\n\n\`\`\`\n${code}\n\`\`\``;
+        return this.sendMessage(prompt);
+    }
+
+    /**
+     * Special prompt for optimizing code
+     */
+    public async optimizeCode(code: string): Promise<string> {
+        const prompt = `${CODE_OPTIMIZATION_PROMPT}\n\n\`\`\`\n${code}\n\`\`\``;
+        return this.sendMessage(prompt);
+    }
+
+    /**
+     * Special prompt for debugging code
+     */
+    public async debugCode(code: string, errorMessage?: string): Promise<string> {
+        let prompt = `${DEBUGGING_PROMPT}\n\n\`\`\`\n${code}\n\`\`\``;
+        
+        if (errorMessage) {
+            prompt += `\n\nHata mesajı: ${errorMessage}`;
+        }
+        
+        return this.sendMessage(prompt);
+    }
+
+    /**
+     * Special prompt for generating documentation
+     */
+    public async generateDocumentation(code: string): Promise<string> {
+        const prompt = `${DOCUMENTATION_PROMPT}\n\n\`\`\`\n${code}\n\`\`\``;
         return this.sendMessage(prompt);
     }
 

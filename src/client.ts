@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { BASE_SYSTEM_PROMPT } from './services/ai/utils/base-prompts';
 
 /**
  * Inline Chat istek tipi
@@ -82,17 +83,30 @@ export class ByteAIClient {
                 throw new Error('API anahtarı veya endpoint tanımlanmamış. Ayarlar üzerinden yapılandırın.');
             }
             
-            // API isteği gönder
+            // API isteği gönder - system promptu ekle
             const response: AxiosResponse = await this._apiClient.post('/inline-chat', {
                 code: request.code,
                 language: request.language,
                 fileName: request.fileName,
-                query: request.query
+                query: request.query,
+                systemPrompt: BASE_SYSTEM_PROMPT // BASE_SYSTEM_PROMPT'u ekle
             });
+            
+            // Yanıt işleme - metin çok uzunsa bölümlere ayır
+            let responseText = response.data.text || 'Yanıt alınamadı.';
+            
+            // Maksimum yanıt uzunluğu (karakter sayısı)
+            const MAX_RESPONSE_LENGTH = 5000;
+            
+            // Yanıt çok uzunsa kısalt ve bildirim ekle
+            if (responseText.length > MAX_RESPONSE_LENGTH) {
+                responseText = responseText.substring(0, MAX_RESPONSE_LENGTH) + 
+                    '\n\n[Yanıt çok uzun olduğu için kısaltıldı. Daha spesifik bir soru sorabilirsiniz.]';
+            }
             
             // Yanıtı döndür
             return {
-                text: response.data.text || 'Yanıt alınamadı.',
+                text: responseText,
                 suggestedEdits: response.data.suggestedEdits
             };
         } catch (error: any) {

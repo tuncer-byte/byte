@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 import { Message, CachedContent } from '../types';
 import { AILogger } from '../utils/logger';
 import { CacheManager } from '../utils/cache-manager';
+import { BASE_SYSTEM_PROMPT } from '../utils/base-prompts';
 
 /**
  * Provider class that communicates with Google Gemini service
@@ -100,18 +101,7 @@ export class GeminiProvider {
         formattedContents.push({
             role: "user",
             parts: [{
-                text: `You are Byte, an intelligent coding assistant. You help users with programming questions and provide clear, concise explanations. 
-                
-Guidelines:
-- Always respond in Turkish with proper grammar and clear explanations
-- Provide code examples when relevant
-- Explain complex concepts in simple terms
-- When showing code, include comments to explain key parts
-- Format your responses with markdown for readability
-- If you're unsure about something, acknowledge it rather than guessing
-- Focus on being helpful, accurate, and educational
-                
-Now, please assist the user with their programming questions.`
+                text: BASE_SYSTEM_PROMPT
             }]
         });
         

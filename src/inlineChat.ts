@@ -3,6 +3,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { getNonce } from './utils';
 import { ByteAIClient } from './client';
+import { 
+    CODE_EXPLANATION_PROMPT, 
+    CODE_REFACTORING_PROMPT, 
+    CODE_OPTIMIZATION_PROMPT, 
+    UNIT_TEST_PROMPT 
+} from './services/ai/utils/base-prompts';
 
 /**
  * Inline Chat WebView Panel sınıfı
@@ -124,19 +130,19 @@ export class InlineChatPanel {
                 break;
                 
             case 'fixCode':
-                await this._processUserMessage('Kodu düzelt ve iyileştir');
+                await this._processUserMessage(CODE_REFACTORING_PROMPT);
                 break;
                 
             case 'optimizeCode':
-                await this._processUserMessage('Kodu optimize et');
+                await this._processUserMessage(CODE_OPTIMIZATION_PROMPT);
                 break;
                 
             case 'testCode':
-                await this._processUserMessage('Bu kod için unit testler oluştur');
+                await this._processUserMessage(UNIT_TEST_PROMPT);
                 break;
                 
             case 'explainCode':
-                await this._processUserMessage('Bu kodu açıkla');
+                await this._processUserMessage(CODE_EXPLANATION_PROMPT);
                 break;
                 
             case 'ready':
