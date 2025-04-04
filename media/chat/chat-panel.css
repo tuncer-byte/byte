@@ -55,6 +55,7 @@ body, html {
     max-width: 100%;
     min-width: 160px;
     margin: 0 auto;
+    padding: 0;
 }
 
 .chat-header {
@@ -180,7 +181,6 @@ body, html {
 .icon-button:hover {
     background-color: rgba(255, 123, 35, 0.15);
     color: var(--primary-color);
-    transform: scale(1.05);
 }
 
 .messages-container {
@@ -193,15 +193,8 @@ body, html {
     background-color: transparent;
 }
 
-/* Modern welcome-message stilleri */
-.welcome-message {
 
-    transition: all 0.3s ease;
-}
 
-.welcome-message:hover {
-    transform: translateY(-2px);
-}
 
 .welcome-header {
     margin-bottom: 20px;
@@ -248,7 +241,6 @@ body, html {
 .feature-card:hover {
     background: transparent;
     border: none;
-    transform: translateX(5px);
 }
 
 .feature-icon {
@@ -341,7 +333,6 @@ body, html {
 .input-container {
     border-top: 1px solid var(--border-color);
     background-color: var(--sidebar-background);
-    padding-bottom: 15px;
     position: relative;
     z-index: 10;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
@@ -1984,7 +1975,6 @@ pre code {
 .message-content .highlighted-command {
     color: #ff7d00 !important;
     font-weight: bold !important;
-    background-color: rgba(255, 125, 0, 0.1);
     padding: 2px 4px;
     border-radius: 3px;
     display: inline-block;
