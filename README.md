@@ -1,45 +1,112 @@
 # Byte AI Assistant
 
-A powerful AI-powered coding assistant for VS Code.
+A powerful AI-powered coding assistant for VS Code that helps developers write, analyze, refactor, and optimize code.
 
 <div align="center">
   <img src="media/icons/icon-white.png" alt="Byte AI Assistant" width="128">
 </div>
 
 <div align="center">
-  <h2>Mimarı Yapı / Architecture</h2>
+  <h2>Architecture Overview</h2>
   <img src="public/modern-architecture.svg" alt="Byte AI Architecture" width="800">
 </div>
 
-## Features
+## ✨ Features
 
-- 🤖 **AI Chat**: Talk to AI models directly in VS Code
-- 🔍 **Code Analysis**: Get explanations and insights about your code
+- 🤖 **AI Chat**: Interact with AI models directly in VS Code
+- 🔍 **Code Analysis**: Get detailed explanations and insights about your code
 - 🛠️ **Code Refactoring**: Improve your code with AI-powered suggestions
-- 📝 **Documentation Generation**: Generate comprehensive documentation
-- 🧪 **Test Generation**: Create unit tests for your code
-- 🚀 **Performance Optimization**: Get suggestions to optimize your code
-- 📊 **Code Issue Detection**: Find potential bugs and code smells
+- 📝 **Documentation Generation**: Create comprehensive documentation for your codebase
+- 🧪 **Test Generation**: Automatically generate unit tests for your code
+- 🚀 **Performance Optimization**: Receive suggestions to optimize and improve performance
+- 📊 **Code Issue Detection**: Find potential bugs, vulnerabilities, and code smells
 - 🐛 **Bug Finder**: Automatically detect and fix terminal errors with AI
-  - Monitors terminal output for error messages
+  - Monitors terminal output for error messages in real-time
   - Provides AI-powered error analysis and solutions
   - Allows one-click application of suggested fixes
   - Includes permanent status bar indicator for monitoring status
 
-## AI Providers
+## 🧠 Supported AI Providers
 
-Byte supports the following AI providers:
+Byte supports multiple AI providers to fit your preference and needs:
 
-- **OpenAI** (GPT models)
-- **Google Gemini**
-- **Anthropic Claude**
-- **Local models** (via Ollama)
+- **OpenAI** (GPT-3.5-Turbo, GPT-4, GPT-4-Turbo)
+- **Google Gemini** (Gemini 1.5 Flash, Gemini 1.5 Pro)
+- **Anthropic Claude** (Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku)
+- **Local models** (via Ollama - supports Llama3, CodeLlama, Mistral, Mixtral, Neural-Chat, Phi)
 
-## Bug Finder
+## 🛠️ Installation
+
+### VS Code Marketplace
+
+1. Open VS Code
+2. Go to Extensions (Ctrl+Shift+X or Cmd+Shift+X)
+3. Search for "Byte AI Assistant"
+4. Click Install
+
+### Manual Installation
+
+Download the `.vsix` file from the [releases page](https://github.com/tuncer-byte/byte/releases) and install it using:
+
+```bash
+code --install-extension byte-0.1.1.vsix
+```
+
+### From Source
+
+```bash
+# Clone the repository
+git clone https://github.com/tuncer-byte/byte.git
+
+# Navigate to the directory
+cd byte
+
+# Install dependencies
+npm install
+
+# Build and package the extension
+npm run vscode:prepublish
+
+# Install the extension from the local .vsix file
+code --install-extension byte-0.1.1.vsix
+```
+
+## 🚀 Getting Started
+
+1. **Install the extension** from the VS Code marketplace or using the manual method above
+2. **Open the Byte panel** by clicking the Byte icon in the activity bar
+3. **Configure your AI provider** using the `/configure` command in the chat panel 
+   - You'll need an API key for most providers (OpenAI, Anthropic, Google)
+   - For local models, ensure Ollama is running with your preferred model
+4. **Start using the features** via:
+   - Chat panel in the sidebar
+   - Right-click context menu on selected code
+   - Command palette (Ctrl+Shift+P or Cmd+Shift+P)
+   - Keyboard shortcuts
+
+## 💡 Key Features
+
+### AI Chat
+
+Use the chat panel to have conversations with the AI. You can:
+- Ask general coding questions
+- Request code examples
+- Discuss software architecture
+- Use slash commands for specialized tasks
+
+### Code Analysis
+
+Select any code in your editor and use "Analyze Selected Code" to get:
+- Line-by-line explanation of how the code works
+- Potential issues and improvement suggestions
+- Best practices recommendations
+- Time and space complexity analysis
+
+### Bug Finder
 
 The Bug Finder feature automatically monitors your terminal for errors and provides AI-powered solutions.
 
-### How to use Bug Finder
+#### How to use Bug Finder
 
 1. **Start Error Monitoring**
    - Use the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
@@ -68,40 +135,33 @@ The Bug Finder feature automatically monitors your terminal for errors and provi
    - Use the command "Byte: Stop Terminal Error Monitoring" to stop
    - Or click on the status bar indicator to turn it off
 
-### Keyboard Shortcuts
+## ⌨️ Commands and Shortcuts
 
-| Shortcut | Command | Description |
-|----------|---------|-------------|
-| `Ctrl+Alt+E` | Start Error Monitoring | Begin monitoring terminal for errors |
-| `Ctrl+Alt+Shift+E` | Stop Error Monitoring | Stop the error monitoring process |
-| `Ctrl+Alt+A` | Analyze Error | Manually analyze an error message |
+### Main Commands
 
-### Using in Development Mode
+| Command | Description |
+|---------|-------------|
+| `Byte: Open AI Chat` | Open the main chat panel |
+| `Byte: Explain Selected Code` | Get an explanation of the selected code |
+| `Byte: Refactor Selected Code` | Get suggestions to improve the selected code |
+| `Byte: Generate Documentation` | Generate documentation for the selected code |
+| `Byte: Optimize Code` | Get performance optimization suggestions |
+| `Byte: Generate Unit Tests` | Create unit tests for the selected code |
+| `Byte: Add Comments to Code` | Add detailed comments to the selected code |
+| `Byte: Analyze Code Issues` | Find potential bugs and code smells |
+| `Byte: Configure AI Service` | Set up your preferred AI provider and API key |
 
-To use the Bug Finder feature in development mode, you need to enable the proposed API:
-
-```bash
-code --enable-proposed-api byte.byte
-```
-
-## Getting Started
-
-1. Install the extension from the VS Code marketplace
-2. Configure your preferred AI provider via the `/configure` command
-3. Start chatting with the AI via the Byte panel in the sidebar
-4. Use slash commands like `/explain`, `/refactor`, `/docs` to process your code
-
-## Commands
+### Chat Slash Commands
 
 | Command | Description |
 |---------|-------------|
 | `/explain` | Explain the selected code |
-| `/refactor` | Get suggestions to improve your code |
-| `/docs` | Generate documentation for your code |
+| `/refactor` | Get refactoring suggestions |
+| `/docs` | Generate documentation |
 | `/optimize` | Get performance optimization suggestions |
-| `/comments` | Add detailed comments to your code |
+| `/comments` | Add detailed comments to code |
 | `/issues` | Find potential bugs and code smells |
-| `/tests` | Generate unit tests for your code |
+| `/tests` | Generate unit tests |
 | `/help` | See a list of all available commands |
 
 ### Bug Finder Commands
@@ -112,42 +172,172 @@ code --enable-proposed-api byte.byte
 | `Byte: Stop Terminal Error Monitoring` | Stop the error monitoring process |
 | `Byte: Analyze Error Message` | Manually analyze an error message |
 
-## Code Analysis
+### Keyboard Shortcuts
 
-Select any code in your editor and use the "Analyze Selected Code" command or right-click menu to get an instant analysis of your code:
+| Shortcut | Command | Description |
+|----------|---------|-------------|
+| `Ctrl+Alt+I` / `Cmd+Alt+I` | Analyze Selected Code | Analyze the currently selected code |
+| `Ctrl+Alt+Q` / `Cmd+Alt+Q` | Ask Question About Selected Code | Ask a specific question about the selected code |
+| `Ctrl+Alt+C` / `Cmd+Alt+C` | Open Code Analysis Chat | Open the inline code analysis chat |
 
-- Explanation of how it works
-- Potential issues and improvement suggestions
-- Best practices recommendations
+## 🧩 Extension Settings
 
-## Development
+Byte AI Assistant provides several configuration options:
 
-For development details, see [ARCHITECTURE.md](src/ARCHITECTURE.md) for information about the codebase structure.
+| Setting | Description |
+|---------|-------------|
+| `byte.provider` | AI service provider (openai, gemini, local, anthropic) |
+| `byte.openai.apiKey` | OpenAI API key |
+| `byte.openai.model` | OpenAI model (gpt-3.5-turbo, gpt-4, gpt-4-turbo) |
+| `byte.gemini.apiKey` | Google Gemini API key |
+| `byte.gemini.model` | Gemini model (gemini-1.5-flash, gemini-1.5-pro) |
+| `byte.anthropic.apiKey` | Anthropic API key |
+| `byte.anthropic.model` | Anthropic model (claude-3-haiku, claude-3-sonnet, claude-3-opus) |
+| `byte.local.endpoint` | Ollama service endpoint URL |
+| `byte.local.model` | Local model name (llama3, codellama, mistral, mixtral, neural-chat, phi) |
+| `byte.saveHistory` | Save chat history between sessions |
+| `byte.cache.enabled` | Enable API response caching to reduce token usage |
+| `byte.autoSwitch` | Enable automatic model switching based on task complexity |
 
-### Building from Source
+You can configure these settings through:
+- VS Code Settings UI
+- `/configure` command in the chat
+- Directly editing settings.json
 
-```bash
-# Clone the repository
-git clone https://github.com/tuncer-byte/byte.git
+## 👨‍💻 Development
 
-# Install dependencies
-npm install
+### Prerequisites
 
-# Build the extension
-npm run build
+- Node.js (v16+)
+- npm or yarn
+- Visual Studio Code
 
-# Package the extension
-npm run package
+### Project Structure
+
+The codebase follows a modular architecture:
+
+```
+src/
+├── commands/              # Command handling and management
+│   ├── handlers/          # Command handler implementations
+│   ├── utils/             # Command-related utilities
+│   ├── index.ts           # CommandManager that registers all commands
+│   └── types.ts           # Command-related type definitions
+│
+├── services/              # Core services
+│   ├── ai/                # AI service and providers
+│   │   ├── providers/     # Implementation for different AI providers
+│   │   ├── types/         # Type definitions for AI-related features
+│   │   └── utils/         # AI-related utility functions
+│   │
+│   └── bug-finder/        # Bug finder functionality
+│       ├── utils/         # Error parsing and analysis utilities
+│       └── types.ts       # Bug finder type definitions
+│
+├── views/                 # UI components and panels
+│   ├── chat/              # Main chat panel implementation
+│   └── inline-chat/       # Inline code chat functionality
+│
+├── extension.ts           # Main extension entry point
+└── utils.ts               # Shared utility functions
 ```
 
-## License
+### Key Components
 
-MIT License
+1. **extension.ts**: The main entry point that activates the extension and initializes all services
+2. **AI Service**: Manages communication with different AI providers (OpenAI, Gemini, Claude, Local)
+3. **Command Manager**: Registers and handles all VS Code commands
+4. **Chat Panel**: Implements the main chat interface in the sidebar
+5. **Inline Code Chat**: Implements the focused code analysis chat interface
+6. **Bug Finder Service**: Monitors terminal output for errors and provides AI-powered solutions
 
-## Privacy
+### Building and Running
 
-Your code is processed according to the privacy policy of the AI provider you choose. Code is sent only when you explicitly request analysis. No code is stored or logged by the extension itself.
+```bash
+# Watch mode for development
+npm run watch
 
-## Feedback
+# Build for production
+npm run compile
 
-We welcome feedback and contributions! Please open an issue on GitHub or use the "Provide Feedback" command in the extension.
+# Lint the code
+npm run lint
+
+# Run tests
+npm run test
+```
+
+To debug the extension:
+1. Open the project in VS Code
+2. Press F5 to launch a new instance of VS Code with the extension loaded
+3. You can set breakpoints in your code for debugging
+
+### Using Proposed APIs
+
+For features like the Bug Finder that use proposed VS Code APIs, you need to enable them in development:
+
+```bash
+code --enable-proposed-api byte.byte
+```
+
+## 🔒 Privacy and Security
+
+- Your code is processed according to the privacy policy of the AI provider you choose
+- Code is sent to AI providers only when you explicitly request analysis
+- No code is stored or logged by the extension itself
+- API keys are stored securely in the VS Code secret storage
+- You can use local models via Ollama for complete privacy
+- The extension implements rate limiting and caching to reduce API usage and costs
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request or open issues for bug reports and feature requests.
+
+### Contribution Guidelines
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run the linter (`npm run lint`)
+5. Commit your changes (`git commit -m 'Add some amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+### Code Style
+
+This project follows these coding conventions:
+- Use TypeScript for all code
+- Follow the ESLint configuration provided
+- Use async/await for asynchronous operations
+- Add appropriate JSDoc comments to public APIs
+- Write unit tests for new functionality
+
+### Testing
+
+Please ensure your contributions include tests. Run the existing test suite to make sure your changes don't break existing functionality:
+
+```bash
+npm run test
+```
+
+## 🙏 Acknowledgements
+
+- Thanks to the VS Code team for their excellent extension API
+- Thanks to the AI provider teams at OpenAI, Google, and Anthropic
+- Thanks to all contributors and users for helping improve this extension
+
+## 📢 Feedback and Support
+
+We welcome feedback and suggestions! There are several ways to reach out:
+
+- **Bug Reports and Feature Requests**: Open an issue on GitHub
+- **Questions and Discussions**: Start a discussion in the GitHub repository
+- **Direct Contact**: Reach out to the maintainer via email at tuncer@byteai.app
+
+## ♻️ Changelog
+
+See the [CHANGELOG.md](CHANGELOG.md) file for details about version updates and changes.
