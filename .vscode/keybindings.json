@@ -1,0 +1,17 @@
+[
+    {
+        "key": "ctrl+alt+e",
+        "command": "byte.startErrorMonitoring",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+alt+shift+e",
+        "command": "byte.stopErrorMonitoring",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+alt+a",
+        "command": "byte.analyzeError",
+        "when": "editorTextFocus"
+    }
+] 

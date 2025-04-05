@@ -17,6 +17,16 @@
     const addFileButton = document.getElementById('addFileButton');
     const fileBadgesContainer = document.getElementById('fileBadgesContainer');
     
+    // Komut Modalı Elementleri
+    const commandModal = document.getElementById('commandModal');
+    const commandInput = document.getElementById('commandInput');
+    const closeCommandBtn = document.getElementById('closeCommandBtn');
+    const commandSuggestions = document.getElementById('commandSuggestions');
+    
+    // Mini Komut Modalı Elementleri
+    const commandMiniModal = document.getElementById('commandMiniModal');
+    const commandMiniList = document.getElementById('commandMiniList');
+    
     // Ayarlar Modalı Elementleri
     const settingsModal = document.getElementById('settingsModal');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -37,19 +47,9 @@
     // Şifre Göster/Gizle Düğmeleri
     const togglePasswordButtons = document.querySelectorAll('.toggle-password');
     
-    // Komut modalı
-    const commandModal = document.getElementById('commandModal');
-    const commandInput = document.getElementById('commandInput');
-    const closeCommandBtn = document.getElementById('closeCommandBtn');
-    const commandSuggestions = document.getElementById('commandSuggestions');
+   
     
-    // Komut listesi
-    const commands = {
-        '/code': 'to generate new feature or fix bug',
-        '/explain': 'file or selected code',
-        '/review': 'code to recommend improvements',
-        '/unittests': 'to generate unit tests'
-    };
+
     
     // State tanımlamasına includeCurrentFile ekleyelim
     const state = {
@@ -569,7 +569,7 @@
                             copyButton.innerHTML = `
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1-2-2h9a2 2 0 0 1-2 2v1"></path>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1-2 2v1"></path>
                                 </svg>
                                 <span>Copy</span>
                             `;
@@ -589,8 +589,11 @@
     function formatMarkdown(text, role = 'assistant') {
         if (!text) return '';
         
+        // Önce HTML karakterlerini kaçışla, daha sonra markdown öğelerini HTML'e dönüştür
+        let formattedText = escapeHtml(text);
+        
         // Kod bloklarını işle - dil desteği ve syntax highlighting eklendi
-        text = text.replace(/```(\w*)([\s\S]*?)```/g, function(match, language, code) {
+        formattedText = formattedText.replace(/```(\w*)([\s\S]*?)```/g, function(match, language, code) {
             // Dil belirteci yoksa varsayılan dilleri kontrol et
             if (!language || language === '') {
                 // Kod içeriğine bakarak yaygın dilleri tespit et
@@ -620,7 +623,6 @@
             }
             
             const langClass = language ? ` class="language-${language}"` : '';
-            const formattedCode = escapeHtml(code.trim());
             
             // Dil belirteci ve butonlar için üst kısım (header) oluştur
             const langBadge = language ? `<div class="code-language">${language}</div>` : '';
@@ -630,88 +632,114 @@
             if (role === 'assistant') {
                 // Butonları oluştur - kod içeriğini direct olarak gönder back-ticks olmadan
                 if (language === 'bash' || language === 'sh') {
-                    actionButtons = `<button class="run-code-button" data-code="${escapeHtml(code.trim())}">Run</button>`;
+                    actionButtons = `<button class="run-code-button" data-code="${code}">Run</button>`;
                 } else if (language && language !== 'output' && language !== 'text' && language !== 'console') {
-                    actionButtons = `<button class="apply-code-button" data-code="${escapeHtml(code.trim())}">Apply</button>`;
+                    actionButtons = `<button class="apply-code-button" data-code="${code}">Apply</button>`;
                 }
             }
 
             // Header'ı ve kod içeriğini birleştir - butonu sağ üst köşeye yerleştir
-            const preElement = `<pre>${langBadge}<div style="position:absolute;top:0;right:0;z-index:10;">${actionButtons}</div><code${langClass}>${formattedCode}</code></pre>`;
-            
-            // Timeout'la highlight.js'yi çalıştır
-            setTimeout(() => {
-                try {
-                    // Tüm <pre><code> bloklarını seç ve highlight.js uygula
-                    document.querySelectorAll('pre code').forEach((block) => {
-                        if (!block.classList.contains('hljs')) {
-                            hljs.highlightElement(block);
-                        }
-                    });
-                } catch (error) {
-                    console.error('Highlight.js error:', error);
-                }
-            }, 0);
-            
-            return preElement;
+            return `<pre>${langBadge}<div style="position:absolute;top:0;right:0;z-index:10;">${actionButtons}</div><code${langClass}>${code}</code></pre>`;
         });
         
         // Satır içi kod
-        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        formattedText = formattedText.replace(/`([^`]+)`/g, '<code>$1</code>');
         
         // Başlıklar
-        text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-        text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-        text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+        formattedText = formattedText.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+        formattedText = formattedText.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+        formattedText = formattedText.replace(/^# (.*$)/gm, '<h1>$1</h1>');
         
         // Kalın metinler
-        text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        formattedText = formattedText.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
         
         // İtalik metinler
-        text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        formattedText = formattedText.replace(/\*([^*]+)\*/g, '<em>$1</em>');
         
-        // Listeler - geliştirildi
-        // Sırasız liste öğelerini grup olarak dönüştür
-        const ulRegex = /^[*\-] (.+)$/gm;
-        const ulMatches = text.match(ulRegex);
-        
-        if (ulMatches) {
-            let listItems = '';
-            ulMatches.forEach(match => {
-                const content = match.replace(/^[*\-] (.+)$/, '$1');
-                listItems += `<li>${content}</li>`;
-            });
-            text = text.replace(ulRegex, '');
-            // Listeleri düzgün grup olarak ekle
-            if (listItems) {
-                text = `<ul>${listItems}</ul>${text}`;
+        // Sırasız listeler için düzeltilmiş yaklaşım
+        let hasUnorderedList = formattedText.match(/^[\*\-] (.+)$/gm);
+        if (hasUnorderedList) {
+            let listContent = '';
+            let inList = false;
+            let lines = formattedText.split('\n');
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                let listMatch = line.match(/^[\*\-] (.+)$/);
+                
+                if (listMatch) {
+                    if (!inList) {
+                        listContent += '<ul>\n';
+                        inList = true;
+                    }
+                    listContent += `<li>${listMatch[1]}</li>\n`;
+                } else {
+                    if (inList) {
+                        listContent += '</ul>\n';
+                        inList = false;
+                    }
+                    listContent += line + '\n';
+                }
             }
+            
+            if (inList) {
+                listContent += '</ul>\n';
+            }
+            
+            formattedText = listContent;
         }
         
-        // Numaralı listeler
-        const olRegex = /^\d+\. (.+)$/gm;
-        const olMatches = text.match(olRegex);
-        
-        if (olMatches) {
-            let listItems = '';
-            olMatches.forEach(match => {
-                const content = match.replace(/^\d+\. (.+)$/, '$1');
-                listItems += `<li>${content}</li>`;
-            });
-            text = text.replace(olRegex, '');
-            if (listItems) {
-                text = `<ol>${listItems}</ol>${text}`;
+        // Sıralı listeler için düzeltilmiş yaklaşım
+        let hasOrderedList = formattedText.match(/^\d+\. (.+)$/gm);
+        if (hasOrderedList) {
+            let listContent = '';
+            let inList = false;
+            let lines = formattedText.split('\n');
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                let listMatch = line.match(/^\d+\. (.+)$/);
+                
+                if (listMatch) {
+                    if (!inList) {
+                        listContent += '<ol>\n';
+                        inList = true;
+                    }
+                    listContent += `<li>${listMatch[1]}</li>\n`;
+                } else {
+                    if (inList) {
+                        listContent += '</ol>\n';
+                        inList = false;
+                    }
+                    listContent += line + '\n';
+                }
             }
+            
+            if (inList) {
+                listContent += '</ol>\n';
+            }
+            
+            formattedText = listContent;
         }
         
-        // Kalan satırları paragraflara dönüştür
-        const paragraphs = text.split(/\n\n+/);
-        return paragraphs.map(p => {
-            if (p.trim() && !p.includes('<h') && !p.includes('<ul') && !p.includes('<ol') && !p.includes('<pre')) {
-                return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+        // Paragrafları oluşturma - boş satırlarla ayrılmış paragraflar
+        let paragraphs = formattedText.split(/\n\n+/);
+        let result = '';
+        
+        paragraphs.forEach(p => {
+            if (p.trim()) {
+                // Eğer zaten HTML elementi içeriyorsa doğrudan ekle
+                if (p.includes('<h') || p.includes('<ul') || p.includes('<ol') || 
+                    p.includes('<pre') || p.includes('<code') || p.includes('<li')) {
+                    result += p + '\n\n';
+                } else {
+                    // Satır içi satır sonlarını <br> ile değiştir
+                    result += `<p>${p.replace(/\n/g, '<br>')}</p>\n\n`;
+                }
             }
-            return p;
-        }).join('');
+        });
+        
+        return result;
     }
     
     // HTML özel karakterleri kaçış
@@ -775,6 +803,78 @@
         }
     });
     
+    // Input için olay dinleyici - komutları izle ve mini modal göster/gizle
+    userInput.addEventListener('input', function() {
+        // Alanın yüksekliğini otomatik ayarla
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        
+        const text = this.value.trim();
+        
+        // Eğer kullanıcı "/" yazıp daha fazla bir şey yazmamışsa, mini komut modalını göster
+        if (text === '/') {
+            showMiniCommandModal();
+        } 
+        // Eğer "/" ile başlayan ve devam eden bir komut yazıyorsa, mini komut modalını göstermeye devam et
+        else if (text.startsWith('/')) {
+            // Filtreleme yap
+            filterMiniCommands(text.toLowerCase());
+        } 
+        // Eğer "/" ile başlamıyorsa veya boşsa, mini komut modalını gizle
+        else {
+            hideMiniCommandModal();
+        }
+        
+        // Komutu anlık vurgula
+        highlightInputCommand();
+    });
+    
+    // Mini komutlarda filtreleme yap
+    function filterMiniCommands(query) {
+        const cmdItems = commandMiniList.querySelectorAll('.command-mini-item');
+        
+        // Eşleşen komutların olup olmadığını izle
+        let hasMatches = false;
+        
+        cmdItems.forEach(item => {
+            const cmdText = item.getAttribute('data-command').toLowerCase();
+            // Eğer komut sorgu metniyle başlıyorsa veya içeriyorsa göster
+            if (cmdText.startsWith(query) || cmdText.includes(query.substring(1))) {
+                item.style.display = 'flex';
+                hasMatches = true;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Eğer hiç eşleşme yoksa modalı gizle
+        if (!hasMatches) {
+            hideMiniCommandModal();
+        } else {
+            // Eşleşme varsa modalı göster
+            commandMiniModal.classList.add('active');
+        }
+    }
+    
+    // Input blur olunca mini modal modalını gizle
+    userInput.addEventListener('blur', function(e) {
+        // Eğer mini komut modalının bir elemanına tıklandıysa, gizleme
+        if (e.relatedTarget && e.relatedTarget.closest('.command-mini-modal')) {
+            return;
+        }
+        
+        // Diğer durumlarda gizle
+        setTimeout(() => {
+            hideMiniCommandModal();
+        }, 200);
+    });
+    
+    // Mini komut modalına tıklandığında input'a odaklanma devam etsin
+    commandMiniModal.addEventListener('mousedown', function(e) {
+        // Olayın varsayılan davranışını engelle (focus'u değiştirmemesi için)
+        e.preventDefault();
+    });
+
     // Slash komutlarını anlık vurgulama fonksiyonu
     function highlightInputCommand() {
         const text = userInput.value;
@@ -868,6 +968,39 @@
             // Komut metinini formatlı bir şekilde yerleştir
             formatCommandInInput(command);
         });
+    });
+
+    // Slash tuşu dinleyicisi
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '/' && document.activeElement !== commandInput) {
+            // If we're already in the userInput field AND it's empty, open the command modal
+            if (document.activeElement === userInput && userInput.value.trim() === '') {
+                e.preventDefault();
+                openCommandModal();
+            } 
+            // If we're not in any input field, open the command modal
+            else if (document.activeElement !== userInput) {
+                e.preventDefault();
+                openCommandModal();
+            }
+        }
+    });
+
+    // Add a specific input event handler for userInput to detect slash at beginning
+    userInput.addEventListener('input', function(e) {
+        const text = this.value.trim();
+        
+        // If the user just typed a / at the start of an empty field
+        if (text === '/') {
+            // Clear the input field
+            this.value = '';
+            
+            // Open the command modal
+            openCommandModal();
+        }
+        
+        // Always call the existing input handling function
+        highlightInputCommand();
     });
 
     // Slash tuşu dinleyicisi
@@ -1494,7 +1627,7 @@
         placeCaretAtEnd(commandInput);
         
         // Önerileri göster
-        commandSuggestions.style.display = 'flex';
+        
     }
 
     // Komut modalını kapat
@@ -1721,5 +1854,49 @@
             // State'i güncelle
             vscode.setState(state);
         }
+    }
+
+    // Bilinen komutlar array'i - her yerde kullanılabilir
+    const knownCommands = [
+        { command: '/code', desc: 'Kod üret veya bir özellik geliştir', icon: '💻' },
+        { command: '/explain', desc: 'Kodu açıkla ve anlaşılmasını sağla', icon: '🔍' },
+        { command: '/review', desc: 'Kod kalitesini değerlendir ve iyileştir', icon: '📝' },
+        { command: '/refactor', desc: 'Kodu yeniden yapılandır', icon: '🔄' },
+        { command: '/optimize', desc: 'Kodu optimize et', icon: '⚡' },
+        { command: '/docs', desc: 'Kod için dokümantasyon oluştur', icon: '📚' },
+        { command: '/tests', desc: 'Unit testler oluştur', icon: '🧪' },
+        { command: '/help', desc: 'Komutlar hakkında yardım', icon: '❓' }
+    ];
+
+    // Mini komut modalını doldur ve göster
+    function showMiniCommandModal() {
+        // Önce listeyi temizle
+        commandMiniList.innerHTML = '';
+        
+        // Komutları ekle
+        knownCommands.forEach(cmd => {
+            const item = document.createElement('div');
+            item.className = 'command-mini-item';
+            item.setAttribute('data-command', cmd.command);
+            item.innerHTML = `<span class="command-icon">${cmd.icon}</span>${cmd.command}`;
+            
+            // Tıklama olayını ekle
+            item.addEventListener('click', function() {
+                // Komutu input'a yerleştir
+                formatCommandInInput(cmd.command);
+                // Mini modalı kapat
+                hideMiniCommandModal();
+            });
+            
+            commandMiniList.appendChild(item);
+        });
+        
+        // Mini modalı göster
+        commandMiniModal.classList.add('active');
+    }
+    
+    // Mini komut modalını gizle
+    function hideMiniCommandModal() {
+        commandMiniModal.classList.remove('active');
     }
 })();

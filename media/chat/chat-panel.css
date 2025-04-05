@@ -294,11 +294,10 @@ html {
 }
 
 .assistant-message .message-content {
-    color: #E6E6E6;
-    /* Daha net görünüm için metni açık renk yap */
-    font-size: 14px;
-    line-height: 1.7;
-    /* Metin satır yüksekliğini artırarak okunabilirliği artır */
+    color: var(--foreground);
+    background-color: rgba(30, 38, 49, 0.3);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
 
 /* Kopyalama butonu için yeni stil */
@@ -786,10 +785,11 @@ html {
 
 /* Mesaj içeriği için stiller */
 .message-content {
-    padding: 12px 16px;
-    /* Mesaj içeriğinde padding azalt */
+    padding: 16px;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    line-height: 1.6;
+    font-size: 14px;
 }
 
 .message-content code {
@@ -802,7 +802,7 @@ html {
     white-space: pre-wrap;
 }
 
-/* Kod blokları için geliştirilmiş stiller - taşma sorununu çözmek için */
+/* Kod blokları için geliştirilmiş stiller */
 .message-content pre {
     background-color: #0D1117;
     border-radius: 6px;
@@ -810,7 +810,6 @@ html {
     position: relative;
     border: 1px solid var(--border-color);
     overflow-x: auto;
-    /* Yatay scroll ekle */
     max-width: 100%;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
@@ -826,6 +825,47 @@ html {
     white-space: pre;
     overflow-wrap: normal;
     tab-size: 2;
+}
+
+/* Markdown listeleri için stiller */
+.message-content ul,
+.message-content ol {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.message-content ul li,
+.message-content ol li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+/* Paragraflar için stiller */
+.message-content p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+/* Başlıklar için stiller */
+.message-content h1,
+.message-content h2,
+.message-content h3 {
+    margin-top: 20px;
+    margin-bottom: 12px;
+    color: var(--primary-light);
+    font-weight: 600;
+}
+
+.message-content h1 {
+    font-size: 22px;
+}
+
+.message-content h2 {
+    font-size: 18px;
+}
+
+.message-content h3 {
+    font-size: 16px;
 }
 
 /* Quick commands için geliştirilmiş stiller */
@@ -1329,32 +1369,34 @@ html {
     left: 50%;
     transform: translateX(-50%) scale(0.9);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 20px;
-    width: 400px;
+    border-radius: 8px; /* Reduced from 12px */
+    padding: 15px; /* Reduced from 20px */
+    width: 320px; /* Reduced from 400px */
     max-width: 90vw;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-    z-index: 1000;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    z-index: -1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Lighter shadow */
+    background-color: var(--vscode-editor-background);
 }
 
 .command-modal.active {
     transform: translateX(-50%) scale(1);
     opacity: 1;
     visibility: visible;
+    z-index: 9999;
 }
 
 .command-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 12px; /* Reduced from 16px */
 }
 
 .command-modal-header h3 {
-    font-size: 18px;
+    font-size: 16px; /* Reduced from 18px */
     font-weight: 600;
     color: var(--foreground);
     margin: 0;
@@ -1363,19 +1405,19 @@ html {
 .command-modal-content {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px; /* Reduced from 12px */
 }
 
 .command-input {
     background: var(--input-background);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    padding: 10px 12px;
+    padding: 8px 10px; /* Reduced from 10px 12px */
     color: var(--primary-color);
-    font-size: 14px;
+    font-size: 13px; /* Reduced from 14px */
     width: 100%;
     transition: all 0.2s ease;
-    min-height: 40px;
+    min-height: 36px; /* Reduced from 40px */
 }
 
 .command-input:focus {
@@ -1385,25 +1427,29 @@ html {
 }
 
 .command-description {
-    font-size: 13px;
+    font-size: 12px; /* Reduced from 13px */
     color: rgba(230, 230, 230, 0.7);
-    margin-top: 4px;
+    margin-top: 2px; /* Reduced from 4px */
 }
 
 .command-list-suggestions {
-    display: flex;
+    display: none;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
-    max-height: 200px;
+    gap: 4px; /* Reduced from 8px */
+    margin-top: 8px; /* Reduced from 12px */
+    max-height: 180px; /* Reduced from 200px */
     overflow-y: auto;
+}
+
+.command-modal.active .command-list-suggestions {
+    display: flex;
 }
 
 .command-suggestion-item {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
-    border-radius: 6px;
+    padding: 6px 8px; /* Reduced from 8px 10px */
+    border-radius: 4px; /* Reduced from 6px */
     background: var(--input-background);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1416,12 +1462,13 @@ html {
 .command-suggestion-name {
     color: var(--primary-color);
     font-weight: 500;
-    margin-right: 10px;
+    margin-right: 8px; /* Reduced from 10px */
+    font-size: 13px; /* Added font size */
 }
 
 .command-suggestion-desc {
     color: rgba(230, 230, 230, 0.7);
-    font-size: 13px;
+    font-size: 12px; /* Reduced from 13px */
 }
 
 .anthropic-icon {
@@ -2485,4 +2532,56 @@ pre code {
         justify-content: flex-end;
         margin-top: 5px;
     }
+}
+
+.command-mini-modal {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--sidebar-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    margin-bottom: 2px;
+}
+
+.command-mini-modal.active {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.command-mini-list {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 8px;
+    gap: 4px;
+}
+
+.command-mini-item {
+    background-color: rgba(30, 38, 49, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--primary-color);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.command-mini-item:hover {
+    background-color: rgba(255, 123, 35, 0.15);
+    border-color: var(--primary-color);
+}
+
+.command-mini-item .command-icon {
+    margin-right: 4px;
+    opacity: 0.8;
 }

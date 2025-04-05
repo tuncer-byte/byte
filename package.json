@@ -14,7 +14,7 @@
   "license": "MIT",
   "icon": "media/icons/icon-white.png",
   "engines": {
-    "vscode": "^1.98.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
     "Other",
@@ -48,7 +48,7 @@
     "commands": [
       {
         "command": "byte.openChat",
-        "title": "Byte: Open Chat Panel"
+        "title": "Byte: Open AI Chat"
       },
       {
         "command": "byte.explainCode",
@@ -84,18 +84,32 @@
       },
       {
         "command": "byte.inlineCodeAnalysis",
-        "title": "Byte: Analyze Code",
+        "title": "Byte: Analyze Selected Code",
         "icon": "$(sparkle)"
       },
       {
         "command": "byte.askQuestionAboutCode",
-        "title": "Byte: Ask Question About Code",
-        "icon": "$(question)"
+        "title": "Byte: Ask Question About Selected Code"
       },
       {
         "command": "byte.openInlineChat",
-        "title": "Byte: Open Inline Chat Window",
-        "icon": "$(comment-discussion)"
+        "title": "Byte: Open Code Analysis Chat"
+      },
+      {
+        "command": "byte.clearConversation",
+        "title": "Byte: Clear Conversation"
+      },
+      {
+        "command": "byte.startErrorMonitoring",
+        "title": "Byte: Start Terminal Error Monitoring"
+      },
+      {
+        "command": "byte.stopErrorMonitoring",
+        "title": "Byte: Stop Terminal Error Monitoring"
+      },
+      {
+        "command": "byte.analyzeError",
+        "title": "Byte: Analyze Error Message"
       }
     ],
     "keybindings": [
@@ -258,7 +272,7 @@
         "byteAI.apiKey": {
           "type": "string",
           "default": "",
-          "description": "Byte AI API anahtarı"
+          "description": "Byte AI API key"
         },
         "byteAI.apiEndpoint": {
           "type": "string",
@@ -342,5 +356,8 @@
   "dependencies": {
     "axios": "^1.8.4",
     "node-fetch": "^2.6.7"
-  }
+  },
+  "enabledApiProposals": [
+    "terminalDataWriteEvent"
+  ]
 }

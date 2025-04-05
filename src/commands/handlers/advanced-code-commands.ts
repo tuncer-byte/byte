@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
 import { AIService } from '../../services/ai';
 import { CodeCommandResult, CommandHandler } from '../types';
 import { getSelectedCode, withProgressNotification } from '../utils/common';
@@ -9,14 +7,14 @@ import { getSelectedCode, withProgressNotification } from '../utils/common';
  * Kod optimizasyon işleyicisi
  */
 export class OptimizeCodeHandler implements CommandHandler {
-    constructor(private aiService: AIService) {}
-    
+    constructor(private aiService: AIService) { }
+
     async execute(): Promise<void> {
         const codeParams = await getSelectedCode();
         if (!codeParams) {
             return;
         }
-        
+
         // Optimize türü seçimi için Quick Pick
         const optimizeType = await vscode.window.showQuickPick(
             [
@@ -30,18 +28,18 @@ export class OptimizeCodeHandler implements CommandHandler {
                 ignoreFocusOut: true
             }
         );
-        
+
         if (!optimizeType) {
             return;
         }
-        
+
         await withProgressNotification("Kod optimize ediliyor...", async (progress) => {
             try {
                 progress.report({ message: "Yapay zeka modeline istek gönderiliyor..." });
-                
+
                 // Optimizasyon türüne göre prompt hazırla
                 let optimizePrompt = '';
-                
+
                 switch (optimizeType.label.toLowerCase()) {
                     case 'performance':
                         optimizePrompt = 'performance optimization (improve execution speed)';
@@ -58,7 +56,7 @@ export class OptimizeCodeHandler implements CommandHandler {
                     default:
                         optimizePrompt = 'general optimization (improve both performance and readability)';
                 }
-                
+
                 // Prompt hazırlama
                 const prompt = `Please optimize the following code for ${optimizePrompt}. 
 Provide a clear explanation of the changes made and why they improve the code.
@@ -69,17 +67,17 @@ ${codeParams.code}
 \`\`\`
 
 Please return the optimized code along with a detailed explanation of the improvements.`;
-                
+
                 const optimizedResult = await this.aiService.sendMessage(prompt);
-                
+
                 // Açıklama paneli açarak sonucu göster
                 const doc = await vscode.workspace.openTextDocument({
                     content: optimizedResult,
                     language: 'markdown'
                 });
-                
+
                 await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
-                
+
                 progress.report({ message: "Tamamlandı", increment: 100 });
             } catch (error: any) {
                 vscode.window.showErrorMessage(`Kod optimizasyonu başarısız: ${error.message}`);
@@ -92,14 +90,14 @@ Please return the optimized code along with a detailed explanation of the improv
  * Kod yorumlama işleyicisi
  */
 export class AddCommentsHandler implements CommandHandler {
-    constructor(private aiService: AIService) {}
-    
+    constructor(private aiService: AIService) { }
+
     async execute(): Promise<void> {
         const codeParams = await getSelectedCode();
         if (!codeParams) {
             return;
         }
-        
+
         // Yorum stili seçimi için Quick Pick
         const commentStyle = await vscode.window.showQuickPick(
             [
@@ -112,18 +110,18 @@ export class AddCommentsHandler implements CommandHandler {
                 ignoreFocusOut: true
             }
         );
-        
+
         if (!commentStyle) {
             return;
         }
-        
+
         await withProgressNotification("Kodlara açıklama ekleniyor...", async (progress) => {
             try {
                 progress.report({ message: "Yapay zeka modeline istek gönderiliyor..." });
-                
+
                 // Yorum stiline göre prompt oluştur
                 let commentPrompt = '';
-                
+
                 switch (commentStyle.label.toLowerCase()) {
                     case 'concise':
                         commentPrompt = 'concise comments (brief comments for key sections only)';
@@ -134,7 +132,7 @@ export class AddCommentsHandler implements CommandHandler {
                     default:
                         commentPrompt = 'comprehensive comments (detailed explanations for each code block)';
                 }
-                
+
                 // Prompt hazırlama
                 const prompt = `Please add ${commentPrompt} to the following code. 
 Return the same code with appropriate comments added.
@@ -143,32 +141,32 @@ Code:
 \`\`\`
 ${codeParams.code}
 \`\`\``;
-                
+
                 const commentedCode = await this.aiService.sendMessage(prompt);
-                
+
                 // Seçenekler sun
                 const editor = vscode.window.activeTextEditor!;
                 const selection = editor.selection;
-                
+
                 const result: CodeCommandResult = {
                     success: true,
                     content: commentedCode
                 };
-                
+
                 // Kullanıcı seçeneklerini göster
                 const action = await vscode.window.showInformationMessage(
                     'Kod yorumları eklendi. Ne yapmak istersiniz?',
                     'Mevcut Kodu Değiştir',
                     'Yeni Dosyada Göster'
                 );
-                
+
                 if (action === 'Mevcut Kodu Değiştir') {
                     // Seçili kodu düzenlenmiş kod ile değiştir
                     const cleanedCode = this.extractCodeFromResponse(commentedCode);
                     await editor.edit(editBuilder => {
                         editBuilder.replace(selection, cleanedCode);
                     });
-                    
+
                     vscode.window.showInformationMessage('Kod başarıyla güncellendi.');
                 } else if (action === 'Yeni Dosyada Göster') {
                     // Yeni dosyada göster
@@ -176,17 +174,17 @@ ${codeParams.code}
                         content: commentedCode,
                         language: editor.document.languageId
                     });
-                    
+
                     await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
                 }
-                
+
                 progress.report({ message: "Tamamlandı", increment: 100 });
             } catch (error: any) {
                 vscode.window.showErrorMessage(`Açıklama ekleme başarısız: ${error.message}`);
             }
         });
     }
-    
+
     /**
      * Yanıttan kod parçasını çıkarır
      */
@@ -194,12 +192,12 @@ ${codeParams.code}
         // Markdown kod blokları içindeki kodu çıkarma
         const codeBlockRegex = /```(?:\w+)?\s*\n([\s\S]*?)\n```/g;
         const matches = [...response.matchAll(codeBlockRegex)];
-        
+
         if (matches.length > 0) {
             // İlk kod bloğunu alıyoruz
             return matches[0][1].trim();
         }
-        
+
         // Kod bloğu bulunamadıysa, yanıtın kendisini döndür
         return response.trim();
     }
@@ -209,14 +207,14 @@ ${codeParams.code}
  * Kod sorun tespit işleyicisi
  */
 export class FindIssuesHandler implements CommandHandler {
-    constructor(private aiService: AIService) {}
-    
+    constructor(private aiService: AIService) { }
+
     async execute(): Promise<void> {
         const codeParams = await getSelectedCode();
         if (!codeParams) {
             return;
         }
-        
+
         // Sorun türü seçimi için Quick Pick
         const issueType = await vscode.window.showQuickPick(
             [
@@ -231,18 +229,18 @@ export class FindIssuesHandler implements CommandHandler {
                 ignoreFocusOut: true
             }
         );
-        
+
         if (!issueType) {
             return;
         }
-        
+
         await withProgressNotification("Kod sorunları tespit ediliyor...", async (progress) => {
             try {
                 progress.report({ message: "Yapay zeka modeline istek gönderiliyor..." });
-                
+
                 // Sorun türüne göre prompt oluştur
                 let issuePrompt = '';
-                
+
                 switch (issueType.label.toLowerCase()) {
                     case 'performance':
                         issuePrompt = 'performance issues (focus on performance bottlenecks)';
@@ -259,7 +257,7 @@ export class FindIssuesHandler implements CommandHandler {
                     default:
                         issuePrompt = 'all issues (find all types of problems in the code)';
                 }
-                
+
                 // Prompt hazırlama
                 const prompt = `Please analyze this code for ${issuePrompt} and provide detailed feedback.
 For each issue you find:
@@ -274,17 +272,17 @@ ${codeParams.code}
 \`\`\`
 
 Return a comprehensive analysis with code examples of how to fix the issues.`;
-                
+
                 const analysis = await this.aiService.sendMessage(prompt);
-                
+
                 // Açıklama paneli açarak sonucu göster
                 const doc = await vscode.workspace.openTextDocument({
                     content: analysis,
                     language: 'markdown'
                 });
-                
+
                 await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
-                
+
                 progress.report({ message: "Tamamlandı", increment: 100 });
             } catch (error: any) {
                 vscode.window.showErrorMessage(`Kod analizi başarısız: ${error.message}`);
@@ -297,30 +295,30 @@ Return a comprehensive analysis with code examples of how to fix the issues.`;
  * Unit test oluşturma işleyicisi
  */
 export class GenerateTestsHandler implements CommandHandler {
-    constructor(private aiService: AIService) {}
-    
+    constructor(private aiService: AIService) { }
+
     async execute(): Promise<void> {
         const codeParams = await getSelectedCode();
         if (!codeParams) {
             return;
         }
-        
+
         // Dil ID'sine göre test framework belirle
         const defaultFramework = this.detectFramework(codeParams.languageId);
-        
+
         // Test framework seçimi için sorma (opsiyonel)
         const promptText = `Test framework seçin (otomatik tespit: ${defaultFramework})`;
         const framework = await vscode.window.showInputBox({
             prompt: promptText,
             placeHolder: defaultFramework
         });
-        
+
         const finalFramework = framework || defaultFramework;
-        
+
         await withProgressNotification("Unit testler oluşturuluyor...", async (progress) => {
             try {
                 progress.report({ message: "Yapay zeka modeline istek gönderiliyor..." });
-                
+
                 // Prompt hazırlama
                 const prompt = `Please generate comprehensive unit tests for the following code using the ${finalFramework} testing framework.
 Include a variety of test cases covering:
@@ -335,24 +333,24 @@ ${codeParams.code}
 \`\`\`
 
 Return well-structured tests with explanatory comments.`;
-                
+
                 const testCode = await this.aiService.sendMessage(prompt);
-                
+
                 // Açıklama paneli açarak sonucu göster
                 const doc = await vscode.workspace.openTextDocument({
                     content: testCode,
                     language: codeParams.languageId
                 });
-                
+
                 await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
-                
+
                 progress.report({ message: "Tamamlandı", increment: 100 });
             } catch (error: any) {
                 vscode.window.showErrorMessage(`Test oluşturma başarısız: ${error.message}`);
             }
         });
     }
-    
+
     /**
      * Dil ID'sine göre test framework belirler
      */

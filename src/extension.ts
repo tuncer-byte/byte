@@ -6,6 +6,8 @@ import { CommandManager } from './commands';
 import { ChatPanel } from './views/chat';
 import { ByteAIClient } from './client';
 import { InlineChatPanel } from './inlineChat';
+import { BugFinderService } from './services/bug-finder/bug-finder-service';
+import { ErrorType } from './services/bug-finder/types';
 
 // Genişlik sabitleri
 const CHAT_PANEL_MIN_WIDTH = 400; // Pixel olarak ChatPanel genişliği
@@ -27,6 +29,9 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Byte AI Client oluştur
     const byteClient = new ByteAIClient();
+    
+    // Bug Finder servisini oluştur
+    const bugFinderService = new BugFinderService(context, aiService);
     
     // Sohbet paneli oluştur ve genişlik değeriyle başlat
     const chatPanel = new ChatPanel(context.extensionUri, aiService, CHAT_PANEL_MIN_WIDTH);
@@ -81,6 +86,42 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('byte.askQuestionAboutCode', () => {
             inlineCodeChat.askQuestionAboutCode();
+        })
+    );
+    
+    // Bug-Finder: Terminal hata izlemeyi başlat
+    context.subscriptions.push(
+        vscode.commands.registerCommand('byte.startErrorMonitoring', () => {
+            bugFinderService.startMonitoring();
+        })
+    );
+    
+    // Bug-Finder: Terminal hata izlemeyi durdur
+    context.subscriptions.push(
+        vscode.commands.registerCommand('byte.stopErrorMonitoring', () => {
+            bugFinderService.stopMonitoring();
+        })
+    );
+    
+    // Bug-Finder: Hata analizi başlat (manuel)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('byte.analyzeError', async () => {
+            // Kullanıcıdan hata mesajını al
+            const errorMessage = await vscode.window.showInputBox({
+                prompt: 'Analiz edilecek hata mesajını girin',
+                placeHolder: 'Hata mesajını yapıştırın...'
+            });
+            
+            if (errorMessage) {
+                const error = {
+                    message: errorMessage,
+                    errorType: ErrorType.Unknown,
+                    stack: '',
+                    source: 'manual'
+                };
+                
+                bugFinderService.analyzeErrorWithAI(error);
+            }
         })
     );
     
