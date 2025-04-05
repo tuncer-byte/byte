@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src 'nonce-{{nonce}}';">
+    <title>Hata Çözümü</title>
+    <link rel="stylesheet" href="{{cssPath}}">
+</head>
+<body>
+    <h1>
+        <span class="byte-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z" fill="{{primaryColor}}"/>
+            </svg>
+        </span>
+        Byte AI Hata Çözümü
+    </h1>
+    
+    <h2>Tespit Edilen Hata <span class="tag tag-error">Hata</span> <span class="tag tag-type">{{errorType}}</span></h2>
+    <div class="error-box">
+        {{errorMessage}}
+        {{errorStack}}
+    </div>
+    
+    <h2>AI Tarafından Önerilen Çözüm <span class="tag tag-solution">Çözüm</span></h2>
+    <div class="solution-nav">
+        <div class="solution-nav-item active" data-section="cozum">Çözüm</div>
+        <div class="solution-nav-item" data-section="aciklama">Açıklama</div>
+        {{commandTab}}
+        {{codeTab}}
+    </div>
+    
+    <div class="solution-section active" id="cozum-section">
+        <div class="solution-box">
+            {{solutionDescription}}
+        </div>
+    </div>
+    
+    <div class="solution-section" id="aciklama-section">
+        <div class="solution-box">
+            <h3>Hata Analizi</h3>
+            <p>Bu hatanın kök nedeni genellikle şu gibi faktörlerden kaynaklanır:</p>
+            <ul>
+                <li>Kod sözdizimi veya mantık hataları</li>
+                <li>Eksik veya hatalı yapılandırma</li>
+                <li>Eksik bağımlılıklar veya çakışan kütüphaneler</li>
+                <li>Sistem izinleri veya çevresel faktörler</li>
+            </ul>
+            <p>AI, hatayı kontekst içinde analiz ederek en olası çözümü sunmaya çalışır.</p>
+        </div>
+    </div>
+    
+    {{commandSection}}
+    
+    {{codeSection}}
+    
+    <div class="action-container">
+        {{commandButton}}
+        {{codeButton}}
+        <button id="dismiss">Kapat</button>
+    </div>
+    
+    <script nonce="{{nonce}}">
+        const vscode = acquireVsCodeApi();
+        
+        // Tab navigation
+        document.querySelectorAll('.solution-nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                // Remove active class from all tabs and sections
+                document.querySelectorAll('.solution-nav-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.solution-section').forEach(s => s.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                item.classList.add('active');
+                
+                // Show corresponding section
+                const sectionId = item.getAttribute('data-section') + '-section';
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+        
+        document.getElementById('dismiss')?.addEventListener('click', () => {
+            vscode.postMessage({ command: 'dismiss' });
+        });
+        
+        {{commandScript}}
+        
+        {{codeScript}}
+    </script>
+</body>
+</html>

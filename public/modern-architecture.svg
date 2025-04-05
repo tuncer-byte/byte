@@ -1,0 +1,140 @@
+<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#007ACC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0098FF;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="moduleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#F8F9FA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E9ECEF;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.15" />
+    </filter>
+    <style>
+      .module {
+        fill: url(#moduleGradient);
+        stroke: #CED4DA;
+        stroke-width: 2;
+        rx: 10;
+        ry: 10;
+        filter: url(#shadow);
+      }
+      .core {
+        fill: url(#headerGradient);
+        stroke: #007ACC;
+        stroke-width: 2;
+        rx: 10;
+        ry: 10;
+        filter: url(#shadow);
+      }
+      .header {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        fill: white;
+      }
+      .moduleHeader {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        font-size: 18px;
+        font-weight: 500;
+        fill: #495057;
+      }
+      .description {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        font-size: 14px;
+        fill: #495057;
+      }
+      .component {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        font-size: 14px;
+        fill: #495057;
+      }
+      .connection {
+        stroke: #ADB5BD;
+        stroke-width: 2;
+        stroke-dasharray: 5,5;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+      .solid-connection {
+        stroke: #007ACC;
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead-solid);
+      }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ADB5BD" />
+    </marker>
+    <marker id="arrowhead-solid" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#007ACC" />
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <rect x="300" y="20" width="400" height="60" class="core" />
+  <text x="500" y="55" text-anchor="middle" class="header">Byte AI Assistant Architecture</text>
+  
+  <!-- Extension Entry Point -->
+  <rect x="400" y="110" width="200" height="60" class="core" />
+  <text x="500" y="145" text-anchor="middle" class="header">extension.ts</text>
+  
+  <!-- Commands -->
+  <rect x="100" y="210" width="240" height="180" class="module" />
+  <text x="220" y="240" text-anchor="middle" class="moduleHeader">Commands</text>
+  <text x="220" y="270" text-anchor="middle" class="description">Registers commands and handlers</text>
+  <text x="120" y="300" class="component">• code-commands.ts</text>
+  <text x="120" y="325" class="component">• config-commands.ts</text>
+  <text x="120" y="350" class="component">• CommandManager</text>
+  
+  <!-- Services -->
+  <rect x="380" y="210" width="240" height="180" class="module" />
+  <text x="500" y="240" text-anchor="middle" class="moduleHeader">Services</text>
+  <text x="500" y="270" text-anchor="middle" class="description">Core application services</text>
+  <text x="400" y="300" class="component">• ai-service.ts</text>
+  <text x="400" y="325" class="component">• storage-service.ts</text>
+  <text x="400" y="350" class="component">• bug-finder-service.ts</text>
+  
+  <!-- Views -->
+  <rect x="660" y="210" width="240" height="180" class="module" />
+  <text x="780" y="240" text-anchor="middle" class="moduleHeader">Views</text>
+  <text x="780" y="270" text-anchor="middle" class="description">UI components and interfaces</text>
+  <text x="680" y="300" class="component">• chat-panel</text>
+  <text x="680" y="325" class="component">• inline-chat</text>
+  <text x="680" y="350" class="component">• webview content</text>
+  
+  <!-- Utilities -->
+  <rect x="240" y="430" width="240" height="140" class="module" />
+  <text x="360" y="460" text-anchor="middle" class="moduleHeader">Utils</text>
+  <text x="360" y="490" text-anchor="middle" class="description">Shared utility functions</text>
+  <text x="260" y="520" class="component">• code-parser.ts</text>
+  <text x="260" y="545" class="component">• formatting-utils.ts</text>
+  
+  <!-- 3rd Party APIs -->
+  <rect x="520" y="430" width="240" height="140" class="module" />
+  <text x="640" y="460" text-anchor="middle" class="moduleHeader">External APIs</text>
+  <text x="640" y="490" text-anchor="middle" class="description">AI providers and services</text>
+  <text x="540" y="520" class="component">• OpenAI, Claude</text>
+  <text x="540" y="545" class="component">• Google Gemini, Ollama</text>
+  
+  <!-- Connections -->
+  <path d="M500 170 L500 210" class="solid-connection" />
+  
+  <path d="M440 170 L220 210" class="solid-connection" />
+  <path d="M500 170 L500 210" class="solid-connection" />
+  <path d="M560 170 L780 210" class="solid-connection" />
+  
+  <path d="M220 390 L360 430" class="connection" />
+  <path d="M500 390 L360 430" class="connection" />
+  <path d="M780 390 L360 430" class="connection" />
+  
+  <path d="M220 390 L640 430" class="connection" />
+  <path d="M500 390 L640 430" class="solid-connection" />
+  <path d="M780 390 L640 430" class="connection" />
+  
+  <path d="M340 210 L380 210" class="connection" />
+  <path d="M620 210 L660 210" class="connection" />
+  <path d="M620 300 L660 300" class="connection" />
+  <path d="M340 350 L380 350" class="connection" />
+</svg> 

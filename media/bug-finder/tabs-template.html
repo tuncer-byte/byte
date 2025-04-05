@@ -1,0 +1,21 @@
+<!-- Komut sekmesi şablonu -->
+<div class="solution-nav-item" data-section="komut">Komut</div>
+
+<!-- Kod sekmesi şablonu -->
+<div class="solution-nav-item" data-section="kod">Kod Değişiklikleri</div>
+
+<!-- Komut butonu şablonu -->
+<button id="apply-command">Komutu Çalıştır</button>
+
+<!-- Kod değişikliği butonu şablonu -->
+<button id="apply-code">Kod Değişikliklerini Uygula</button>
+
+<!-- Komut script şablonu -->
+document.getElementById('apply-command')?.addEventListener('click', () => {
+    vscode.postMessage({ command: 'applyCommand' });
+});
+
+<!-- Kod script şablonu -->
+document.getElementById('apply-code')?.addEventListener('click', () => {
+    vscode.postMessage({ command: 'applyCodeChanges' });
+}); 

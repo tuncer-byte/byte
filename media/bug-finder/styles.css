@@ -1,0 +1,392 @@
+:root {
+    /* Ana renkler - Byte tasarımıyla uyumlu */
+    --primary-color: #FF7B23;
+    --primary-light: #FF9A52;
+    --primary-dark: #E35F00;
+    --background: #0D1117;
+    --foreground: #E6E6E6;
+    --sidebar-background: #161B22;
+    --input-background: #1E2631;
+    --border-color: #30363D;
+    
+    /* Ek renkler */
+    --byte-success: #3FB950;
+    --byte-error: #F85149;
+    --byte-warning: #F7B93E;
+    
+    /* Yumuşak tonlar */
+    --primary-soft: rgba(255, 123, 35, 0.15);
+    --success-soft: rgba(63, 185, 80, 0.1);
+    --error-soft: rgba(248, 81, 73, 0.08);
+    --warning-soft: rgba(247, 185, 62, 0.1);
+    
+    /* Gölgeler */
+    --shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Temel stil */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    padding: 20px;
+    color: var(--foreground);
+    background-color: var(--background);
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+/* Başlıklar */
+h1, h2, h3, h4 {
+    font-weight: 500;
+    margin-top: 0;
+    line-height: 1.3;
+}
+
+h1 {
+    color: var(--foreground);
+    font-size: 18px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+}
+
+h2 {
+    color: var(--primary-light);
+    font-size: 16px;
+    margin-top: 28px;
+    margin-bottom: 12px;
+}
+
+h3 {
+    color: var(--primary-color);
+    font-size: 15px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* Logo */
+.byte-logo {
+    margin-right: 10px;
+    display: inline-flex;
+}
+
+/* Paneller */
+.error-box {
+    background-color: var(--error-soft);
+    border: 1px solid var(--byte-error);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.3s ease;
+}
+
+.error-box:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.solution-box {
+    background-color: rgba(30, 38, 49, 0.3);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 24px;
+    overflow-wrap: break-word;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.solution-box:hover {
+    box-shadow: var(--shadow-hover);
+    border-left-color: var(--primary-light);
+}
+
+/* Kod blokları */
+pre.code-block {
+    background-color: var(--code-background, #0D1117);
+    padding: 14px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 14px 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+code.inline-code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: var(--foreground);
+}
+
+/* Butonlar */
+button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow);
+    outline: none;
+}
+
+button:hover {
+    background-color: var(--primary-dark);
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+button#apply-command {
+    background-color: var(--primary-color);
+}
+
+button#apply-command:hover {
+    background-color: var(--primary-dark);
+}
+
+button#apply-code {
+    background-color: var(--byte-success);
+}
+
+button#apply-code:hover {
+    background-color: #4ECB5C;
+}
+
+/* Dosya adı kutusu */
+.file-name {
+    font-weight: 500;
+    margin-top: 18px;
+    margin-bottom: 0;
+    color: var(--foreground);
+    background-color: rgba(30, 38, 49, 0.8);
+    padding: 8px 12px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+}
+
+.file-name::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23E6E6E6'%3E%3Cpath d='M13.5 3h-11A1.5 1.5 0 001 4.5v7A1.5 1.5 0 002.5 13h11a1.5 1.5 0 001.5-1.5v-7A1.5 1.5 0 0013.5 3zm0 8.5h-11v-7h11v7z'/%3E%3C/svg%3E");
+    margin-right: 8px;
+}
+
+/* Aksiyonlar */
+.action-container {
+    margin-top: 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Linkler */
+a.markdown-link {
+    color: var(--primary-light);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--primary-light);
+    transition: all 0.2s ease;
+}
+
+a.markdown-link:hover {
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--primary-color);
+}
+
+/* Liste elemanları */
+ul, ol {
+    padding-left: 22px;
+    margin: 12px 0;
+}
+
+li {
+    margin: 6px 0;
+}
+
+li::marker {
+    color: var(--primary-color);
+}
+
+/* Metin vurguları */
+strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+em {
+    color: var(--primary-light);
+    font-style: italic;
+}
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 20px 0;
+}
+
+/* Navigasyon Sekmeleri */
+.solution-nav {
+    display: flex;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0;
+    flex-wrap: wrap;
+}
+
+.solution-nav-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-right: 12px;
+    transition: all 0.2s ease;
+    color: var(--foreground);
+    opacity: 0.7;
+    border-radius: 4px 4px 0 0;
+}
+
+.solution-nav-item:hover {
+    background-color: var(--primary-soft);
+    opacity: 0.9;
+}
+
+.solution-nav-item.active {
+    border-bottom: 3px solid var(--primary-color);
+    font-weight: 500;
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+/* İçerik bölümleri */
+.solution-section {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.solution-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Etiketler */
+.tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    margin-right: 6px;
+    color: white;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+}
+
+.tag-error {
+    background-color: var(--byte-error);
+}
+
+.tag-solution {
+    background-color: var(--byte-success);
+}
+
+.tag-type {
+    background-color: var(--primary-color);
+}
+
+/* Run ve Apply Butonları için özel stiller */
+.run-code-button, .apply-code-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: rgba(255, 123, 35, 0.2);
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 0 5px 0 5px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    margin-top: 0;
+}
+
+.run-code-button:hover, .apply-code-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.code-language {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: var(--foreground);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 0 0 4px 0;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-weight: 500;
+    text-transform: uppercase;
+    z-index: 5;
+}
+
+/* Responsive düzenleme */
+@media (max-width: 768px) {
+    body {
+        padding: 12px;
+    }
+    
+    .solution-nav {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .solution-nav-item {
+        margin-right: 0;
+    }
+    
+    .action-container {
+        flex-direction: column;
+    }
+    
+    button {
+        width: 100%;
+        margin-right: 0;
+    }
+}

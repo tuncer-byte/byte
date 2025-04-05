@@ -11,6 +11,7 @@ import {
 import { parse as parseStackTrace } from './utils/stack-parser';
 import { identifyErrorType } from './utils/error-identifier';
 import { generatePrompt } from './utils/prompt-generator';
+import { TemplateLoader } from './utils/template-loader';
 
 /**
  * Terminal hatalarını yakalayıp AI ile çözümler üreten servis
@@ -420,259 +421,103 @@ export class BugFinderService {
     private getSolutionHtml(webview: vscode.Webview, error: DetectedError, solution: ErrorSolution): string {
         const nonce = this.getNonce();
         
-        return `<!DOCTYPE html>
-        <html lang="tr">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
-            <title>Hata Çözümü</title>
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-                    padding: 16px;
-                    color: var(--vscode-foreground);
-                    background-color: var(--vscode-editor-background);
-                    line-height: 1.5;
-                }
-                h1 {
-                    color: var(--vscode-editor-foreground);
-                    font-size: 18px;
-                    margin-bottom: 16px;
-                    padding-bottom: 8px;
-                    border-bottom: 1px solid var(--vscode-input-border);
-                }
-                h2 {
-                    color: var(--vscode-editor-foreground);
-                    font-size: 16px;
-                    margin-top: 24px;
-                    margin-bottom: 8px;
-                }
-                h3 {
-                    color: var(--vscode-editor-foreground);
-                    font-size: 14px;
-                    margin-top: 16px;
-                    margin-bottom: 8px;
-                }
-                .error-box {
-                    background-color: var(--vscode-inputValidation-errorBackground);
-                    border: 1px solid var(--vscode-inputValidation-errorBorder);
-                    border-radius: 4px;
-                    padding: 12px;
-                    margin-bottom: 20px;
-                    white-space: pre-wrap;
-                    overflow-wrap: break-word;
-                    max-height: 200px;
-                    overflow-y: auto;
-                }
-                .solution-box {
-                    background-color: var(--vscode-editor-background);
-                    border: 1px solid var(--vscode-input-border);
-                    border-radius: 4px;
-                    padding: 16px;
-                    margin-bottom: 20px;
-                    overflow-wrap: break-word;
-                }
-                p {
-                    margin: 8px 0;
-                    line-height: 1.6;
-                }
-                pre.code-block {
-                    background-color: var(--vscode-editor-inactiveSelectionBackground);
-                    padding: 10px;
-                    border-radius: 4px;
-                    overflow-x: auto;
-                    margin: 12px 0;
-                    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-                }
-                code.inline-code {
-                    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
-                    background-color: var(--vscode-editor-inactiveSelectionBackground);
-                    padding: 2px 5px;
-                    border-radius: 3px;
-                    font-size: 0.9em;
-                }
-                button {
-                    background-color: var(--vscode-button-background);
-                    color: var(--vscode-button-foreground);
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    margin-right: 8px;
-                    margin-top: 10px;
-                    font-size: 13px;
-                    transition: background-color 0.2s;
-                }
-                button:hover {
-                    background-color: var(--vscode-button-hoverBackground);
-                }
-                .file-name {
-                    font-weight: bold;
-                    margin-top: 16px;
-                    margin-bottom: 4px;
-                    color: var(--vscode-textLink-foreground);
-                    background-color: var(--vscode-textBlockQuote-background);
-                    padding: 4px 8px;
-                    border-top-left-radius: 4px;
-                    border-top-right-radius: 4px;
-                    border-left: 3px solid var(--vscode-textLink-activeForeground);
-                }
-                .action-container {
-                    margin-top: 20px;
-                    display: flex;
-                    gap: 8px;
-                }
-                a.markdown-link {
-                    color: var(--vscode-textLink-foreground);
-                    text-decoration: none;
-                }
-                a.markdown-link:hover {
-                    text-decoration: underline;
-                }
-                ul, ol {
-                    padding-left: 20px;
-                    margin: 8px 0;
-                }
-                li {
-                    margin: 4px 0;
-                }
-                strong {
-                    color: var(--vscode-editorMarkerNavigationInfo-headerBackground);
-                }
-                hr {
-                    border: none;
-                    height: 1px;
-                    background-color: var(--vscode-input-border);
-                    margin: 16px 0;
-                }
-                .solution-nav {
-                    display: flex;
-                    margin-bottom: 12px;
-                    border-bottom: 1px solid var(--vscode-input-border);
-                    padding-bottom: 8px;
-                }
-                .solution-nav-item {
-                    padding: 6px 12px;
-                    cursor: pointer;
-                    border-bottom: 2px solid transparent;
-                    margin-right: 8px;
-                }
-                .solution-nav-item.active {
-                    border-bottom: 2px solid var(--vscode-textLink-activeForeground);
-                    font-weight: bold;
-                }
-                .solution-section {
-                    display: none;
-                }
-                .solution-section.active {
-                    display: block;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Hata Tespiti ve Çözümü</h1>
+        // Byte AI renk paleti
+        const byteColors = {
+            primary: '#007ACC',        // Ana mavi renk
+            secondary: '#0098FF',      // Açık mavi vurgu
+            accent: '#FF6D00',         // Turuncu vurgu rengi 
+            success: '#3FB950',        // Yeşil başarı rengi
+            error: '#F85149',          // Kırmızı hata rengi
+            warning: '#F7B93E',        // Sarı uyarı rengi
+        };
+        
+        // Eklenti yolunu al
+        const extensionUri = this.getExtensionUri();
+        if (!extensionUri) {
+            console.error('Eklenti URI oluşturulamadı');
+        }
+        
+        // CSS dosyasının yolunu hesapla ve webview için güvenli hale getir
+        const cssUri = extensionUri ? webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'bug-finder', 'styles.css')) : '';
+        
+        // Ana değişkenleri hazırla
+        const variables: Record<string, string> = {
+            nonce: nonce,
+            cspSource: webview.cspSource,
+            primaryColor: byteColors.primary,
+            errorType: error.errorType || 'Bilinmeyen',
+            errorMessage: this.escapeHtml(error.message),
+            errorStack: error.stack ? `<hr>${this.escapeHtml(error.stack)}` : '',
+            solutionDescription: this.markdownToHtml(solution.description),
+            cssPath: cssUri.toString()
+        };
+        
+        // Ek şablon parçalarını hazırla
+        const templates: Record<string, string> = {
+            commandTab: '',
+            codeTab: '',
+            commandSection: '',
+            codeSection: '',
+            commandButton: '',
+            codeButton: '',
+            commandScript: '',
+            codeScript: ''
+        };
+        
+        // Komut varsa ilgili bölümleri ekle
+        if (solution.commandToRun) {
+            templates.commandTab = TemplateLoader.loadTemplate('tabs-template.html', {})
+                .split('\n')
+                .find(line => line.includes('komut">Komut')) || '';
             
-            <h2>Tespit Edilen Hata</h2>
-            <div class="error-box">
-                ${this.escapeHtml(error.message)}
-                ${error.stack ? `<hr>${this.escapeHtml(error.stack)}` : ''}
-            </div>
+            templates.commandSection = TemplateLoader.loadTemplate('command-section.html', {
+                commandToRun: this.escapeHtml(solution.commandToRun)
+            });
             
-            <h2>AI Tarafından Önerilen Çözüm</h2>
-            <div class="solution-nav">
-                <div class="solution-nav-item active" data-section="cozum">Çözüm</div>
-                <div class="solution-nav-item" data-section="aciklama">Açıklama</div>
-                ${solution.commandToRun ? `<div class="solution-nav-item" data-section="komut">Komut</div>` : ''}
-                ${solution.codeChanges && solution.codeChanges.length > 0 ? `<div class="solution-nav-item" data-section="kod">Kod Değişiklikleri</div>` : ''}
-            </div>
+            templates.commandButton = TemplateLoader.loadTemplate('tabs-template.html', {})
+                .split('\n')
+                .find(line => line.includes('apply-command">Komutu')) || '';
             
-            <div class="solution-section active" id="cozum-section">
-                <div class="solution-box">
-                    ${this.markdownToHtml(solution.description)}
-                </div>
-            </div>
+            templates.commandScript = TemplateLoader.loadTemplate('tabs-template.html', {})
+                .split('\n')
+                .filter(line => line.includes('apply-command') && line.includes('addEventListener'))
+                .join('\n');
+        }
+        
+        // Kod değişiklikleri varsa ilgili bölümleri ekle
+        if (solution.codeChanges && solution.codeChanges.length > 0) {
+            templates.codeTab = TemplateLoader.loadTemplate('tabs-template.html', {})
+                .split('\n')
+                .find(line => line.includes('kod">Kod')) || '';
             
-            <div class="solution-section" id="aciklama-section">
-                <div class="solution-box">
-                    <h3>Hata Analizi</h3>
-                    <p>Bu hatanın kök nedeni genellikle şu gibi faktörlerden kaynaklanır:</p>
-                    <ul>
-                        <li>Kod sözdizimi veya mantık hataları</li>
-                        <li>Eksik veya hatalı yapılandırma</li>
-                        <li>Eksik bağımlılıklar veya çakışan kütüphaneler</li>
-                        <li>Sistem izinleri veya çevresel faktörler</li>
-                    </ul>
-                    <p>AI, hatayı kontekst içinde analiz ederek en olası çözümü sunmaya çalışır.</p>
-                </div>
-            </div>
+            // Kod değişiklik listesini oluştur
+            const codeChangesList: string[] = [];
+            for (const change of solution.codeChanges) {
+                codeChangesList.push(TemplateLoader.loadTemplate('file-template.html', {
+                    fileName: this.escapeHtml(change.fileName),
+                    fileContent: this.escapeHtml(change.changes[0].replacementText)
+                }));
+            }
             
-            ${solution.commandToRun ? `
-            <div class="solution-section" id="komut-section">
-                <div class="solution-box">
-                    <h3>Çalıştırılacak Komut</h3>
-                    <pre class="code-block"><code class="language-bash">${this.escapeHtml(solution.commandToRun)}</code></pre>
-                    <p>Bu komutu çalıştırmak için "Komutu Çalıştır" butonunu kullanabilirsiniz.</p>
-                </div>
-            </div>
-            ` : ''}
+            templates.codeSection = TemplateLoader.loadTemplate('code-section.html', {
+                codeChangesList: codeChangesList.join('\n')
+            });
             
-            ${solution.codeChanges && solution.codeChanges.length > 0 ? `
-            <div class="solution-section" id="kod-section">
-                <div class="solution-box">
-                    <h3>Önerilen Kod Değişiklikleri</h3>
-                    ${solution.codeChanges.map(change => `
-                        <div class="file-name">${this.escapeHtml(change.fileName)}</div>
-                        <pre class="code-block"><code>${this.escapeHtml(change.changes[0].replacementText)}</code></pre>
-                    `).join('')}
-                    <p>Bu değişiklikleri uygulamak için "Kod Değişikliklerini Uygula" butonunu kullanabilirsiniz.</p>
-                </div>
-            </div>
-            ` : ''}
+            templates.codeButton = TemplateLoader.loadTemplate('tabs-template.html', {})
+                .split('\n')
+                .find(line => line.includes('apply-code">Kod')) || '';
             
-            <div class="action-container">
-                ${solution.commandToRun ? `<button id="apply-command">Komutu Çalıştır</button>` : ''}
-                ${solution.codeChanges && solution.codeChanges.length > 0 ? `<button id="apply-code">Kod Değişikliklerini Uygula</button>` : ''}
-                <button id="dismiss">Kapat</button>
-            </div>
-            
-            <script nonce="${nonce}">
-                const vscode = acquireVsCodeApi();
-                
-                // Tab navigation
-                document.querySelectorAll('.solution-nav-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        // Remove active class from all tabs and sections
-                        document.querySelectorAll('.solution-nav-item').forEach(i => i.classList.remove('active'));
-                        document.querySelectorAll('.solution-section').forEach(s => s.classList.remove('active'));
-                        
-                        // Add active class to clicked tab
-                        item.classList.add('active');
-                        
-                        // Show corresponding section
-                        const sectionId = item.getAttribute('data-section') + '-section';
-                        document.getElementById(sectionId).classList.add('active');
-                    });
-                });
-                
-                document.getElementById('dismiss')?.addEventListener('click', () => {
-                    vscode.postMessage({ command: 'dismiss' });
-                });
-                
-                ${solution.commandToRun ? `
-                document.getElementById('apply-command')?.addEventListener('click', () => {
-                    vscode.postMessage({ command: 'applyCommand' });
-                });
-                ` : ''}
-                
-                ${solution.codeChanges && solution.codeChanges.length > 0 ? `
-                document.getElementById('apply-code')?.addEventListener('click', () => {
-                    vscode.postMessage({ command: 'applyCodeChanges' });
-                });
-                ` : ''}
-            </script>
-        </body>
-        </html>`;
+            templates.codeScript = TemplateLoader.loadTemplate('tabs-template.html', {})
+                .split('\n')
+                .filter(line => line.includes('apply-code') && line.includes('addEventListener'))
+                .join('\n');
+        }
+        
+        // Ana şablonu yükle ve tüm değişkenleri ekle
+        let mainTemplate = TemplateLoader.loadTemplate('solution-template.html', variables);
+        
+        // Ek şablonları ana şablona ekle
+        return TemplateLoader.injectTemplates(mainTemplate, templates);
     }
     
     /**
@@ -880,6 +725,25 @@ export class BugFinderService {
             } else {
                 vscode.window.showErrorMessage('Kod değişiklikleri uygulanırken bir sorun oluştu.');
             }
+        }
+    }
+    
+    /**
+     * Eklenti URI'sini alır
+     */
+    private getExtensionUri(): vscode.Uri | undefined {
+        try {
+            // Aktif uzantıları kontrol et
+            for (const ext of vscode.extensions.all) {
+                if (ext.id.toLowerCase().includes('byte') || ext.id.toLowerCase().includes('tuncerbyte')) {
+                    return ext.extensionUri;
+                }
+            }
+            
+            return undefined;
+        } catch (error) {
+            console.error('Eklenti URI bulunamadı:', error);
+            return undefined;
         }
     }
 } 
