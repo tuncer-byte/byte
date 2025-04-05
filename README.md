@@ -8,7 +8,7 @@ A powerful AI-powered coding assistant for VS Code that helps developers write, 
 
 <div align="center">
   <h2>Architecture Overview</h2>
-  <img src="public/modern-architecture.svg" alt="Byte AI Architecture" width="800">
+  <img src="public/modern-architecture.png" alt="Byte AI Architecture" width="800">
 </div>
 
 ## ✨ Features
