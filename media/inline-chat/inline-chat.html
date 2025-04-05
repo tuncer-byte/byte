@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Byte AI Asistan - Inline Chat</title>
+    <title>Byte AI Assistant - Inline Chat</title>
     <link rel="stylesheet" href="./prism.css">
     <link rel="stylesheet" href="./inline-chat.css">
 </head>
 <body>
     <div class="container">
-        <!-- Basitleştirilmiş başlık -->
+        <!-- Simplified header -->
         <div class="chat-header">
             <div class="logo-area">
                 <div class="byte-logo">
@@ -23,38 +23,38 @@
             <span class="version-tag">Beta</span>
         </div>
         
-        <!-- Daha kompakt kod paneli -->
+        <!-- More compact code panel -->
         <div class="code-panel">
             <div class="code-header">
                 <div class="code-info">
-                    <span class="file-name" title="Kod Parçası">Kod Parçası</span>
+                    <span class="file-name" title="Code Snippet">Code Snippet</span>
                     <span class="code-language">text</span>
-                    <span class="line-info">0 satır</span>
+                    <span class="line-info">0 lines</span>
                 </div>
                 <div class="code-actions">
-                    <button id="explainCodeBtn" class="action-button" title="Kodu açıkla" data-tooltip="Kodu açıkla">
+                    <button id="explainCodeBtn" class="action-button" title="Explain code" data-tooltip="Explain code">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                             <line x1="12" y1="17" x2="12.01" y2="17"></line>
                         </svg>
-                        <span>Açıkla</span>
+                        <span>Explain</span>
                     </button>
-                    <button id="fixCodeBtn" class="action-button" title="Kodu düzelt ve iyileştir" data-tooltip="Kodu düzelt">
+                    <button id="fixCodeBtn" class="action-button" title="Fix and improve code" data-tooltip="Fix code">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 20h9"></path>
                             <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                         </svg>
-                        <span>Düzelt</span>
+                        <span>Fix</span>
                     </button>
-                    <button id="optimizeCodeBtn" class="action-button" title="Kodu optimize et" data-tooltip="Optimize et">
+                    <button id="optimizeCodeBtn" class="action-button" title="Optimize code" data-tooltip="Optimize">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 6L6 18"></path>
                             <path d="M6 6l12 12"></path>
                         </svg>
                         <span>Optimize</span>
                     </button>
-                    <button id="testCodeBtn" class="action-button" title="Bu kod için unit testler oluştur" data-tooltip="Test oluştur">
+                    <button id="testCodeBtn" class="action-button" title="Create unit tests for this code" data-tooltip="Create tests">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                             <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -64,9 +64,9 @@
                 </div>
             </div>
             <div class="code-block-wrapper">
-                <!-- Kopyala butonu kaldırıldı -->
+                <!-- Copy button removed -->
                 <pre class="code-block"><code class="language-plaintext"></code></pre>
-                <!-- Kod yükleniyor göstergesi -->
+                <!-- Code loading indicator -->
                 <div id="codeLoadingIndicator" class="typing-indicator" style="display: none;">
                     <span></span>
                     <span></span>
@@ -75,31 +75,31 @@
             </div>
         </div>
         
-        <!-- Mesaj paneli -->
+        <!-- Message panel -->
         <div id="messagesContainer" class="messages-panel">
             <div class="message assistant-message">
                 <div class="message-content">
-                    <p>Merhaba, ben Byte AI Asistan! Kodunuz hakkında bir sorunuz veya isteğiniz mi var?</p>
-                    <p>Kodu düzeltmek, optimize etmek, test etmek veya açıklamak için üstteki butonları kullanabilir veya kendi isteğinizi yazabilirsiniz.</p>
+                    <p>Hello, I'm Byte AI Assistant! Do you have a question or request about your code?</p>
+                    <p>You can use the buttons above to fix, optimize, test, or explain your code, or you can write your own request.</p>
                 </div>
             </div>
         </div>
         
-        <!-- Daha yalın input paneli -->
+        <!-- Cleaner input panel -->
         <div class="input-panel">
             <div class="textarea-wrapper">
-                <textarea id="userInput" placeholder="Bir soru sorun veya istek yazın..."></textarea>
-                <button id="sendButton" disabled title="Gönder" data-tooltip="Gönder">
+                <textarea id="userInput" placeholder="Ask a question or write a request..."></textarea>
+                <button id="sendButton" disabled title="Send" data-tooltip="Send">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"></path>
                     </svg>
                 </button>
             </div>
             <div class="quick-actions">
-                <button class="quick-action-btn">Bu kodda sorun nedir?</button>
-                <button class="quick-action-btn">Kodu daha okunabilir yap</button>
-                <button class="quick-action-btn">Performansı iyileştir</button>
-                <button class="quick-action-btn">Daha açıklayıcı yap</button>
+                <button class="quick-action-btn">What's wrong with this code?</button>
+                <button class="quick-action-btn">Make code more readable</button>
+                <button class="quick-action-btn">Improve performance</button>
+                <button class="quick-action-btn">Make it more descriptive</button>
             </div>
         </div>
     </div>

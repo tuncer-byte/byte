@@ -88,6 +88,19 @@ export class MessageHandler {
                     }
                     break;
                     
+                case 'newChat':
+                    // Yeni sohbet başlatıldığında mesaj geçmişini temizle
+                    this.aiService.clearMessages();
+                    
+                    // WebView'e mesaj geçmişinin temizlendiğini bildir
+                    if (this.view) {
+                        this.view.webview.postMessage({
+                            type: 'chatCleared',
+                            success: true
+                        });
+                    }
+                    break;
+                    
                 case 'applyCode':
                     // Kodu aktif editöre uygula
                     await this.applyCodeToEditor(message.code);
@@ -154,6 +167,20 @@ export class MessageHandler {
                     const fileContent = editor.document.getText();
                     finalMessage = `Current file (${this.currentFile}):\n\`\`\`\n${fileContent}\n\`\`\`\n\nUser message:\n${message.message}`;
                 }
+            }
+            
+            // Seçilmiş dosyaları ekle
+            if (message.selectedFiles && message.selectedFiles.length > 0) {
+                let filesContent = `\n\nSelected files:\n`;
+                
+                for (const file of message.selectedFiles) {
+                    const fileExtension = file.fileName.split('.').pop() || '';
+                    const language = this.getLanguageFromExtension(fileExtension);
+                    
+                    filesContent += `\n**${file.fileName}:**\n\`\`\`${language}\n${file.fileContent}\n\`\`\`\n`;
+                }
+                
+                finalMessage = `${filesContent}\n\nUser message:\n${message.message}`;
             }
             
             if (message.provider === 'local') {
@@ -312,38 +339,15 @@ export class MessageHandler {
                     });
                 }
                 
-                // Dosya bilgilerini WebView'e gönder
+                // Dosya bilgilerini WebView'e gönder - içerik olmadan sadece dosya adlarını gönderiyoruz
                 if (this.view) {
-                    // Seçilen dosyaları current-file bölümünde göstermek için WebView'e bildir
                     this.view.webview.postMessage({
                         type: 'selectedFilesChanged',
                         files: selectedFiles.map(file => ({
                             fileName: file.fileName,
-                            filePath: file.filePath
+                            filePath: file.filePath,
+                            fileContent: file.fileContent // İçerik AI'ya sorulduğunda gönderilecek
                         }))
-                    });
-                    
-                
-                    
-                    // AI'ya dosyaları ilet (arka planda)
-                    // Dosyaları markdown olarak formatla
-                    let aiMessage = `Kullanıcı şu dosyaları paylaştı:\n\n`;
-                    
-                    for (const file of selectedFiles) {
-                        const fileExtension = file.fileName.split('.').pop() || '';
-                        const language = this.getLanguageFromExtension(fileExtension);
-                        
-                        // Her dosyayı ayrı kod bloğu içinde ekle
-                        aiMessage += `**${file.fileName}:**\n\`\`\`${language}\n${file.fileContent}\n\`\`\`\n\n`;
-                    }
-                    
-                    // Dosya içeriklerini AI'ya gönder - UI'da gösterme
-                    // Mesajı AI geçmişine ekle
-                    await this.aiService.sendMessage(aiMessage);
-                    
-                    // Dosya içeriklerini göstermeden AI yanıtını bekle
-                    this.view.webview.postMessage({
-                        type: 'loadingStart'
                     });
                 }
             }

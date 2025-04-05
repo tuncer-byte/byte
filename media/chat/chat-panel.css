@@ -201,6 +201,13 @@ html {
     flex-direction: column;
     gap: 20px;
     background-color: transparent;
+    scrollbar-width: none; /* Firefox için scrollbar'ı gizle */
+    -ms-overflow-style: none; /* IE ve Edge için scrollbar'ı gizle */
+}
+
+/* WebKit tarayıcıları (Chrome, Safari) için scrollbar'ı gizle */
+.messages-container::-webkit-scrollbar {
+    display: none;
 }
 
 .welcome-header {
@@ -2584,4 +2591,80 @@ pre code {
 .command-mini-item .command-icon {
     margin-right: 4px;
     opacity: 0.8;
+}
+
+.file-badges-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 70%;
+    overflow-x: auto;
+    padding: 4px 0;
+    align-items: center;
+    justify-content: flex-start;
+    scrollbar-width: none; /* Firefox scrollbar gizleme */
+    -ms-overflow-style: none; /* IE scrollbar gizleme */
+    max-height: 60px; /* Maksimum yükseklik */
+    overflow-y: auto;
+}
+
+/* Chrome için scrollbar gizle */
+.file-badges-container::-webkit-scrollbar {
+    display: none;
+}
+
+.file-badge {
+    display: flex;
+    align-items: center;
+    padding: 2px 6px;
+    background-color: rgba(30, 38, 49, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    font-size: 11px;
+    color: var(--foreground);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    max-width: 140px;
+    overflow: hidden;
+}
+
+.file-badge:hover {
+    background-color: rgba(255, 123, 35, 0.15);
+    border-color: var(--primary-color);
+}
+
+.file-badge-icon {
+    margin-right: 4px;
+    font-size: 12px;
+}
+
+.file-badge-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+    font-size: 11px;
+}
+
+.file-badge-remove {
+    background: none;
+    border: none;
+    color: var(--foreground);
+    opacity: 0.6;
+    cursor: pointer;
+    margin-left: 4px;
+    padding: 0 2px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    transition: all 0.2s ease;
+}
+
+.file-badge-remove:hover {
+    opacity: 1;
+    background-color: rgba(255, 123, 35, 0.2);
+    color: var(--primary-color);
 }

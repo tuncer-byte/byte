@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Byte AI Asistanı</title>
+    <title>Byte AI Assistant</title>
     <link rel="stylesheet" href="{{styleUri}}">
 </head>
 <body>
@@ -24,7 +24,7 @@
                     <div class="selected-provider">Gemini<span class="model-name">Gemini Flash</span></div>
                     <div class="select-arrow">▼</div>
                 </div>
-                <button id="configureButton" class="icon-button" title="Yapılandır">
+                <button id="configureButton" class="icon-button" title="Configure">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/>
                     </svg>
@@ -50,7 +50,7 @@
                         <div class="thinking-animation">
                             <div class="dot-pulse"></div>
                         </div>
-                        <div class="thinking-text">Düşünüyor...</div>
+                        <div class="thinking-text">Thinking...</div>
                     </div>
                 </div>
                 <div id="typingIndicator" class="typing-indicator" style="display: none;">
@@ -64,7 +64,7 @@
         <div class="input-container">
             <div class="context-info">
                 <span class="new-chat">New chat</span>
-                <button id="addFileButton" class="add-file-button" title="Dosya Ekle">
+                <button id="addFileButton" class="add-file-button" title="Add File">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
                     </svg>
@@ -82,7 +82,7 @@
                     </div>
                 </div>
                 <div class="context-controls">
-                    <span id="generatingIndicator" class="generating-indicator" style="display: none;">Yanıt oluşturuluyor...</span>
+                    <span id="generatingIndicator" class="generating-indicator" style="display: none;">Generating...</span>
 
                     <label class="agent-toggle">
                         <span>Chill</span>
@@ -94,11 +94,11 @@
             <div class="input-wrapper">
                 <div class="command-mini-modal" id="commandMiniModal">
                     <div class="command-mini-list" id="commandMiniList">
-                        <!-- Komutlar JS tarafından eklenecek -->
+                        <!-- Commands will be added by JS -->
                     </div>
                 </div>
                 <textarea id="userInput" placeholder="Ask Byte..." rows="1"></textarea>
-                <button id="sendButton" class="send-button" title="Gönder">
+                <button id="sendButton" class="send-button" title="Send">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
                     </svg>
@@ -107,11 +107,11 @@
         </div>
     </div>
 
-    <!-- Ayarlar Modal Dialog -->
+    <!-- Settings Modal Dialog -->
     <div id="settingsModal" class="settings-modal">
         <div class="settings-content">
             <div class="settings-header">
-                <h2>Ayarlar</h2>
+                <h2>Settings</h2>
                 <button id="closeSettingsBtn" class="close-button">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="currentColor"/>
@@ -120,7 +120,7 @@
             </div>
             <div class="settings-body">
                 <div class="settings-section">
-                    <h3>AI Sağlayıcı Ayarları</h3>
+                    <h3>AI Provider Settings</h3>
                     
                     <div class="settings-group" id="openaiSettings">
                         <div class="settings-group-header">
@@ -132,14 +132,14 @@
                             </div>
                             <div class="provider-info">
                                 <h4>OpenAI</h4>
-                                <span class="provider-status">API Anahtarı Gerekli</span>
+                                <span class="provider-status">API Key Required</span>
                             </div>
                         </div>
                         <div class="settings-group-body">
                             <div class="settings-field">
-                                <label for="openaiApiKey">API Anahtarı</label>
+                                <label for="openaiApiKey">API Key</label>
                                 <div class="api-key-input">
-                                    <input type="password" id="openaiApiKey" placeholder="OpenAI API anahtarınızı girin">
+                                    <input type="password" id="openaiApiKey" placeholder="Enter your OpenAI API key">
                                     <button class="toggle-password" data-for="openaiApiKey">
                                         <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
@@ -149,7 +149,7 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <span class="info-tip">API anahtarı güvenli bir şekilde saklanacaktır</span>
+                                <span class="info-tip">API key will be stored securely</span>
                             </div>
                             <div class="settings-field">
                                 <label for="openaiModel">Model</label>
@@ -171,14 +171,14 @@
                             </div>
                             <div class="provider-info">
                                 <h4>Google Gemini</h4>
-                                <span class="provider-status">API Anahtarı Gerekli</span>
+                                <span class="provider-status">API Key Required</span>
                             </div>
                         </div>
                         <div class="settings-group-body">
                             <div class="settings-field">
-                                <label for="geminiApiKey">API Anahtarı</label>
+                                <label for="geminiApiKey">API Key</label>
                                 <div class="api-key-input">
-                                    <input type="password" id="geminiApiKey" placeholder="Google Gemini API anahtarınızı girin">
+                                    <input type="password" id="geminiApiKey" placeholder="Enter your Google Gemini API key">
                                     <button class="toggle-password" data-for="geminiApiKey">
                                        
                                         <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -189,7 +189,7 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <span class="info-tip">API anahtarı güvenli bir şekilde saklanacaktır</span>
+                                <span class="info-tip">API key will be stored securely</span>
                             </div>
                             <div class="settings-field">
                                 <label for="geminiModel">Model</label>
@@ -215,14 +215,14 @@
                             </div>
                             <div class="provider-info">
                                 <h4>Anthropic Claude</h4>
-                                <span class="provider-status">API Anahtarı Gerekli</span>
+                                <span class="provider-status">API Key Required</span>
                             </div>
                         </div>
                         <div class="settings-group-body">
                             <div class="settings-field">
-                                <label for="anthropicApiKey">API Anahtarı</label>
+                                <label for="anthropicApiKey">API Key</label>
                                 <div class="api-key-input">
-                                    <input type="password" id="anthropicApiKey" placeholder="Anthropic API anahtarınızı girin">
+                                    <input type="password" id="anthropicApiKey" placeholder="Enter your Anthropic API key">
                                     <button class="toggle-password" data-for="anthropicApiKey" aria-label="Show or hide password">
                                        
                                         <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -233,7 +233,7 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <span class="info-tip">API anahtarı güvenli bir şekilde saklanacaktır</span>
+                                <span class="info-tip">API key will be stored securely</span>
                             </div>
                             <div class="settings-field">
                                 <label for="anthropicModel">Model</label>
@@ -254,15 +254,15 @@
                                 </svg>
                             </div>
                             <div class="provider-info">
-                                <h4>Ollama (Yerel)</h4>
-                                <span class="provider-status">Bağlantı Ayarları</span>
+                                <h4>Ollama (Local)</h4>
+                                <span class="provider-status">Connection Settings</span>
                             </div>
                         </div>
                         <div class="settings-group-body">
                             <div class="settings-field">
                                 <label for="localEndpoint">Endpoint URL</label>
                                 <input type="text" id="localEndpoint" placeholder="http://localhost:11434/api/generate">
-                                <span class="info-tip">Ollama API endpoint adresi</span>
+                                <span class="info-tip">Ollama API endpoint address</span>
                             </div>
                             <div class="settings-field">
                                 <label for="localModel">Model</label>
@@ -278,54 +278,54 @@
                 </div>
 
                 <div class="settings-section">
-                    <h3>Genel Ayarlar</h3>
+                    <h3>General Settings</h3>
                     <div class="settings-field">
-                        <label for="defaultProvider">Varsayılan AI Sağlayıcısı</label>
+                        <label for="defaultProvider">Default AI Provider</label>
                         <select id="defaultProvider">
                             <option value="openai">OpenAI</option>
                             <option value="gemini" selected>Google Gemini</option>
                             <option value="anthropic">Anthropic Claude</option>
-                            <option value="local">Ollama (Yerel)</option>
+                            <option value="local">Ollama (Local)</option>
                         </select>
                     </div>
                     <div class="settings-field">
                         <div class="checkbox-field">
                             <input type="checkbox" id="saveHistory" checked>
-                            <label for="saveHistory">Sohbet geçmişini kaydet</label>
+                            <label for="saveHistory">Save chat history</label>
                         </div>
                     </div>
                 </div>
 
                 <div class="settings-section">
-                    <h3>Otomatik Geçiş Ayarları</h3>
+                    <h3>Auto-Switch Settings</h3>
                     <div class="settings-field">
                         <div class="checkbox-field">
                             <input type="checkbox" id="autoSwitch">
-                            <label for="autoSwitch">Otomatik model geçişini etkinleştir</label>
+                            <label for="autoSwitch">Enable automatic model switching</label>
                         </div>
-                        <span class="info-tip">Görev karmaşıklığı ve maliyet optimizasyonuna göre otomatik model seçimi</span>
+                        <span class="info-tip">Automatic model selection based on task complexity and cost optimization</span>
                     </div>
                     <div class="settings-field" id="autoSwitchSettings">
-                        <label for="maxCostPerDay">Günlük Maksimum Maliyet (USD)</label>
+                        <label for="maxCostPerDay">Maximum Daily Cost (USD)</label>
                         <input type="number" id="maxCostPerDay" min="0" step="0.1" value="1.0">
-                        <span class="info-tip">0 değeri limitsiz anlamına gelir</span>
+                        <span class="info-tip">Value of 0 means unlimited</span>
                     </div>
                     <div class="settings-field">
-                        <label for="preferredProvider">Tercih Edilen Optimizasyon</label>
+                        <label for="preferredProvider">Preferred Optimization</label>
                         <select id="preferredProvider">
-                            <option value="fastest">En Hızlı</option>
-                            <option value="cheapest">En Ucuz</option>
-                            <option value="most-accurate">En Doğru</option>
+                            <option value="fastest">Fastest</option>
+                            <option value="cheapest">Cheapest</option>
+                            <option value="most-accurate">Most Accurate</option>
                         </select>
-                        <span class="info-tip">Otomatik geçiş için öncelikli strateji</span>
+                        <span class="info-tip">Priority strategy for auto-switching</span>
                     </div>
                 </div>
             </div>
             <div class="settings-footer">
                 <div class="settings-status" id="settingsStatus"></div>
                 <div class="settings-actions">
-                    <button id="saveSettingsBtn" class="primary-button">Kaydet</button>
-                    <button id="cancelSettingsBtn" class="secondary-button">İptal</button>
+                    <button id="saveSettingsBtn" class="primary-button">Save</button>
+                    <button id="cancelSettingsBtn" class="secondary-button">Cancel</button>
                 </div>
             </div>
         </div>

@@ -770,12 +770,20 @@
             // Yükleniyor göstergesini aç
             showLoadingIndicator();
             
+            // Seçilmiş dosyaları topla
+            const selectedFilesData = state.selectedFiles.map(file => ({
+                fileName: file.fileName,
+                filePath: file.filePath,
+                fileContent: file.fileContent
+            }));
+            
             // VS Code'a gönder
             vscode.postMessage({
                 type: 'sendMessage',
                 message: message,
                 includeCurrentFile: state.includeCurrentFile,
-                currentFilePath: state.currentFilePath
+                currentFilePath: state.currentFilePath,
+                selectedFiles: selectedFilesData
             });
             
             // Input'u temizle
@@ -1526,27 +1534,13 @@
                     // Seçilen dosyaları state'e kaydet
                     state.selectedFiles = message.files;
                     
-                    // Seçilen dosyaları görüntüle
-                    const selectedFilesContainer = document.getElementById('selectedFiles');
-                    if (selectedFilesContainer) {
-                        selectedFilesContainer.innerHTML = ''; // Önceki içeriği temizle
-                        
-                        // Dosya içeriğini göster
-                        message.files.forEach(file => {
-                            const fileItem = document.createElement('div');
-                            fileItem.classList.add('file-item');
-                            fileItem.title = file.filePath;
-                            fileItem.innerHTML = `
-                                <span class="current-file">${file.fileName}</span>
-                            `;
-                            selectedFilesContainer.appendChild(fileItem);
-                        });
-                        
-                        // fileContext div'ini görünür yap
-                        const fileContextElement = document.getElementById('fileContext');
-                        if (fileContextElement) {
-                            fileContextElement.style.display = 'flex';
-                        }
+                    // Badge'leri güncelle (dosya etiketlerini göster)
+                    updateFileBadges(state.selectedFiles);
+                    
+                    // fileContext div'ini görünür yap
+                    const fileContextElement = document.getElementById('fileContext');
+                    if (fileContextElement) {
+                        fileContextElement.style.display = 'flex';
                     }
                     
                     // State'i kaydet
@@ -1759,25 +1753,43 @@
         badge.title = filePath;
         badge.dataset.filePath = filePath;
         
-        // Dosya uzantısını belirle ve simgeyi ayarla
+        // Dosya uzantısını belirle ve uygun icon sınıfını ayarla
         const fileExtension = fileName.split('.').pop().toLowerCase();
-        let fileIcon = '📄';
+        let iconClass = 'file-icon-default';
         
-        // Dosya türüne göre simge ata
-        if (['js', 'ts', 'jsx', 'tsx'].includes(fileExtension)) {
-            fileIcon = '📝';
-        } else if (['json', 'xml', 'yaml', 'yml'].includes(fileExtension)) {
-            fileIcon = '⚙️';
-        } else if (['html', 'css', 'scss', 'less'].includes(fileExtension)) {
-            fileIcon = '🎨';
-        } else if (['md', 'txt', 'doc'].includes(fileExtension)) {
-            fileIcon = '📄';
-        } else if (['py', 'rb', 'php', 'java'].includes(fileExtension)) {
-            fileIcon = '🔧';
+        // Dosya türüne göre icon sınıfı ata
+        if (['js', 'jsx'].includes(fileExtension)) {
+            iconClass = 'file-icon-js';
+        } else if (['ts', 'tsx'].includes(fileExtension)) {
+            iconClass = 'file-icon-ts';
+        } else if (['json'].includes(fileExtension)) {
+            iconClass = 'file-icon-json';
+        } else if (['html'].includes(fileExtension)) {
+            iconClass = 'file-icon-html';
+        } else if (['css', 'scss', 'less'].includes(fileExtension)) {
+            iconClass = 'file-icon-css';
+        } else if (['md'].includes(fileExtension)) {
+            iconClass = 'file-icon-md';
+        } else if (['py'].includes(fileExtension)) {
+            iconClass = 'file-icon-py';
+        } else if (['java'].includes(fileExtension)) {
+            iconClass = 'file-icon-java';
+        } else if (['php'].includes(fileExtension)) {
+            iconClass = 'file-icon-php';
+        } else if (['c', 'cpp', 'h', 'hpp'].includes(fileExtension)) {
+            iconClass = 'file-icon-cpp';
+        } else if (['go'].includes(fileExtension)) {
+            iconClass = 'file-icon-go';
+        } else if (['rb'].includes(fileExtension)) {
+            iconClass = 'file-icon-ruby';
+        } else if (['xml', 'svg'].includes(fileExtension)) {
+            iconClass = 'file-icon-xml';
+        } else if (['yaml', 'yml'].includes(fileExtension)) {
+            iconClass = 'file-icon-yaml';
         }
         
         badge.innerHTML = `
-            <span class="file-badge-icon">${fileIcon}</span>
+            <span class="file-badge-icon ${iconClass}"></span>
             <span class="file-badge-name">${fileName}</span>
             <button class="file-badge-remove" title="Dosyayı Kaldır">×</button>
         `;
