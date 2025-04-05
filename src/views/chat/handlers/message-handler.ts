@@ -320,10 +320,10 @@ export class MessageHandler {
             // Dosyaları gruplandır ve QuickPick öğelerini oluştur
             const items: vscode.QuickPickItem[] = workspaceFiles.map(file => {
                 return {
-                    label: file.label,
+                    label: `$(${this.getFileIconName(file.label.split('.').pop()?.toLowerCase() || '')}) ${file.label}`,
                     description: file.description,
                     detail: this.getCategoryForFile(file.label),
-                    iconPath: file.iconPath
+                    alwaysShow: false // Kategoride popüler olanları göster
                 };
             });
             
@@ -332,10 +332,22 @@ export class MessageHandler {
             // Seçilen öğeleri takip et
             const selectedFilesData: Array<{fileName: string, filePath: string, fileContent: string}> = [];
             
+            // Seçim değiştiğinde kontrol et
+            quickPick.onDidChangeSelection((selectedItems) => {
+                // Maksimum 3 dosya seçimine izin ver
+                if (selectedItems.length > 3) {
+                    // Kullanıcıyı uyar ve fazla seçimleri kaldır
+                    vscode.window.showWarningMessage('Maksimum 3 dosya seçebilirsiniz!');
+                    
+                    // İlk 3 dosyayı seç
+                    const first3Items = selectedItems.slice(0, 3);
+                    quickPick.selectedItems = first3Items;
+                }
+            });
+            
             // Dosya seçildiğinde işlem yap
             quickPick.onDidAccept(async () => {
-                // Maksimum 3 dosya ile sınırla
-                const selectedItems = quickPick.selectedItems.slice(0, 3);
+                const selectedItems = quickPick.selectedItems;
                 
                 if (selectedItems.length > 0) {
                     // Yükleniyor göstergesi
@@ -347,8 +359,14 @@ export class MessageHandler {
                     
                     // Dosya URI'larını bul
                     for (const item of selectedItems) {
-                        // Dosya URI'sını bul
-                        const matchingFile = workspaceFiles.find(f => f.label === item.label && f.description === item.description);
+                        // Dosya etiketinden dosya adını çıkar (ikonları kaldır)
+                        const cleanFileName = item.label.replace(/\$\([a-z\-]+\)\s+/, '');
+                        
+                        // Dosya URI'sını bul (dosya adını ve göreli yolu kullanarak)
+                        const matchingFile = workspaceFiles.find(f => 
+                            f.label === cleanFileName && 
+                            f.description === item.description
+                        );
                         
                         if (matchingFile) {
                             try {
@@ -356,7 +374,7 @@ export class MessageHandler {
                                 const fileContent = document.getText();
                                 
                                 selectedFilesData.push({
-                                    fileName: item.label,
+                                    fileName: cleanFileName,
                                     filePath: matchingFile.uri.fsPath,
                                     fileContent: fileContent
                                 });
@@ -395,6 +413,57 @@ export class MessageHandler {
             // Hata durumunda WebView'e bildir
             this.sendErrorToWebView(`Dosya seçilirken hata oluştu: ${error.message}`);
             vscode.window.showErrorMessage(`Dosya seçici açılırken hata oluştu: ${error.message}`);
+        }
+    }
+    
+    /**
+     * Dosya uzantısına göre VS Code ikon adı döndürür
+     * VS Code yerleşik codicon adlarını kullanır
+     */
+    private getFileIconName(fileExtension: string): string {
+        switch (fileExtension.toLowerCase()) {
+            case 'js':
+            case 'jsx':
+                return 'symbol-method';
+            case 'ts':
+            case 'tsx':
+                return 'symbol-class';
+            case 'py':
+                return 'symbol-namespace';
+            case 'java':
+                return 'symbol-constructor';
+            case 'c':
+            case 'cpp':
+            case 'h':
+                return 'symbol-constant';
+            case 'cs':
+                return 'symbol-field';
+            case 'go':
+                return 'symbol-enum';
+            case 'rs':
+                return 'symbol-operator';
+            case 'rb':
+                return 'symbol-variable';
+            case 'php':
+                return 'symbol-property';
+            case 'html':
+                return 'symbol-enum-member';
+            case 'css':
+            case 'scss':
+            case 'less':
+                return 'symbol-key';
+            case 'json':
+                return 'json';
+            case 'md':
+                return 'markdown';
+            case 'xml':
+            case 'svg':
+                return 'symbol-file';
+            case 'yaml':
+            case 'yml':
+                return 'list-flat';
+            default:
+                return 'file-code';
         }
     }
     
