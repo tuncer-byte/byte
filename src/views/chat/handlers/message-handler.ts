@@ -308,52 +308,128 @@ export class MessageHandler {
      */
     private async handleFilePicker(): Promise<void> {
         try {
-            // VS Code'un kendi yerleşik dosya seçicisini kullanarak workspace içindeki dosyaları göster
-            const items = await vscode.window.showQuickPick(
-                this.getWorkspaceFiles(),
-                {
-                    placeHolder: 'Sohbete eklemek için bir dosya seçin (maksimum 3 dosya eklenebilir)',
-                    canPickMany: true // Birden fazla dosya seçimine izin ver
-                }
-            );
+            // Önce dosyaları al ve gruplandır
+            const workspaceFiles = await this.getWorkspaceFiles();
             
-            // Kullanıcı dosya(lar) seçtiyse
-            if (items && items.length > 0) {
+            // Özelleştirilmiş QuickPick ile dosyaları göster
+            const quickPick = vscode.window.createQuickPick();
+            quickPick.title = 'Dosya Seçici';
+            quickPick.placeholder = 'Sohbete eklemek için dosya ara ve seç (maksimum 3 dosya)';
+            quickPick.canSelectMany = true;
+            
+            // Dosyaları gruplandır ve QuickPick öğelerini oluştur
+            const items: vscode.QuickPickItem[] = workspaceFiles.map(file => {
+                return {
+                    label: file.label,
+                    description: file.description,
+                    detail: this.getCategoryForFile(file.label),
+                    iconPath: file.iconPath
+                };
+            });
+            
+            quickPick.items = items;
+            
+            // Seçilen öğeleri takip et
+            const selectedFilesData: Array<{fileName: string, filePath: string, fileContent: string}> = [];
+            
+            // Dosya seçildiğinde işlem yap
+            quickPick.onDidAccept(async () => {
                 // Maksimum 3 dosya ile sınırla
-                const selectedItems = items.slice(0, 3);
-                const selectedFiles: Array<{fileName: string, filePath: string, fileContent: string}> = [];
+                const selectedItems = quickPick.selectedItems.slice(0, 3);
                 
-                // Tüm seçilen dosyaları oku
-                for (const item of selectedItems) {
-                    const filePath = item.uri.fsPath;
-                    const fileName = item.label;
+                if (selectedItems.length > 0) {
+                    // Yükleniyor göstergesi
+                    quickPick.busy = true;
+                    quickPick.placeholder = 'Dosyalar okunuyor...';
                     
-                    // Dosyayı oku
-                    const document = await vscode.workspace.openTextDocument(item.uri);
-                    const fileContent = document.getText();
+                    // Seçilen dosyaları temizle
+                    selectedFilesData.length = 0;
                     
-                    selectedFiles.push({
-                        fileName,
-                        filePath,
-                        fileContent
-                    });
+                    // Dosya URI'larını bul
+                    for (const item of selectedItems) {
+                        // Dosya URI'sını bul
+                        const matchingFile = workspaceFiles.find(f => f.label === item.label && f.description === item.description);
+                        
+                        if (matchingFile) {
+                            try {
+                                const document = await vscode.workspace.openTextDocument(matchingFile.uri);
+                                const fileContent = document.getText();
+                                
+                                selectedFilesData.push({
+                                    fileName: item.label,
+                                    filePath: matchingFile.uri.fsPath,
+                                    fileContent: fileContent
+                                });
+                            } catch (error) {
+                                console.error(`Dosya okuma hatası: ${error}`);
+                            }
+                        }
+                    }
+                    
+                    // Dosya bilgilerini WebView'e gönder
+                    if (this.view && selectedFilesData.length > 0) {
+                        this.view.webview.postMessage({
+                            type: 'selectedFilesChanged',
+                            files: selectedFilesData
+                        });
+                        
+                        vscode.window.showInformationMessage(
+                            `${selectedFilesData.length} dosya sohbete eklendi.`
+                        );
+                    }
+                    
+                    // QuickPick'i kapat
+                    quickPick.hide();
                 }
-                
-                // Dosya bilgilerini WebView'e gönder - içerik olmadan sadece dosya adlarını gönderiyoruz
-                if (this.view) {
-                    this.view.webview.postMessage({
-                        type: 'selectedFilesChanged',
-                        files: selectedFiles.map(file => ({
-                            fileName: file.fileName,
-                            filePath: file.filePath,
-                            fileContent: file.fileContent // İçerik AI'ya sorulduğunda gönderilecek
-                        }))
-                    });
-                }
-            }
+            });
+            
+            // İptal edilirse kapat
+            quickPick.onDidHide(() => {
+                quickPick.dispose();
+            });
+            
+            // QuickPick'i göster
+            quickPick.show();
+            
         } catch (error: any) {
             // Hata durumunda WebView'e bildir
             this.sendErrorToWebView(`Dosya seçilirken hata oluştu: ${error.message}`);
+            vscode.window.showErrorMessage(`Dosya seçici açılırken hata oluştu: ${error.message}`);
+        }
+    }
+    
+    /**
+     * Dosya türüne göre kategori döndürür
+     */
+    private getCategoryForFile(fileName: string): string {
+        const extension = fileName.split('.').pop()?.toLowerCase() || '';
+        
+        if (['js', 'jsx', 'ts', 'tsx'].includes(extension)) {
+            return 'JavaScript/TypeScript';
+        } else if (['py'].includes(extension)) {
+            return 'Python';
+        } else if (['java'].includes(extension)) {
+            return 'Java';
+        } else if (['c', 'cpp', 'h', 'hpp'].includes(extension)) {
+            return 'C/C++';
+        } else if (['cs'].includes(extension)) {
+            return 'C#';
+        } else if (['html', 'css', 'scss', 'less'].includes(extension)) {
+            return 'Web';
+        } else if (['json', 'xml', 'yaml', 'yml'].includes(extension)) {
+            return 'Veri/Konfigürasyon';
+        } else if (['md'].includes(extension)) {
+            return 'Dokümantasyon';
+        } else if (['go'].includes(extension)) {
+            return 'Go';
+        } else if (['rs'].includes(extension)) {
+            return 'Rust';
+        } else if (['rb'].includes(extension)) {
+            return 'Ruby';
+        } else if (['php'].includes(extension)) {
+            return 'PHP';
+        } else {
+            return 'Diğer';
         }
     }
     
@@ -363,9 +439,9 @@ export class MessageHandler {
     private getLanguageFromExtension(fileExtension: string): string {
         switch (fileExtension.toLowerCase()) {
             case 'js': return 'javascript';
+            case 'jsx': return 'jsx';
             case 'ts': return 'typescript';
-            case 'tsx': return 'typescript';
-            case 'jsx': case 'tsx': return 'tsx';
+            case 'tsx': return 'tsx';
             case 'py': return 'python';
             case 'java': return 'java';
             case 'c': case 'cpp': case 'h': return 'cpp';
@@ -375,9 +451,11 @@ export class MessageHandler {
             case 'rb': return 'ruby';
             case 'php': return 'php';
             case 'html': return 'html';
-            case 'css': return 'css';
+            case 'css': case 'scss': case 'less': return 'css';
             case 'json': return 'json';
             case 'md': return 'markdown';
+            case 'xml': case 'svg': return 'xml';
+            case 'yaml': case 'yml': return 'yaml';
             default: return '';
         }
     }
@@ -385,7 +463,7 @@ export class MessageHandler {
     /**
      * Workspace içindeki tüm dosyaları getirir
      */
-    private async getWorkspaceFiles(): Promise<Array<{label: string; description: string; uri: vscode.Uri}>> {
+    private async getWorkspaceFiles(): Promise<Array<{label: string; description: string; uri: vscode.Uri; iconPath?: vscode.ThemeIcon}>> {
         console.log("getWorkspaceFiles metodu çağrıldı");
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
@@ -393,15 +471,59 @@ export class MessageHandler {
             return [];
         }
         
-        const files: Array<{label: string; description: string; uri: vscode.Uri}> = [];
+        const files: Array<{label: string; description: string; uri: vscode.Uri; iconPath?: vscode.ThemeIcon}> = [];
+        
+        // Hariç tutulacak dosya ve klasör desenleri
+        const excludePatterns = [
+            '**/node_modules/**',
+            '**/dist/**',
+            '**/build/**',
+            '**/coverage/**',
+            '**/.git/**',
+            '**/package-lock.json',
+            '**/yarn.lock',
+            '**/.DS_Store',
+            '**/thumbs.db',
+            '**/*.log',
+            '**/*.lock',
+            '**/*.min.js',
+            '**/*.min.css'
+        ];
+        
+        // Desteklenen dosya türleri
+        const includePatterns = [
+            '**/*.js',
+            '**/*.ts',
+            '**/*.jsx',
+            '**/*.tsx',
+            '**/*.py',
+            '**/*.java',
+            '**/*.c',
+            '**/*.cpp',
+            '**/*.h',
+            '**/*.cs',
+            '**/*.go',
+            '**/*.rs',
+            '**/*.rb',
+            '**/*.php',
+            '**/*.html',
+            '**/*.css',
+            '**/*.scss',
+            '**/*.json',
+            '**/*.md',
+            '**/*.xml',
+            '**/*.yml',
+            '**/*.yaml',
+            '**/*.svg'
+        ];
         
         for (const folder of workspaceFolders) {
             console.log(`Klasör işleniyor: ${folder.name}`);
             try {
-                // VS Code API ile dosyaları bul - sadece kod dosyalarını göster
+                // VS Code API ile dosyaları bul - sadece kod dosyalarını göster ve belirlenen klasörleri hariç tut
                 const fileUris = await vscode.workspace.findFiles(
-                    '{**/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.py,**/*.java,**/*.c,**/*.cpp,**/*.h,**/*.cs,**/*.go,**/*.rs,**/*.rb,**/*.php,**/*.html,**/*.css,**/*.json,**/*.md}',
-                    '**/node_modules/**'
+                    `{${includePatterns.join(',')}}`,
+                    `{${excludePatterns.join(',')}}`
                 );
                 
                 console.log(`Bulunan dosya sayısı: ${fileUris.length}`);
@@ -412,10 +534,15 @@ export class MessageHandler {
                     // Workspace klasörüne göre göreceli yolu al
                     const relativePath = vscode.workspace.asRelativePath(uri);
                     
+                    // Dosya türüne göre ikon belirleme
+                    const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
+                    const iconPath = this.getFileIcon(fileExtension);
+                    
                     files.push({
                         label: fileName,
                         description: relativePath,
-                        uri: uri
+                        uri: uri,
+                        iconPath: iconPath
                     });
                 }
             } catch (error) {
@@ -426,6 +553,56 @@ export class MessageHandler {
         console.log(`Toplam eklenen dosya sayısı: ${files.length}`);
         
         return Promise.resolve(files);
+    }
+    
+    /**
+     * Dosya uzantısına göre ikon döndürür
+     */
+    private getFileIcon(fileExtension: string): vscode.ThemeIcon {
+        switch (fileExtension.toLowerCase()) {
+            case 'js':
+            case 'jsx':
+                return new vscode.ThemeIcon('javascript');
+            case 'ts':
+            case 'tsx':
+                return new vscode.ThemeIcon('typescript');
+            case 'py':
+                return new vscode.ThemeIcon('python');
+            case 'java':
+                return new vscode.ThemeIcon('java');
+            case 'c':
+            case 'cpp':
+            case 'h':
+                return new vscode.ThemeIcon('cpp');
+            case 'cs':
+                return new vscode.ThemeIcon('csharp');
+            case 'go':
+                return new vscode.ThemeIcon('go');
+            case 'rs':
+                return new vscode.ThemeIcon('rust');
+            case 'rb':
+                return new vscode.ThemeIcon('ruby');
+            case 'php':
+                return new vscode.ThemeIcon('php');
+            case 'html':
+                return new vscode.ThemeIcon('html');
+            case 'css':
+            case 'scss':
+            case 'less':
+                return new vscode.ThemeIcon('css');
+            case 'json':
+                return new vscode.ThemeIcon('json');
+            case 'md':
+                return new vscode.ThemeIcon('markdown');
+            case 'xml':
+            case 'svg':
+                return new vscode.ThemeIcon('xml');
+            case 'yaml':
+            case 'yml':
+                return new vscode.ThemeIcon('yaml');
+            default:
+                return new vscode.ThemeIcon('file-code');
+        }
     }
     
     /**
