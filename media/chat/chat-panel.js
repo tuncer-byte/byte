@@ -113,6 +113,18 @@
             if (typingIndicator) {
                 typingIndicator.style.display = 'flex';
             }
+            
+            // Yanıt oluşturuluyor göstergesini göster
+            const generatingIndicator = document.getElementById('generatingIndicator');
+            if (generatingIndicator) {
+                generatingIndicator.style.display = 'inline';
+            }
+            
+            // Gönder butonunu devre dışı bırak
+            if (sendButton) {
+                sendButton.disabled = true;
+                sendButton.classList.add('disabled');
+            }
         }
     }
     
@@ -125,6 +137,18 @@
             // Yeni 3 noktalı göstergeyi de gizle
             if (typingIndicator) {
                 typingIndicator.style.display = 'none';
+            }
+            
+            // Yanıt oluşturuluyor göstergesini gizle
+            const generatingIndicator = document.getElementById('generatingIndicator');
+            if (generatingIndicator) {
+                generatingIndicator.style.display = 'none';
+            }
+            
+            // Gönder butonunu tekrar etkinleştir
+            if (sendButton) {
+                sendButton.disabled = false;
+                sendButton.classList.remove('disabled');
             }
         }
     }
