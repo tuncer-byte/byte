@@ -336,8 +336,9 @@ We welcome feedback and suggestions! There are several ways to reach out:
 
 - **Bug Reports and Feature Requests**: Open an issue on GitHub
 - **Questions and Discussions**: Start a discussion in the GitHub repository
-- **Direct Contact**: Reach out to the maintainer via email at tuncer@byteai.app
+- **Direct Contact**: Reach out to the maintainer via email at tuncerbostancibasi@gmail.com
 
 ## ♻️ Changelog
 
 See the [CHANGELOG.md](CHANGELOG.md) file for details about version updates and changes.
+
