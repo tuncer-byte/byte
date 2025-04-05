@@ -314,11 +314,31 @@ export class BugFinderService {
         };
         
         try {
-            // AI yanıtında komut önerisi var mı kontrol et
-            const commandMatch = aiResponse.match(/```(bash|sh|cmd|terminal|shell)\n(.*?)\n```/s);
+            // AI yanıtında komut önerisi var mı kontrol et - regex'i iyileştirelim
+            // Önceki regex: /```(bash|sh|cmd|terminal|shell)\n(.*?)\n```/s
+            // Daha geniş bir eşleşme için değiştirildi
+            const commandMatch = aiResponse.match(/```(bash|sh|cmd|terminal|shell)\n([\s\S]*?)```/s);
+            
             if (commandMatch && commandMatch[2]) {
-                defaultSolution.commandToRun = commandMatch[2].trim();
+                const commandText = commandMatch[2].trim();
+                console.log('Terminal komutu tespit edildi:', commandText);
+                defaultSolution.commandToRun = commandText;
                 defaultSolution.type = SolutionType.Installation;
+            } else {
+                // Alternatif bir arama daha yap, bazen dil belirtilmez
+                const simpleCmdMatch = aiResponse.match(/```\n?(.*?)\n?```/s);
+                if (simpleCmdMatch && simpleCmdMatch[1] && 
+                    (simpleCmdMatch[1].includes('npm ') || 
+                     simpleCmdMatch[1].includes('yarn ') || 
+                     simpleCmdMatch[1].includes('apt ') ||
+                     simpleCmdMatch[1].includes('pip ') ||
+                     simpleCmdMatch[1].includes('brew ') ||
+                     simpleCmdMatch[1].includes('git '))) {
+                    const commandText = simpleCmdMatch[1].trim();
+                    console.log('Basit terminal komutu tespit edildi:', commandText);
+                    defaultSolution.commandToRun = commandText;
+                    defaultSolution.type = SolutionType.Installation;
+                }
             }
             
             // Kod değişiklikleri var mı kontrol et
@@ -466,29 +486,31 @@ export class BugFinderService {
         
         // Komut varsa ilgili bölümleri ekle
         if (solution.commandToRun) {
-            templates.commandTab = TemplateLoader.loadTemplate('tabs-template.html', {})
-                .split('\n')
-                .find(line => line.includes('komut">Komut')) || '';
+            console.log('Komut var, bölümleri ekliyorum:', solution.commandToRun);
+            // Tab için gereken HTML parçası
+            templates.commandTab = `<div class="solution-nav-item" data-section="komut">Komut</div>`;
             
+            // Komut bölümü
             templates.commandSection = TemplateLoader.loadTemplate('command-section.html', {
                 commandToRun: this.escapeHtml(solution.commandToRun)
             });
             
-            templates.commandButton = TemplateLoader.loadTemplate('tabs-template.html', {})
-                .split('\n')
-                .find(line => line.includes('apply-command">Komutu')) || '';
+            // Komut butonu
+            templates.commandButton = `<button id="apply-command">Komutu Çalıştır</button>`;
             
-            templates.commandScript = TemplateLoader.loadTemplate('tabs-template.html', {})
-                .split('\n')
-                .filter(line => line.includes('apply-command') && line.includes('addEventListener'))
-                .join('\n');
+            // Script kısmı
+            templates.commandScript = `
+                document.getElementById('apply-command')?.addEventListener('click', () => {
+                    vscode.postMessage({ command: 'applyCommand' });
+                });
+            `;
         }
         
         // Kod değişiklikleri varsa ilgili bölümleri ekle
         if (solution.codeChanges && solution.codeChanges.length > 0) {
-            templates.codeTab = TemplateLoader.loadTemplate('tabs-template.html', {})
-                .split('\n')
-                .find(line => line.includes('kod">Kod')) || '';
+            console.log('Kod değişiklikleri var, bölümleri ekliyorum');
+            // Tab için gereken HTML parçası
+            templates.codeTab = `<div class="solution-nav-item" data-section="kod">Kod Değişiklikleri</div>`;
             
             // Kod değişiklik listesini oluştur
             const codeChangesList: string[] = [];
@@ -503,14 +525,15 @@ export class BugFinderService {
                 codeChangesList: codeChangesList.join('\n')
             });
             
-            templates.codeButton = TemplateLoader.loadTemplate('tabs-template.html', {})
-                .split('\n')
-                .find(line => line.includes('apply-code">Kod')) || '';
+            // Kod butonu
+            templates.codeButton = `<button id="apply-code">Kod Değişikliklerini Uygula</button>`;
             
-            templates.codeScript = TemplateLoader.loadTemplate('tabs-template.html', {})
-                .split('\n')
-                .filter(line => line.includes('apply-code') && line.includes('addEventListener'))
-                .join('\n');
+            // Script kısmı
+            templates.codeScript = `
+                document.getElementById('apply-code')?.addEventListener('click', () => {
+                    vscode.postMessage({ command: 'applyCodeChanges' });
+                });
+            `;
         }
         
         // Ana şablonu yükle ve tüm değişkenleri ekle

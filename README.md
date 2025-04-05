@@ -3,7 +3,7 @@
 A powerful AI-powered coding assistant for VS Code.
 
 <div align="center">
-  <img src="media/icons/icon.png" alt="Byte AI Assistant" width="128">
+  <img src="media/icons/icon-white.png" alt="Byte AI Assistant" width="128">
 </div>
 
 <div align="center">

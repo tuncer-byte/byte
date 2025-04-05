@@ -86,8 +86,12 @@ export class TemplateLoader {
             result = result.replace(placeholderRegex, content || '');
         }
         
-        // Kalan yer işaretlerini temizle
+        // Kalan yer işaretlerini temizle (boş satırlar hariç)
         result = result.replace(/{{[^}]+}}/g, '');
+        
+        // Debug için
+        console.log("Oluşturulan şablon içinde komut bölümü var mı:", 
+            result.includes("apply-command") && result.includes("Komutu Çalıştır"));
         
         return result;
     }
@@ -209,10 +213,12 @@ export class TemplateLoader {
                 </html>`;
                 
             case 'command-section.html':
-                return `<div>
-                    <h3>Çalıştırılacak Komut</h3>
-                    <pre class="code-block">${variables.commandToRun || ''}</pre>
-                    <button id="apply-command">Komutu Çalıştır</button>
+                return `<div class="solution-section" id="komut-section">
+                    <div class="solution-box">
+                        <h3>Çalıştırılacak Komut</h3>
+                        <pre class="code-block">${variables.commandToRun || ''}</pre>
+                        <p>Bu komutu çalıştırmak için <strong>"Komutu Çalıştır"</strong> butonunu kullanabilirsiniz.</p>
+                    </div>
                 </div>`;
                 
             case 'code-section.html':

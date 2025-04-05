@@ -45,10 +45,17 @@ Lütfen aşağıdaki gibi detaylı bir yanıt ver:
 3. Çözüm adımları (how): Adım adım, net, uygulanabilir çözüm önerileri sun
 4. Gelecekte önlemler: Bu tür hataları önlemek için öneriler
 
-Uygun olduğunda, çözüm içerisinde:
-* Terminalde çalıştırılacak komutlar için \`\`\`bash\n[komut]\n\`\`\` formatını kullan
-* Değiştirilecek dosyalar için \`\`\`[dil]:[dosya_yolu]\n[yeni içerik]\n\`\`\` formatını kullan
-* En olası çözümü öncelikle öner
+ÖNEMLİ: Çözüm içerisinde komut çalıştırmam gerekiyorsa, aşağıdaki formatta MUTLAKA yaz:
+
+\`\`\`bash
+senin_önerdiğin_komut parametre1 parametre2
+\`\`\`
+
+ÖNEMLİ: Kod değişikliği yapılması gerekiyorsa, aşağıdaki formatta MUTLAKA yaz:
+
+\`\`\`dosya_dili:dosya_yolu
+// Değiştirilecek içerik
+\`\`\`
 
 Yanıtını kısa, öz ve uygulanabilir çözümlere odakla. Aşırı teknik jargondan kaçın ve çözümleri türkçe olarak açıkla. Kodu açıklarken türkçe kullan.`;
 
